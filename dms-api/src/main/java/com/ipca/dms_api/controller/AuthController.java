@@ -4,22 +4,24 @@ import com.ipca.dms_api.dto.AuthRequest;
 import com.ipca.dms_api.entity.User;
 import com.ipca.dms_api.repository.UserRepository;
 import com.ipca.dms_api.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/dmsApi/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/")
     public String health() {

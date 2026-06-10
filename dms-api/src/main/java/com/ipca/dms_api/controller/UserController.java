@@ -19,15 +19,16 @@ import com.ipca.dms_api.repository.UserRepository;
 import com.ipca.dms_api.service.UserService;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
-@RequestMapping("/dmsApi/users")
-@RequiredArgsConstructor
+@RequestMapping("/dmsApi/user")
 public class UserController {
 
-    private final UserRepository userRepository;
-    private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
 
     @PostConstruct
     public void init() {

@@ -3,7 +3,7 @@ package com.ipca.dms_api.controller;
 import com.ipca.dms_api.dto.*;
 import com.ipca.dms_api.service.BatchDetailsService;
 import com.ipca.dms_api.service.ZipMailService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,11 +14,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/dmsApi/batch")
-@RequiredArgsConstructor
 public class BatchDetailsController {
 
-    private final BatchDetailsService batchService;
-    private final ZipMailService zipMailService;
+    @Autowired
+    private BatchDetailsService batchService;
+    @Autowired
+    private ZipMailService zipMailService;
 
     // ── GET PRODUCT DETAILS ───────────────────────────────────────────────────
     @GetMapping("/getProductDetails")

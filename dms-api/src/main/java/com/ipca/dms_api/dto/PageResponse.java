@@ -2,11 +2,6 @@ package com.ipca.dms_api.dto;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public class PageResponse<T> {
 
     private List<T> content;
@@ -16,4 +11,23 @@ public class PageResponse<T> {
     private int totalPages;
     private boolean first;
     private boolean last;
+
+    public PageResponse(List<T> content, int page, int size, long totalElements, int totalPages, boolean first, boolean last) {
+        this.content = content;
+        this.page = page;
+        this.size = size;
+        this.totalElements = totalElements;
+        this.totalPages = totalPages;
+        this.first = first;
+        this.last = last;
+    }
+
+    // Getters
+    public List<T> getContent() { return content; }
+    public int getPage() { return page; }
+    public int getSize() { return size; }
+    public long getTotalElements() { return totalElements; }
+    public int getTotalPages() { return totalPages; }
+    public boolean isFirst() { return first; }
+    public boolean isLast() { return last; }
 }

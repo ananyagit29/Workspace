@@ -13,14 +13,14 @@ import com.ipca.dms_api.dto.PageResponse;
 import com.ipca.dms_api.dto.UserRightsDTO;
 import com.ipca.dms_api.service.UserRightsService;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
-@RequestMapping("/dmsApi/rights")
-@RequiredArgsConstructor
+@RequestMapping("/dmsApi/userRights")
 public class UserRightsController {
 
-    private final UserRightsService userRightsService;
+    @Autowired
+    private UserRightsService userRightsService;
 
     @GetMapping("/list")
     public PageResponse<UserRightsDTO> rightsList(

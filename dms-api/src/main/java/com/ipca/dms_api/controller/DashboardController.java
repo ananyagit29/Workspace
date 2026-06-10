@@ -8,16 +8,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ipca.dms_api.repository.UserRepository;
 import com.ipca.dms_api.repository.UserRightsRepository;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/dmsApi/dashboard")
-@RequiredArgsConstructor
 public class DashboardController {
 
-    private final UserRightsRepository userRightsRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserRightsRepository userRightsRepository;
 
     @GetMapping("/getCompanies")
     public List<Object[]> getCompanies(Authentication authentication) {

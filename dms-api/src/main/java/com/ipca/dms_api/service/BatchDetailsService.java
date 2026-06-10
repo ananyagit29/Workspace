@@ -4,7 +4,7 @@ import com.ipca.dms_api.dto.*;
 import com.ipca.dms_api.entity.BatchDetails;
 import com.ipca.dms_api.repository.BatchDetailsRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,11 +18,12 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class BatchDetailsService {
 
-    private final BatchDetailsRepository batchRepo;
-    private final JdbcTemplate jdbcTemplate;
+    @Autowired
+    private BatchDetailsRepository batchRepo;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Value("${dms.upload.directory}")
     private String uploadBaseDir;

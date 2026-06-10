@@ -2,7 +2,7 @@ package com.ipca.dms_api.controller;
 
 import com.ipca.dms_api.dto.InvoiceDocumentResponse;
 import com.ipca.dms_api.service.InvoiceDocumentService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
@@ -18,10 +18,10 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/dmsApi/invoice")
-@RequiredArgsConstructor
 public class InvoiceDocumentController {
 
-    private final InvoiceDocumentService invoiceService;
+    @Autowired
+    private InvoiceDocumentService invoiceService;
 
     @GetMapping("/exists")
     public ResponseEntity<Boolean> exists(@RequestParam String invoiceNumber) {
