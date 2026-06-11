@@ -71,7 +71,7 @@ public class ZipMailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setFrom(SENDER);
-        helper.setTo(recipients.toArray(new String[0]));
+        helper.setTo(java.util.Objects.requireNonNull(recipients.toArray(new String[0])));
         helper.setSubject("DMS — Batch Documents ZIP");
         helper.setText(
                 "<p>Dear User,</p>" +

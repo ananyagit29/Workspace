@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ipca.dms_api.repository.UserRepository;
+
 import com.ipca.dms_api.repository.UserRightsRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequestMapping("/dmsApi/dashboard")
 public class DashboardController {
 
-    @Autowired
-    private UserRepository userRepository;
+
     @Autowired
     private UserRightsRepository userRightsRepository;
 

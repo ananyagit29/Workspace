@@ -71,7 +71,7 @@ public class InvoiceDocumentController {
         try {
             InvoiceDocumentResponse invoice = invoiceService.findById(id);
             Path path = Paths.get(invoice.getFilePath());
-            Resource resource = new UrlResource(path.toUri());
+            Resource resource = new UrlResource(java.util.Objects.requireNonNull(path.toUri()));
 
             if (!resource.exists() || !resource.isReadable()) {
                 return ResponseEntity.notFound().build();

@@ -29,12 +29,12 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         if (toEmails != null)
-            helper.setTo(toEmails.toArray(String[]::new));
+            helper.setTo(java.util.Objects.requireNonNull(toEmails.toArray(String[]::new)));
         if (ccEmails != null)
-            helper.setCc(ccEmails.toArray(String[]::new));
-        helper.setFrom(fromEmail);
-        helper.setSubject(subject);
-        helper.setText(body, true);
+            helper.setCc(java.util.Objects.requireNonNull(ccEmails.toArray(String[]::new)));
+        helper.setFrom(java.util.Objects.requireNonNull(fromEmail));
+        helper.setSubject(java.util.Objects.requireNonNull(subject));
+        helper.setText(java.util.Objects.requireNonNull(body), true);
 
         mailSender.send(message);
     }

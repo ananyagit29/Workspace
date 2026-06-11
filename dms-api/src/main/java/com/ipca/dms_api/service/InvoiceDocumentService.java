@@ -37,7 +37,7 @@ public class InvoiceDocumentService {
     private String uploadBaseDir;
 
     public InvoiceDocumentService(@Qualifier("invoiceDataSource") DataSource invoiceDataSource) {
-        this.invoiceJdbcTemplate = new JdbcTemplate(invoiceDataSource);
+        this.invoiceJdbcTemplate = new JdbcTemplate(java.util.Objects.requireNonNull(invoiceDataSource));
     }
 
     @PostConstruct

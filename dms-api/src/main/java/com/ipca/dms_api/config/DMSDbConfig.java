@@ -47,6 +47,6 @@ public class DMSDbConfig {
     @Bean
     public PlatformTransactionManager primaryTransactionManager(
             LocalContainerEntityManagerFactoryBean primaryEntityManagerFactory) {
-        return new JpaTransactionManager(primaryEntityManagerFactory.getObject());
+        return new JpaTransactionManager(java.util.Objects.requireNonNull(primaryEntityManagerFactory.getObject()));
     }
 }

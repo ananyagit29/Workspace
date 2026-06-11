@@ -26,7 +26,7 @@ public class UserService {
 
     @PostConstruct
     public void init() {
-        this.hrmsJdbcTemplate = new JdbcTemplate(hrmsDataSource);
+        this.hrmsJdbcTemplate = new JdbcTemplate(java.util.Objects.requireNonNull(hrmsDataSource));
     }
 
     public Map<String, Object> checkUser(@RequestParam String uid) {

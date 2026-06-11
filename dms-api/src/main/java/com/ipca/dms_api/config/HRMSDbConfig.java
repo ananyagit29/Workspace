@@ -48,6 +48,6 @@ public class HRMSDbConfig {
     @Bean
     public PlatformTransactionManager hrmsTransactionManager(
             LocalContainerEntityManagerFactoryBean hrmsEntityManagerFactory) {
-        return new JpaTransactionManager(hrmsEntityManagerFactory.getObject());
+        return new JpaTransactionManager(java.util.Objects.requireNonNull(hrmsEntityManagerFactory.getObject()));
     }
 }

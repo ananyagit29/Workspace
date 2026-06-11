@@ -124,7 +124,7 @@ public class BatchDetailsController {
             @RequestParam String filePath) {
         try {
             java.nio.file.Path path = java.nio.file.Paths.get(filePath);
-            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+            org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(java.util.Objects.requireNonNull(path.toUri()));
 
             if (!resource.exists() || !resource.isReadable())
                 return ResponseEntity.notFound().build();

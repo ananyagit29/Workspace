@@ -45,6 +45,6 @@ public class SCMDbConfig {
     @Bean
     public PlatformTransactionManager scmTransactionManager(
             LocalContainerEntityManagerFactoryBean scmEntityManagerFactory) {
-        return new JpaTransactionManager(scmEntityManagerFactory.getObject());
+        return new JpaTransactionManager(java.util.Objects.requireNonNull(scmEntityManagerFactory.getObject()));
     }
 }

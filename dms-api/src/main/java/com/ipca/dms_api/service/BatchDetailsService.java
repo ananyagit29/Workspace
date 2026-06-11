@@ -195,7 +195,7 @@ public class BatchDetailsService {
                 record.setFilePath(filePath);
                 record.setCreatedBy(userId);
                 record.setCreatedOn(LocalDateTime.now());
-                batchRepo.save(record);
+                batchRepo.save(java.util.Objects.requireNonNull(record));
             }
         } else {
             // INSERT always (even if no file — row represents the batch entry)
@@ -216,7 +216,7 @@ public class BatchDetailsService {
                     .createdBy(userId)
                     .createdOn(LocalDateTime.now())
                     .build();
-            batchRepo.save(record);
+            batchRepo.save(java.util.Objects.requireNonNull(record));
         }
     }
 

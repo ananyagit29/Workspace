@@ -129,12 +129,12 @@ const SearchInvoice = () => {
 
       <main style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
         <div style={{ maxWidth: 1050, margin: "0 auto" }}>
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "8px 12px", marginBottom: 8 }}>
+          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16, width: "fit-content", margin: "0 auto 16px auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={sectionTitle}>Search Filters</span>
               <button onClick={handleReset} style={linkButton}>Clear</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 320px) auto", gap: 10, alignItems: "end" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "300px 300px", gap: 16, alignItems: "end", padding: "10px 0 4px 0" }}>
               <div>
                 <label style={labelStyle}>Invoice Number</label>
                 <input
@@ -146,7 +146,7 @@ const SearchInvoice = () => {
                 />
               </div>
 
-              <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1 }}>
+              <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, width: "100%" }}>
                 {searching ? "Searching..." : "Search"}
               </button>
             </div>
@@ -237,7 +237,7 @@ const EmptyState = ({ title, text }: { title: string; text: string }) => (
 const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" };
 const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
-const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "7px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 31 };
+const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 const linkButton: React.CSSProperties = { fontSize: 11, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0 };
 const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap" };
