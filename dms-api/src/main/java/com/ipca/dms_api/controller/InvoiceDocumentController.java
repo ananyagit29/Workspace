@@ -38,7 +38,10 @@ public class InvoiceDocumentController {
             @RequestParam String applicationName,
             @RequestParam MultipartFile invoiceFile) {
         try {
-            String userId = authentication == null ? "SYSTEM" : authentication.getName();
+            if (authentication == null || authentication.getName() == null) {
+                throw new IllegalArgumentException("User is not authenticated properly.");
+            }
+            String userId = authentication.getName();
             return ResponseEntity.ok(invoiceService.saveInvoice(
                     invoiceNumber, companyId, locationId, divisionName, applicationName, userId, invoiceFile));
         } catch (IllegalArgumentException e) {
@@ -54,7 +57,10 @@ public class InvoiceDocumentController {
             @RequestParam String invoiceNumber,
             @RequestParam MultipartFile otherFile) {
         try {
-            String userId = authentication == null ? "SYSTEM" : authentication.getName();
+            if (authentication == null || authentication.getName() == null) {
+                throw new IllegalArgumentException("User is not authenticated properly.");
+            }
+            String userId = authentication.getName();
             return ResponseEntity.ok(invoiceService.attachOtherFile(invoiceNumber, userId, otherFile));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
