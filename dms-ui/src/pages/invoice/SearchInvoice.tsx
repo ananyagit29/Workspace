@@ -17,6 +17,7 @@ interface InvoiceRecord {
   fileName: string;
   otherFileName?: string;
   invoiceFileName?: string;
+  otherFileId?: number;
   filePath: string;
   createdBy: string;
   createdOn: string;
@@ -24,9 +25,10 @@ interface InvoiceRecord {
 
 const PAGE_SIZE = 8;
 
-const getInvoiceFileUrl = (id: number, action: "view" | "download") => {
+const getInvoiceFileUrl = (id: number, action: "view" | "download", otherId?: number) => {
   const token = localStorage.getItem("jwtToken");
-  return `${import.meta.env.VITE_DMS_API}/invoice/${id}/${action}?token=${token}`;
+  const otherQuery = otherId ? `&otherId=${otherId}` : "";
+  return `${import.meta.env.VITE_DMS_API}/invoice/${id}/${action}?token=${token}${otherQuery}`;
 };
 
 const SearchInvoice = () => {
@@ -177,21 +179,25 @@ const SearchInvoice = () => {
                           <tr key={row.id} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
-                              <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view"), "_blank")} style={fileButton}>
-                                {row.otherFileName}
-                              </button>
+                              {row.otherFileName ? (
+                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={fileButton}>
+                                  {row.otherFileName}
+                                </button>
+                              ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
-                              <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view"), "_blank")} style={fileButton}>
-                                {row.invoiceFileName}
-                              </button>
+                              {row.invoiceFileName ? (
+                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view"), "_blank")} style={fileButton}>
+                                  {row.invoiceFileName}
+                                </button>
+                              ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdBy || "-"}</td>
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleDateString("en-GB") : "-"}</td>
                             <td style={tdStyle}>
                               <div style={{ display: "flex", gap: 10 }}>
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view"), "_blank")} style={rowAction}>View</button>
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "download"), "_blank")} style={rowAction}>Download</button>
+                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={rowAction}>View</button>
+                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "download", row.otherFileId), "_blank")} style={rowAction}>Download</button>
                               </div>
                             </td>
                           </tr>

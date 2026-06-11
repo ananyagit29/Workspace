@@ -1,7 +1,22 @@
 import { authApi } from "./authApi";
 
-export { authApi as dmsApi };
+import axios from "axios";
 
+export const dmsApi = axios.create({
+  baseURL: import.meta.env.VITE_DMS_API,
+  withCredentials: false,
+});
+
+dmsApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem("jwtToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.url && config.url.startsWith("/")) {
+    config.url = config.url.substring(1);
+  }
+  return config;
+});
 /* ── Dashboard workspace dropdown APIs ── */
 
 export interface UserRights {

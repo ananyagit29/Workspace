@@ -13,12 +13,18 @@ public class InvoiceDocumentResponse {
     private String applicationName;
     private String createdBy;
     private LocalDateTime createdOn;
+    
+    // New fields for multiple files support
+    private String invoiceFileName;
+    private String otherFileName;
+    private Long otherFileId;
 
     public InvoiceDocumentResponse() {}
 
     public InvoiceDocumentResponse(Long id, String invoiceNumber, String fileName, String filePath,
                                   String companyId, String locationId, String divisionName,
-                                  String applicationName, String createdBy, LocalDateTime createdOn) {
+                                  String applicationName, String createdBy, LocalDateTime createdOn,
+                                  String invoiceFileName, String otherFileName, Long otherFileId) {
         this.id = id;
         this.invoiceNumber = invoiceNumber;
         this.fileName = fileName;
@@ -29,6 +35,9 @@ public class InvoiceDocumentResponse {
         this.applicationName = applicationName;
         this.createdBy = createdBy;
         this.createdOn = createdOn;
+        this.invoiceFileName = invoiceFileName;
+        this.otherFileName = otherFileName;
+        this.otherFileId = otherFileId;
     }
 
     // Getters and Setters
@@ -62,6 +71,15 @@ public class InvoiceDocumentResponse {
     public LocalDateTime getCreatedOn() { return createdOn; }
     public void setCreatedOn(LocalDateTime createdOn) { this.createdOn = createdOn; }
 
+    public String getInvoiceFileName() { return invoiceFileName; }
+    public void setInvoiceFileName(String invoiceFileName) { this.invoiceFileName = invoiceFileName; }
+
+    public String getOtherFileName() { return otherFileName; }
+    public void setOtherFileName(String otherFileName) { this.otherFileName = otherFileName; }
+
+    public Long getOtherFileId() { return otherFileId; }
+    public void setOtherFileId(Long otherFileId) { this.otherFileId = otherFileId; }
+
     // Builder
     public static Builder builder() { return new Builder(); }
 
@@ -76,6 +94,9 @@ public class InvoiceDocumentResponse {
         private String applicationName;
         private String createdBy;
         private LocalDateTime createdOn;
+        private String invoiceFileName;
+        private String otherFileName;
+        private Long otherFileId;
 
         public Builder id(Long id) { this.id = id; return this; }
         public Builder invoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; return this; }
@@ -87,10 +108,14 @@ public class InvoiceDocumentResponse {
         public Builder applicationName(String applicationName) { this.applicationName = applicationName; return this; }
         public Builder createdBy(String createdBy) { this.createdBy = createdBy; return this; }
         public Builder createdOn(LocalDateTime createdOn) { this.createdOn = createdOn; return this; }
+        public Builder invoiceFileName(String invoiceFileName) { this.invoiceFileName = invoiceFileName; return this; }
+        public Builder otherFileName(String otherFileName) { this.otherFileName = otherFileName; return this; }
+        public Builder otherFileId(Long otherFileId) { this.otherFileId = otherFileId; return this; }
 
         public InvoiceDocumentResponse build() {
             return new InvoiceDocumentResponse(id, invoiceNumber, fileName, filePath, companyId,
-                                             locationId, divisionName, applicationName, createdBy, createdOn);
+                                             locationId, divisionName, applicationName, createdBy, createdOn,
+                                             invoiceFileName, otherFileName, otherFileId);
         }
     }
 }

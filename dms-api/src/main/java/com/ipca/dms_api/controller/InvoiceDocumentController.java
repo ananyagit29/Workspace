@@ -48,6 +48,21 @@ public class InvoiceDocumentController {
         }
     }
 
+    @PostMapping("/attach")
+    public ResponseEntity<?> attach(
+            Authentication authentication,
+            @RequestParam String invoiceNumber,
+            @RequestParam MultipartFile otherFile) {
+        try {
+            String userId = authentication == null ? "SYSTEM" : authentication.getName();
+            return ResponseEntity.ok(invoiceService.attachOtherFile(invoiceNumber, userId, otherFile));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<Page<InvoiceDocumentResponse>> search(
             @RequestParam(required = false) String invoiceNumber,
@@ -58,19 +73,25 @@ public class InvoiceDocumentController {
     }
 
     @GetMapping("/{id}/view")
-    public ResponseEntity<Resource> view(@PathVariable Long id) {
-        return fileResponse(id, "inline");
+    public ResponseEntity<Resource> view(@PathVariable Long id, @RequestParam(required = false) Long otherId) {
+        return fileResponse(id, otherId, "inline");
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id) {
-        return fileResponse(id, "attachment");
+    public ResponseEntity<Resource> download(@PathVariable Long id, @RequestParam(required = false) Long otherId) {
+        return fileResponse(id, otherId, "attachment");
     }
 
-    private ResponseEntity<Resource> fileResponse(Long id, String disposition) {
+    private ResponseEntity<Resource> fileResponse(Long id, Long otherId, String disposition) {
         try {
-            InvoiceDocumentResponse invoice = invoiceService.findById(id);
-            Path path = Paths.get(invoice.getFilePath());
+            String filePathString;
+            if (otherId != null) {
+                filePathString = invoiceService.getOtherFilePath(otherId);
+            } else {
+                InvoiceDocumentResponse invoice = invoiceService.findById(id);
+                filePathString = invoice.getFilePath();
+            }
+            Path path = Paths.get(filePathString);
             Resource resource = new UrlResource(java.util.Objects.requireNonNull(path.toUri()));
 
             if (!resource.exists() || !resource.isReadable()) {
