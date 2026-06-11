@@ -194,12 +194,6 @@ const SearchInvoice = () => {
                             </td>
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdBy || "-"}</td>
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleDateString("en-GB") : "-"}</td>
-                            <td style={tdStyle}>
-                              <div style={{ display: "flex", gap: 10 }}>
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={rowAction}>View</button>
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "download", row.otherFileId), "_blank")} style={rowAction}>Download</button>
-                              </div>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -248,7 +242,7 @@ const linkButton: React.CSSProperties = { fontSize: 11, color: "#9ca3af", backgr
 const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
-const rowAction: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 };
+
 const pagerButton = (disabled: boolean): React.CSSProperties => ({ fontSize: 11, padding: "4px 10px", border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, color: "#374151" });
 
 export default SearchInvoice;
