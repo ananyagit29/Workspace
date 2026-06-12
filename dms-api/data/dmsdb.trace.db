@@ -1,0 +1,3 @@
+2026-06-12 17:35:17.821061+05:30 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "DMS_BATCH_DETAILS" not found (this database is empty); SQL statement:
+select distinct bd1_0.VENDOR_CODE from DMS_BATCH_DETAILS bd1_0 where bd1_0.LOCATION_ID=? and bd1_0.FILE_NAME is not null and (? is null or bd1_0.TYPE=?) order by bd1_0.VENDOR_CODE [42104-224]

@@ -254,7 +254,7 @@ const SearchInvoice = () => {
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   {results.length > 0 && (
-                    <button onClick={handleExportExcel} style={{ ...primaryButton, background: "#10b981", height: 26, padding: "0 16px" }}>
+                    <button onClick={handleExportExcel} style={{ ...primaryButton, height: 26, padding: "0 16px" }}>
                       Export to Excel
                     </button>
                   )}
@@ -278,7 +278,11 @@ const SearchInvoice = () => {
                           <tr key={row.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
-                              {row.otherFileName || "-"}
+                              {row.otherFileName ? (
+                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.id, "view", row.otherFileId))} style={fileButton}>
+                                  {row.otherFileName}
+                                </button>
+                              ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
                               {row.invoiceFileName ? (
@@ -291,11 +295,7 @@ const SearchInvoice = () => {
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
                             <td style={{ ...tdStyle, textAlign: "center" }}>
                               {row.otherFileName ? (
-                                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                                  <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={{ ...iconButton, color: "#1d4ed8" }} title="View">👁️</button>
-                                  <button onClick={() => { setReplacingInvoice(row.invoiceNumber); fileRef.current?.click(); }} style={{ ...iconButton, color: "#047857" }} title="Replace">🔄</button>
-                                  <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ ...iconButton, color: "#b91c1c" }} title="Delete">🗑️</button>
-                                </div>
+                                <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ ...primaryButton, background: "#b91c1c", padding: "4px 12px", height: "auto" }} title="Delete Other File">Delete</button>
                               ) : (
                                 <div style={{ fontSize: 11, color: "#9ca3af", fontStyle: "italic" }}>No Other File Present</div>
                               )}
