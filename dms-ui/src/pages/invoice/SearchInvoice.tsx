@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
@@ -46,6 +46,10 @@ const SearchInvoice = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
+  const [replacingInvoice, setReplacingInvoice] = useState<string | null>(null);
+  const fileRef = React.useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -96,6 +100,56 @@ const SearchInvoice = () => {
     setTotalElements(0);
     setCurrentPage(0);
     setHasSearched(false);
+  };
+
+  const handleDeleteOtherFile = async (invoiceNumber: string) => {
+    if (!window.confirm("Are you sure you want to delete this file?")) return;
+    try {
+      await dmsApi.delete(`/invoice/other-file/${invoiceNumber}`);
+      showToast("File deleted successfully", "success");
+      handleSearch(currentPage);
+    } catch {
+      showToast("Failed to delete file", "error");
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !replacingInvoice) return;
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append("newFile", file);
+
+    try {
+      await dmsApi.put(`/invoice/other-file/${replacingInvoice}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      showToast("File replaced successfully", "success");
+      handleSearch(currentPage);
+    } catch {
+      showToast("Failed to replace file", "error");
+    } finally {
+      setReplacingInvoice(null);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleExportExcel = () => {
+    if (results.length === 0) return;
+    import("xlsx").then((XLSX) => {
+      const data = results.map(r => ({
+        "Invoice No.": r.invoiceNumber,
+        "Other File": r.otherFileName || "-",
+        "Invoice File": r.invoiceFileName || "-",
+        "Created By": r.createdBy || "-",
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Invoices");
+      const fileName = invoiceNumber ? `${invoiceNumber.toUpperCase()}.xlsx` : "invoices.xlsx";
+      XLSX.writeFile(wb, fileName);
+    });
   };
 
   if (loading || !selections)
@@ -198,7 +252,14 @@ const SearchInvoice = () => {
                 <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
                   {results.length > 0 ? `${totalElements.toLocaleString()} records found` : "No records found"}
                 </span>
-                {results.length > 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Page {currentPage + 1} of {totalPages}</span>}
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {results.length > 0 && (
+                    <button onClick={handleExportExcel} style={{ ...primaryButton, background: "#10b981", height: 26, padding: "0 16px" }}>
+                      Export to Excel
+                    </button>
+                  )}
+                  {results.length > 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Page {currentPage + 1} of {totalPages}</span>}
+                </div>
               </div>
 
               {results.length > 0 ? (
@@ -206,32 +267,39 @@ const SearchInvoice = () => {
                   <div style={{ overflowX: "auto", maxHeight: "calc(100vh - 320px)" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
-                        <tr style={{ borderBottom: "1px solid #e5e7eb", background: "#f9fafb" }}>
-                          {["Invoice No.", "Other File", "Invoice File", "Created By", "Created On"].map(h => (
+                        <tr style={{ background: "#f9fafb" }}>
+                          {["Invoice No.", "Other File", "Invoice File", "Created By", "Created On", "Actions"].map(h => (
                             <th key={h} style={thStyle}>{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {results.map((row, i) => (
-                          <tr key={row.id} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                          <tr key={row.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
-                              {row.otherFileName ? (
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={fileButton}>
-                                  {row.otherFileName}
-                                </button>
-                              ) : "-"}
+                              {row.otherFileName || "-"}
                             </td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
                               {row.invoiceFileName ? (
-                                <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view"), "_blank")} style={fileButton}>
+                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.id, "view"))} style={fileButton}>
                                   {row.invoiceFileName}
                                 </button>
                               ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdBy || "-"}</td>
-                            <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleDateString("en-GB") : "-"}</td>
+                            <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
+                            <td style={{ ...tdStyle, textAlign: "center" }}>
+                              {row.otherFileName ? (
+                                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                                  <button onClick={() => window.open(getInvoiceFileUrl(row.id, "view", row.otherFileId), "_blank")} style={{ ...iconButton, color: "#1d4ed8" }} title="View">👁️</button>
+                                  <button onClick={() => { setReplacingInvoice(row.invoiceNumber); fileRef.current?.click(); }} style={{ ...iconButton, color: "#047857" }} title="Replace">🔄</button>
+                                  <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ ...iconButton, color: "#b91c1c" }} title="Delete">🗑️</button>
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: 11, color: "#9ca3af", fontStyle: "italic" }}>No Other File Present</div>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -259,6 +327,20 @@ const SearchInvoice = () => {
           {!hasSearched && <EmptyState title="Search invoice documents" text="Enter an invoice number and click Search to view uploaded PDFs." />}
         </div>
       </main>
+
+      {viewPdfUrl && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "80%", height: "80%", background: "#fff", borderRadius: 8, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
+            <div style={{ padding: "12px 16px", background: "#f3f4f6", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 600, color: "#374151" }}>View Invoice</span>
+              <button onClick={() => setViewPdfUrl(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#6b7280" }}>&times;</button>
+            </div>
+            <iframe src={viewPdfUrl} style={{ width: "100%", flex: 1, border: "none" }} />
+          </div>
+        </div>
+      )}
+      <input type="file" ref={fileRef} accept=".pdf" style={{ display: "none" }} onChange={handleFileChange} />
+
       <Footer />
     </div>
   );
@@ -277,9 +359,10 @@ const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWe
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 const linkButton: React.CSSProperties = { fontSize: 11, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" };
-const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap" };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
+const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
+const iconButton: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 2 };
 
 const pagerButton = (disabled: boolean): React.CSSProperties => ({ fontSize: 11, padding: "4px 10px", border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, color: "#374151" });
 

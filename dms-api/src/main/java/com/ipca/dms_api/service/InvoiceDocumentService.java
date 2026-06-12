@@ -190,6 +190,84 @@ public class InvoiceDocumentService {
         return parent;
     }
 
+    public void deleteOtherFile(String invoiceNumber) {
+        String cleanedInvoice = clean(invoiceNumber);
+        if (cleanedInvoice == null || cleanedInvoice.isBlank()) {
+            throw new IllegalArgumentException("Invoice number is required.");
+        }
+
+        List<String> filePaths = invoiceJdbcTemplate.queryForList(
+                "SELECT FILE_PATH FROM DMS_INVOICE_OTHER_FILES WHERE INVOICE_NUMBER = ?",
+                String.class,
+                cleanedInvoice);
+
+        if (filePaths.isEmpty()) {
+            throw new IllegalArgumentException("No other file attached to this invoice.");
+        }
+
+        for (String filePath : filePaths) {
+            try {
+                Files.deleteIfExists(Paths.get(filePath));
+            } catch (IOException e) {
+                System.err.println("Warning: Could not delete file from disk: " + filePath);
+            }
+        }
+
+        invoiceJdbcTemplate.update("DELETE FROM DMS_INVOICE_OTHER_FILES WHERE INVOICE_NUMBER = ?", cleanedInvoice);
+    }
+
+    public InvoiceDocumentResponse replaceOtherFile(String invoiceNumber, String userId, MultipartFile newFile) throws IOException {
+        String cleanedInvoice = clean(invoiceNumber);
+        if (cleanedInvoice == null || cleanedInvoice.isBlank()) {
+            throw new IllegalArgumentException("Invoice number is required.");
+        }
+        if (!exists(cleanedInvoice)) {
+            throw new IllegalArgumentException("Invoice number does not exist.");
+        }
+        
+        // Delete the existing file first
+        try {
+            deleteOtherFile(cleanedInvoice);
+        } catch (IllegalArgumentException e) {
+            // It's okay if there was no file to delete, just proceed with attaching
+        }
+
+        // We can just call the attachment logic directly here, but we need to bypass the "exists" and "count" checks.
+        // Easiest is to just replicate the physical file save and DB insert logic.
+        if (newFile == null || newFile.isEmpty()) {
+            throw new IllegalArgumentException("File is required.");
+        }
+        if (newFile.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size must be 1 MB or less.");
+        }
+        String originalName = Objects.requireNonNull(newFile.getOriginalFilename(), "File name is required.");
+        if (!originalName.toLowerCase().endsWith(".pdf")) {
+            throw new IllegalArgumentException("Only PDF files are allowed.");
+        }
+        
+        String safeFileName = originalName.replaceAll("[&,]", "-");
+        InvoiceDocumentResponse parent = findByInvoiceNumber(cleanedInvoice);
+        String uploadDir = uploadBaseDir + "/InvoiceDocument/" + valueOrDefault(parent.getCompanyId(), "NA") + "/"
+                + valueOrDefault(parent.getLocationId(), "NA") + "/" + cleanedInvoice + "/other/";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        Path fullPath = Paths.get(uploadDir, safeFileName);
+        Files.write(fullPath, newFile.getBytes());
+
+        LocalDateTime now = LocalDateTime.now();
+        invoiceJdbcTemplate.update("""
+                INSERT INTO DMS_INVOICE_OTHER_FILES
+                (INVOICE_NUMBER, FILE_NAME, FILE_PATH, CREATED_BY, CREATED_ON)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                cleanedInvoice, safeFileName, fullPath.toString(), userId, Timestamp.valueOf(now));
+
+        return parent;
+    }
+
     public Page<InvoiceDocumentResponse> search(String invoiceNumber, String locationId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         String invoiceFilter = emptyToNull(invoiceNumber);

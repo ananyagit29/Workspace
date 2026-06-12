@@ -75,6 +75,42 @@ public class InvoiceDocumentController {
         }
     }
 
+    @PutMapping("/other-file/{invoiceNumber}")
+    public ResponseEntity<?> replaceOtherFile(
+            Authentication authentication,
+            @PathVariable String invoiceNumber,
+            @RequestParam MultipartFile newFile) {
+        try {
+            if (authentication == null || authentication.getName() == null) {
+                throw new IllegalArgumentException("User is not authenticated properly.");
+            }
+            String userId = authentication.getName();
+            return ResponseEntity.ok(invoiceService.replaceOtherFile(invoiceNumber, userId, newFile));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/other-file/{invoiceNumber}")
+    public ResponseEntity<?> deleteOtherFile(
+            Authentication authentication,
+            @PathVariable String invoiceNumber) {
+        try {
+            if (authentication == null || authentication.getName() == null) {
+                throw new IllegalArgumentException("User is not authenticated properly.");
+            }
+            invoiceService.deleteOtherFile(invoiceNumber);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+
     @GetMapping("/search")
     public ResponseEntity<Page<InvoiceDocumentResponse>> search(
             @RequestParam(required = false) String invoiceNumber,
