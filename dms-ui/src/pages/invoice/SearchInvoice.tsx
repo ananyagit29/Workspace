@@ -46,6 +46,7 @@ const SearchInvoice = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
   const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
   const [replacingInvoice, setReplacingInvoice] = useState<string | null>(null);
@@ -71,6 +72,7 @@ const SearchInvoice = () => {
     if (!selections) return;
     setSearching(true);
     setHasSearched(true);
+    setSearchMessage(null);
     try {
       const searchNumber = specificInvoiceNumber || invoiceNumber;
       const res = await dmsApi.get("/invoice/search", {
@@ -79,9 +81,30 @@ const SearchInvoice = () => {
           page,
           size: PAGE_SIZE,
           ...(searchNumber && { invoiceNumber: searchNumber.trim().toUpperCase() }),
+          strict: true
         },
       });
-      setResults(res.data.content || []);
+
+      const fetched = res.data.content || [];
+
+      if (searchNumber && searchNumber.trim().length > 0) {
+        const exactMatch = fetched.find((r: InvoiceRecord) => r.invoiceNumber.toUpperCase() === searchNumber.trim().toUpperCase());
+        if (!exactMatch) {
+          const existsRes = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: searchNumber.trim().toUpperCase() } });
+          if (existsRes.data) {
+            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists, but it is missing files (Invoice File or Other File), hence not displayed here.`);
+          } else {
+            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist.`);
+          }
+          setResults([]);
+          setTotalPages(0);
+          setTotalElements(0);
+          setCurrentPage(0);
+          return;
+        }
+      }
+
+      setResults(fetched);
       setTotalPages(res.data.totalPages || 0);
       setTotalElements(res.data.totalElements || 0);
       setCurrentPage(page);
@@ -100,6 +123,7 @@ const SearchInvoice = () => {
     setTotalElements(0);
     setCurrentPage(0);
     setHasSearched(false);
+    setSearchMessage(null);
   };
 
   const handleDeleteOtherFile = async (invoiceNumber: string) => {
@@ -203,7 +227,7 @@ const SearchInvoice = () => {
                     setInvoiceNumber(val);
                     if (val.trim().length > 0) {
                       setShowSuggestions(true);
-                      dmsApi.get("/invoice/suggest", { params: { query: val } })
+                      dmsApi.get("/invoice/suggest", { params: { query: val, strict: true } })
                         .then(res => setSuggestions(res.data || []))
                         .catch(() => setSuggestions([]));
                     } else {
@@ -245,8 +269,14 @@ const SearchInvoice = () => {
               </button>
             </div>
           </div>
+          
+          {searchMessage && (
+            <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #f87171", borderRadius: 8, color: "#991b1b", fontSize: 13, fontWeight: 500, marginBottom: 16 }}>
+              {searchMessage}
+            </div>
+          )}
 
-          {hasSearched && (
+          {hasSearched && !searchMessage && (
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>

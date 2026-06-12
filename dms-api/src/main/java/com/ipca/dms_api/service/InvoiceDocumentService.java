@@ -82,11 +82,20 @@ public class InvoiceDocumentService {
         return count != null && count > 0;
     }
 
-    public List<String> suggestInvoiceNumbers(String query) {
+    public List<String> suggestInvoiceNumbers(String query, boolean strict) {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
         }
-        String sql = "SELECT INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) LIKE UPPER(?) ORDER BY INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
+        
+        String sql;
+        if (strict) {
+            sql = "SELECT d.INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS d " +
+                  "INNER JOIN DMS_INVOICE_OTHER_FILES o ON d.INVOICE_NUMBER = o.INVOICE_NUMBER " +
+                  "WHERE UPPER(d.INVOICE_NUMBER) LIKE UPPER(?) AND d.FILE_NAME IS NOT NULL " +
+                  "ORDER BY d.INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
+        } else {
+            sql = "SELECT INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) LIKE UPPER(?) ORDER BY INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
+        }
         return invoiceJdbcTemplate.queryForList(sql, String.class, "%" + query.trim() + "%");
     }
 
@@ -268,16 +277,21 @@ public class InvoiceDocumentService {
         return parent;
     }
 
-    public Page<InvoiceDocumentResponse> search(String invoiceNumber, String locationId, int page, int size) {
+    public Page<InvoiceDocumentResponse> search(String invoiceNumber, String locationId, int page, int size, boolean strict) {
         Pageable pageable = PageRequest.of(page, size);
         String invoiceFilter = emptyToNull(invoiceNumber);
         String locationFilter = emptyToNull(locationId);
 
         String where = " WHERE (? IS NULL OR UPPER(d.INVOICE_NUMBER) LIKE UPPER(?)) "
                 + "AND (? IS NULL OR d.LOCATION_ID = ?) ";
+        if (strict) {
+            where += "AND d.FILE_NAME IS NOT NULL ";
+        }
+
+        String join = strict ? " INNER JOIN DMS_INVOICE_OTHER_FILES o " : " LEFT JOIN DMS_INVOICE_OTHER_FILES o ";
 
         Long total = invoiceJdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS d LEFT JOIN DMS_INVOICE_OTHER_FILES o ON d.INVOICE_NUMBER = o.INVOICE_NUMBER" + where,
+                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS d" + join + "ON d.INVOICE_NUMBER = o.INVOICE_NUMBER" + where,
                 Long.class,
                 invoiceFilter, invoiceFilter == null ? null : "%" + invoiceFilter + "%",
                 locationFilter, locationFilter);
@@ -289,8 +303,7 @@ public class InvoiceDocumentService {
                        COALESCE(o.CREATED_ON, d.CREATED_ON) as CREATED_ON,
                        o.ID as o_id, o.FILE_NAME as o_fileName, o.FILE_PATH as o_filePath
                 FROM DMS_INVOICE_DOCUMENTS d 
-                LEFT JOIN DMS_INVOICE_OTHER_FILES o ON d.INVOICE_NUMBER = o.INVOICE_NUMBER
-                """ + where + " ORDER BY d.CREATED_ON DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
+                """ + join + "ON d.INVOICE_NUMBER = o.INVOICE_NUMBER" + where + " ORDER BY d.CREATED_ON DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
                 (rs, rowNum) -> InvoiceDocumentResponse.builder()
                         .id(rs.getLong("d_id"))
                         .invoiceNumber(rs.getString("INVOICE_NUMBER"))

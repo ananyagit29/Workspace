@@ -30,8 +30,8 @@ public class InvoiceDocumentController {
     }
 
     @GetMapping("/suggest")
-    public ResponseEntity<List<String>> suggest(@RequestParam String query) {
-        return ResponseEntity.ok(invoiceService.suggestInvoiceNumbers(query));
+    public ResponseEntity<List<String>> suggest(@RequestParam String query, @RequestParam(defaultValue = "false") boolean strict) {
+        return ResponseEntity.ok(invoiceService.suggestInvoiceNumbers(query, strict));
     }
 
     @PostMapping("/save")
@@ -116,8 +116,9 @@ public class InvoiceDocumentController {
             @RequestParam(required = false) String invoiceNumber,
             @RequestParam(required = false) String locationId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size) {
-        return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, page, size));
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(defaultValue = "false") boolean strict) {
+        return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, page, size, strict));
     }
 
     @GetMapping("/{id}/view")
