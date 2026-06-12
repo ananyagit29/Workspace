@@ -13,7 +13,7 @@ public class InvoiceH2Config {
     public DataSource invoiceDataSource() {
         return DataSourceBuilder.create()
                 .driverClassName("org.h2.Driver")
-                .url("jdbc:h2:mem:invoice_documents;DB_CLOSE_DELAY=-1;MODE=Oracle")
+                .url("jdbc:h2:file:./data/invoice_documents;DB_CLOSE_DELAY=-1;MODE=Oracle")
                 .username("sa")
                 .password("")
                 .build();

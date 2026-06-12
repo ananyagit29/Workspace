@@ -71,20 +71,7 @@ public class InvoiceDocumentService {
                 )
                 """);
 
-        Integer count = invoiceJdbcTemplate.queryForObject("SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS", Integer.class);
-        if (count != null && count == 0) {
-            LocalDateTime now = LocalDateTime.now();
-            String[] dummies = {"1001058", "1001059", "INV-2023-01", "INV-2023-02", "TEST-999"};
-            for (String inv : dummies) {
-                invoiceJdbcTemplate.update("""
-                        INSERT INTO DMS_INVOICE_DOCUMENTS
-                        (INVOICE_NUMBER, FILE_NAME, FILE_PATH, COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, CREATED_BY, CREATED_ON)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        inv, inv + ".pdf", "/dummy/path/" + inv + ".pdf", "COMP1", "LOC1",
-                        "DIV1", "APP1", "system", Timestamp.valueOf(now));
-            }
-        }
+
     }
 
     public boolean exists(String invoiceNumber) {
