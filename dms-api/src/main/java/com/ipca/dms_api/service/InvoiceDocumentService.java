@@ -148,6 +148,14 @@ public class InvoiceDocumentService {
         if (!exists(cleanedInvoice)) {
             throw new IllegalArgumentException("Invoice number does not exist.");
         }
+        
+        Integer otherCount = invoiceJdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM DMS_INVOICE_OTHER_FILES WHERE INVOICE_NUMBER = ?",
+                Integer.class,
+                cleanedInvoice);
+        if (otherCount != null && otherCount > 0) {
+            throw new IllegalArgumentException("Only one attached file is allowed per invoice. This invoice already has an attachment.");
+        }
         if (otherFile == null || otherFile.isEmpty()) {
             throw new IllegalArgumentException("File is required.");
         }
