@@ -82,6 +82,14 @@ public class InvoiceDocumentService {
         return count != null && count > 0;
     }
 
+    public List<String> suggestInvoiceNumbers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return List.of();
+        }
+        String sql = "SELECT INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) LIKE UPPER(?) ORDER BY INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
+        return invoiceJdbcTemplate.queryForList(sql, String.class, "%" + query.trim() + "%");
+    }
+
     public InvoiceDocumentResponse saveInvoice(
             String invoiceNumber,
             String companyId,

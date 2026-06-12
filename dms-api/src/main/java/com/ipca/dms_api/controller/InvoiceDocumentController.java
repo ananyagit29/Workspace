@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @RestController
 @RequestMapping("/dmsApi/invoice")
@@ -26,6 +27,11 @@ public class InvoiceDocumentController {
     @GetMapping("/exists")
     public ResponseEntity<Boolean> exists(@RequestParam String invoiceNumber) {
         return ResponseEntity.ok(invoiceService.exists(invoiceNumber));
+    }
+
+    @GetMapping("/suggest")
+    public ResponseEntity<List<String>> suggest(@RequestParam String query) {
+        return ResponseEntity.ok(invoiceService.suggestInvoiceNumbers(query));
     }
 
     @PostMapping("/save")

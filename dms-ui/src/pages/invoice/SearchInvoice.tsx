@@ -43,6 +43,8 @@ const SearchInvoice = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
@@ -61,17 +63,18 @@ const SearchInvoice = () => {
 
   const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
-  const handleSearch = async (page = 0) => {
+  const handleSearch = async (page = 0, specificInvoiceNumber?: string) => {
     if (!selections) return;
     setSearching(true);
     setHasSearched(true);
     try {
+      const searchNumber = specificInvoiceNumber || invoiceNumber;
       const res = await dmsApi.get("/invoice/search", {
         params: {
           locationId: selections.loc,
           page,
           size: PAGE_SIZE,
-          ...(invoiceNumber && { invoiceNumber: invoiceNumber.trim().toUpperCase() }),
+          ...(searchNumber && { invoiceNumber: searchNumber.trim().toUpperCase() }),
         },
       });
       setResults(res.data.content || []);
@@ -137,15 +140,50 @@ const SearchInvoice = () => {
               <button onClick={handleReset} style={linkButton}>Clear</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "300px 300px", gap: 16, alignItems: "end", padding: "10px 0 4px 0" }}>
-              <div>
+              <div style={{ position: "relative" }}>
                 <label style={labelStyle}>Invoice Number</label>
                 <input
                   value={invoiceNumber}
-                  onChange={e => setInvoiceNumber(e.target.value.toUpperCase())}
-                  onKeyDown={e => { if (e.key === "Enter") handleSearch(0); }}
+                  onChange={e => {
+                    const val = e.target.value.toUpperCase();
+                    setInvoiceNumber(val);
+                    if (val.trim().length > 0) {
+                      setShowSuggestions(true);
+                      dmsApi.get("/invoice/suggest", { params: { query: val } })
+                        .then(res => setSuggestions(res.data || []))
+                        .catch(() => setSuggestions([]));
+                    } else {
+                      setShowSuggestions(false);
+                      setSuggestions([]);
+                    }
+                  }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  onKeyDown={e => { if (e.key === "Enter") { setShowSuggestions(false); handleSearch(0); } }}
                   placeholder="Enter invoice number"
-                  style={inputStyle}
+                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }}
                 />
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 10, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                    {suggestions.map(sug => (
+                      <li 
+                        key={sug} 
+                        onClick={() => {
+                          setInvoiceNumber(sug);
+                          setShowSuggestions(false);
+                          // Trigger search immediately upon selection
+                          setTimeout(() => {
+                            handleSearch(0, sug);
+                          }, 0);
+                        }}
+                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        {sug}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, width: "100%" }}>

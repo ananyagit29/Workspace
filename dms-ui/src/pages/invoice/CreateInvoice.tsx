@@ -24,7 +24,8 @@ const CreateInvoice = () => {
   const [checkingInvoice, setCheckingInvoice] = useState(false);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uploadType, setUploadType] = useState<"main" | "other">("main");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
@@ -43,16 +44,15 @@ const CreateInvoice = () => {
 
   const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
-  const handleInvoiceBlur = async () => {
-    if (!invoiceNumber.trim()) return;
+  const validateInvoice = async (val: string) => {
+    if (!val.trim()) return;
     setCheckingInvoice(true);
     setInvoiceExists(null);
     try {
-      const res = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: invoiceNumber.trim().toUpperCase() } });
+      const res = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: val.trim().toUpperCase() } });
       const exists = !!res.data;
       setInvoiceExists(exists);
-      if (uploadType === "main" && exists) showToast("Invoice number already exists", "error");
-      if (uploadType === "other" && !exists) showToast("Invoice number not found. Create it first.", "error");
+      if (!exists) showToast("Invoice number not found.", "error");
     } catch {
       showToast("Failed to validate invoice number", "error");
     } finally {
@@ -79,6 +79,7 @@ const CreateInvoice = () => {
     setInvoiceNumber("");
     setInvoiceExists(null);
     setInvoiceFile(null);
+    setShowSuggestions(false);
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -86,28 +87,16 @@ const CreateInvoice = () => {
     e.preventDefault();
     if (!selections) return;
     if (!invoiceNumber.trim()) { showToast("Please enter Invoice Number", "error"); return; }
-    if (uploadType === "main" && invoiceExists) { showToast("Invoice number already exists", "error"); return; }
-    if (uploadType === "other" && invoiceExists === false) { showToast("Invoice number not found", "error"); return; }
+    if (invoiceExists !== true) { showToast("Invoice number not validated", "error"); return; }
     if (!invoiceFile) { showToast("Please upload a PDF", "error"); return; }
 
     setSaving(true);
     try {
       const fd = new FormData();
-      if (uploadType === "main") {
-        fd.append("invoiceNumber", invoiceNumber.trim().toUpperCase());
-        fd.append("companyId", selections.com);
-        fd.append("locationId", selections.loc);
-        fd.append("divisionName", selections.div);
-        fd.append("applicationName", selections.app);
-        fd.append("invoiceFile", invoiceFile);
-        await dmsApi.post("/invoice/save", fd, { headers: { "Content-Type": "multipart/form-data" } });
-        showToast("Invoice saved successfully");
-      } else {
-        fd.append("invoiceNumber", invoiceNumber.trim().toUpperCase());
-        fd.append("otherFile", invoiceFile);
-        await dmsApi.post("/invoice/attach", fd, { headers: { "Content-Type": "multipart/form-data" } });
-        showToast("Other file attached successfully");
-      }
+      fd.append("invoiceNumber", invoiceNumber.trim().toUpperCase());
+      fd.append("otherFile", invoiceFile);
+      await dmsApi.post("/invoice/attach", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      showToast("Other file attached successfully");
       handleCancel();
     } catch (err: unknown) {
       const error = err as { response?: { data?: string } };
@@ -152,74 +141,104 @@ const CreateInvoice = () => {
 
       <main style={{ flex: 1, padding: "8px 16px", overflowY: "auto" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            <button
-              onClick={() => { setUploadType("main"); handleCancel(); }}
-              style={{ ...tabButton, background: uploadType === "main" ? "#003366" : "#fff", color: uploadType === "main" ? "#fff" : "#374151", borderColor: uploadType === "main" ? "#003366" : "#d1d5db" }}
-            >
-              Upload Main Invoice
-            </button>
-            <button
-              onClick={() => { setUploadType("other"); handleCancel(); }}
-              style={{ ...tabButton, background: uploadType === "other" ? "#003366" : "#fff", color: uploadType === "other" ? "#fff" : "#374151", borderColor: uploadType === "other" ? "#003366" : "#d1d5db" }}
-            >
-              Attach Other File
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit}>
             <div style={cardStyle}>
-              <div style={sectionTitle}>{uploadType === "main" ? "Invoice Information" : "Attach To Invoice"}</div>
-              <div style={fieldStyle}>
+              <div style={sectionTitle}>Attach To Invoice</div>
+              <div style={{ ...fieldStyle, position: "relative" }}>
                 <label style={labelStyle}>Invoice Number <span style={{ color: "#ef4444" }}>*</span></label>
                 <input
                   value={invoiceNumber}
-                  onChange={e => { setInvoiceNumber(e.target.value.toUpperCase()); setInvoiceExists(null); }}
-                  onBlur={handleInvoiceBlur}
+                  onChange={e => { 
+                    const val = e.target.value.toUpperCase();
+                    setInvoiceNumber(val); 
+                    setInvoiceExists(null); 
+                    if (val.trim().length > 0) {
+                      setShowSuggestions(true);
+                      dmsApi.get("/invoice/suggest", { params: { query: val } })
+                        .then(res => setSuggestions(res.data || []))
+                        .catch(() => setSuggestions([]));
+                    } else {
+                      setShowSuggestions(false);
+                      setSuggestions([]);
+                    }
+                  }}
+                  onBlur={() => {
+                    // Slight delay to allow clicking a suggestion
+                    setTimeout(() => setShowSuggestions(false), 200);
+                    if (invoiceNumber.trim() && invoiceExists === null) {
+                      validateInvoice(invoiceNumber);
+                    }
+                  }}
                   placeholder="Enter invoice number"
                   style={{
                     ...inputStyle,
-                    borderColor: invoiceExists !== null ? (
-                      uploadType === "main" ? (invoiceExists ? "#ef4444" : "#10b981") : (!invoiceExists ? "#ef4444" : "#10b981")
-                    ) : "#e5e7eb"
+                    borderColor: invoiceExists !== null ? (!invoiceExists ? "#ef4444" : "#10b981") : "#e5e7eb"
                   }}
                 />
-                <span style={{ fontSize: 10, color: invoiceExists !== null ? (uploadType === "main" ? (invoiceExists ? "#ef4444" : "#10b981") : (!invoiceExists ? "#ef4444" : "#10b981")) : "#9ca3af", marginTop: 2 }}>
+                
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 10, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                    {suggestions.map(sug => (
+                      <li 
+                        key={sug} 
+                        onClick={() => {
+                          setInvoiceNumber(sug);
+                          setShowSuggestions(false);
+                          validateInvoice(sug);
+                        }}
+                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        {sug}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <span style={{ fontSize: 10, color: invoiceExists !== null ? (!invoiceExists ? "#ef4444" : "#10b981") : "#9ca3af", marginTop: 2 }}>
                   {checkingInvoice ? "Validating invoice number..." : invoiceExists !== null ? (
-                    uploadType === "main" ? (invoiceExists ? "This invoice number already exists." : "Invoice number is available.")
-                      : (!invoiceExists ? "Invoice number not found. Create main invoice first." : "Invoice found, you can attach files.")
+                    !invoiceExists ? "Invoice number not found." : "Invoice found, you can attach files."
                   ) : "Used for validation before saving."}
                 </span>
               </div>
             </div>
 
             <div style={{ ...cardStyle, marginTop: 10 }}>
-              <div style={sectionTitle}>{uploadType === "main" ? "Upload Document" : "Upload Additional File"}</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 10 }}>Upload {uploadType === "main" ? "invoice" : "other file"} in PDF format only. Maximum file size: 1 MB.</div>
+              <div style={sectionTitle}>Upload Additional File</div>
+              <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 10 }}>Upload other file in PDF format only. Maximum file size: 1 MB.</div>
               <div
-                onClick={() => fileRef.current?.click()}
-                style={{ display: "flex", alignItems: "center", gap: 8, border: "1px dashed #d1d5db", borderRadius: 6, padding: "8px 10px", background: invoiceFile ? "#f0fdf4" : "#fafafa", borderColor: invoiceFile ? "#86efac" : "#d1d5db", cursor: "pointer" }}
+                onClick={() => {
+                  if (invoiceExists === true) fileRef.current?.click();
+                }}
+                style={{ 
+                  display: "flex", alignItems: "center", gap: 8, border: "1px dashed #d1d5db", borderRadius: 6, padding: "8px 10px", 
+                  background: invoiceExists === true ? (invoiceFile ? "#f0fdf4" : "#fafafa") : "#f3f4f6", 
+                  borderColor: invoiceFile ? "#86efac" : "#d1d5db", 
+                  cursor: invoiceExists === true ? "pointer" : "not-allowed",
+                  opacity: invoiceExists === true ? 1 : 0.6
+                }}
               >
-                <span style={{ fontSize: 12, fontWeight: 700, color: invoiceFile ? "#166534" : "#2563eb" }}>PDF</span>
-                <span style={{ fontSize: 12, color: invoiceFile ? "#166534" : "#2563eb", fontWeight: 500, flex: 1 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: invoiceExists === true ? (invoiceFile ? "#166534" : "#2563eb") : "#9ca3af" }}>PDF</span>
+                <span style={{ fontSize: 12, color: invoiceExists === true ? (invoiceFile ? "#166534" : "#2563eb") : "#9ca3af", fontWeight: 500, flex: 1 }}>
                   {invoiceFile ? invoiceFile.name : "Choose file"}
                 </span>
                 <span style={{ fontSize: 10, color: "#9ca3af" }}>
                   {invoiceFile ? `${(invoiceFile.size / 1024).toFixed(0)} KB` : "No file chosen"}
                 </span>
-                <input ref={fileRef} type="file" accept=".pdf,application/pdf" style={{ display: "none" }} onChange={e => handleFileChange(e.target.files?.[0] || null)} />
+                <input disabled={invoiceExists !== true} ref={fileRef} type="file" accept=".pdf,application/pdf" style={{ display: "none" }} onChange={e => handleFileChange(e.target.files?.[0] || null)} />
               </div>
             </div>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
               <button type="button" onClick={handleCancel} style={secondaryButton}>Cancel</button>
-              <button type="submit" disabled={saving || invoiceExists === (uploadType === "main") || invoiceExists === null || !invoiceFile} style={{
+              <button type="submit" disabled={saving || invoiceExists !== true || !invoiceFile} style={{
                 ...primaryButton,
-                background: saving || invoiceExists === (uploadType === "main") || invoiceExists === null || !invoiceFile ? "#e5e7eb" : "#003366",
-                color: saving || invoiceExists === (uploadType === "main") || invoiceExists === null || !invoiceFile ? "#9ca3af" : "#fff",
-                cursor: saving || invoiceExists === (uploadType === "main") || invoiceExists === null || !invoiceFile ? "not-allowed" : "pointer",
+                background: saving || invoiceExists !== true || !invoiceFile ? "#e5e7eb" : "#003366",
+                color: saving || invoiceExists !== true || !invoiceFile ? "#9ca3af" : "#fff",
+                cursor: saving || invoiceExists !== true || !invoiceFile ? "not-allowed" : "pointer",
               }}>
-                {saving ? "Saving..." : (uploadType === "main" ? "Save Invoice" : "Attach File")}
+                {saving ? "Saving..." : "Attach File"}
               </button>
             </div>
           </form>
