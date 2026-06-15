@@ -1,9 +1,7 @@
 import React from "react";
 import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
-import { Header } from "../../components/Header";
-import { Footer } from "../../components/Footer";
 import { dmsApi } from "../../api/dmsApi";
 
 interface Selections {
@@ -24,13 +22,11 @@ interface InvoiceRecord {
 
 const PAGE_SIZE = 8;
 
-
-
 const SearchInvoice = () => {
   const { user, loading } = useContext(AuthContext);
+  const { selections } = useOutletContext<{ selections: Selections }>();
   const navigate = useNavigate();
 
-  const [selections, setSelections] = useState<Selections | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [results, setResults] = useState<InvoiceRecord[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -50,9 +46,6 @@ const SearchInvoice = () => {
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/"); return; }
-    const raw = sessionStorage.getItem("dms2Selections");
-    if (!raw) { navigate("/dashboard"); return; }
-    setSelections(JSON.parse(raw));
   }, [loading, user, navigate]);
 
   useEffect(() => {
@@ -180,32 +173,14 @@ const SearchInvoice = () => {
   if (!user) return null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", position: "fixed", inset: 0, background: "#f3f4f6", overflow: "hidden" }}>
-      <Header
-        username={`${user.firstName} ${user.lastName}`}
-        userId={user.userId}
-        locationName={user.locationName}
-        departmentName={user.departmentName}
-        applicationName={user.applicationName}
-        pageTitle="Invoice Documents"
-        breadcrumb={`Dashboard > Invoice Documents${selections.subApp ? ` > ${selections.subApp}` : ""}`}
-        contextMeta={[
-          { label: "Company", value: selections.com },
-          { label: "Division", value: selections.div },
-          { label: "Location", value: selections.loc },
-          ...(selections.year ? [{ label: "Year", value: selections.year }] : []),
-        ]}
-        onCreateClick={() => navigate("/invoice/create")}
-        createLabel="Create Invoice"
-      />
-
+    <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
       {toast && (
         <div style={{ position: "fixed", top: 16, right: 16, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
           {toast.msg}
         </div>
       )}
 
-      <main style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
+      <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1050, margin: "0 auto" }}>
           <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16, width: "fit-content", margin: "0 auto 16px auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -243,7 +218,6 @@ const SearchInvoice = () => {
                         onClick={() => {
                           setInvoiceNumber(sug);
                           setShowSuggestions(false);
-                          // Trigger search immediately upon selection
                           setTimeout(() => {
                             handleSearch(0, sug);
                           }, 0);
@@ -353,10 +327,7 @@ const SearchInvoice = () => {
         </div>
       </main>
 
-
       <input type="file" ref={fileRef} accept=".pdf" style={{ display: "none" }} onChange={handleFileChange} />
-
-      <Footer />
     </div>
   );
 };

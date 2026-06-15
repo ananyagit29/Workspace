@@ -1,12 +1,12 @@
-import { authApi } from "./authApi";
-
 import axios from "axios";
+import { authApi } from "./authApi";
 
 export const dmsApi = axios.create({
   baseURL: import.meta.env.VITE_DMS_API,
   withCredentials: false,
 });
 
+// Attach JWT token from localStorage to every DMS request
 dmsApi.interceptors.request.use((config) => {
   const token = localStorage.getItem("jwtToken");
   if (token) {
@@ -17,7 +17,8 @@ dmsApi.interceptors.request.use((config) => {
   }
   return config;
 });
-/* ── Dashboard workspace dropdown APIs ── */
+
+/* ── Dashboard workspace dropdown APIs (still use authApi) ── */
 
 export interface UserRights {
   userId: string;
@@ -45,7 +46,6 @@ export const getLocations = (companyId: string, divisionName: string) =>
     params: { companyId, divisionName },
   });
 
-// Applications come from the logged-in user's actual rights filtered by workspace
 export const getApplications = async (
   companyId: string,
   divisionName: string,
@@ -70,15 +70,29 @@ export const getApplications = async (
 export const getYears = (_applicationName: string) =>
   Promise.resolve({ data: [] });
 
-export const getSubApplications = (
-  _companyId: string,
-  _divisionId: string,
-  _locationId: string,
-  applicationName: string
-) =>
-  authApi.get("/dashboard/getSubApplications", {
-    params: { applicationName },
+export const getSubApplications = async (
+  companyId: string,
+  divisionId: string,
+  locationId: string,
+  applicationName: string,
+  userId?: string
+) => {
+  const uid = userId || localStorage.getItem("userId") || "";
+  const res = await authApi.get("/rights/byUser", {
+    params: { userId: uid },
   });
+  const rights: UserRights[] = res.data || [];
+  const filtered = rights.filter(
+    (r) =>
+      r.companyId === companyId &&
+      r.divisionName === divisionId &&
+      r.locationId === locationId &&
+      r.applicationName === applicationName &&
+      r.subApplicationName  // must have a subApp
+  );
+  const unique = [...new Set(filtered.map((r) => r.subApplicationName).filter(Boolean))];
+  return { data: unique };
+};
 
 export const getModules = (
   _companyId: string,

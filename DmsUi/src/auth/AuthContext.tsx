@@ -7,7 +7,6 @@ export interface User {
   lastName: string;
   locationName?: string;
   departmentName?: string;
-  applicationName?: string;
   emailId?: string;
   isAdmin?: boolean;
 }

@@ -1,9 +1,6 @@
 import type React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../auth/AuthContext";
-import { Header } from "../../components/Header";
-import { Footer } from "../../components/Footer";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { dmsApi } from "../../api/dmsApi";
 
 interface Selections {
@@ -14,11 +11,9 @@ interface Selections {
 const MAX_FILE_SIZE = 1024 * 1024;
 
 const CreateInvoice = () => {
-  const { user, loading } = useContext(AuthContext);
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const [selections, setSelections] = useState<Selections | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceExists, setInvoiceExists] = useState<boolean | null>(null);
   const [checkingInvoice, setCheckingInvoice] = useState(false);
@@ -26,15 +21,9 @@ const CreateInvoice = () => {
   const [saving, setSaving] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-  useEffect(() => {
-    if (loading) return;
-    if (!user) { navigate("/"); return; }
-    const raw = sessionStorage.getItem("dms2Selections");
-    if (!raw) { navigate("/dashboard"); return; }
-    setSelections(JSON.parse(raw));
-  }, [loading, user, navigate]);
+  const { selections } = useOutletContext<{ selections: Selections }>();
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -106,32 +95,9 @@ const CreateInvoice = () => {
     }
   };
 
-  if (loading || !selections)
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
-        <div style={{ width: 28, height: 28, border: "3px solid #e5e7eb", borderTopColor: "#003366", borderRadius: "50%" }} />
-      </div>
-    );
-  if (!user) return null;
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", position: "fixed", inset: 0, background: "#f3f4f6", overflow: "hidden" }}>
-      <Header
-        username={`${user.firstName} ${user.lastName}`}
-        userId={user.userId}
-        locationName={user.locationName}
-        departmentName={user.departmentName}
-        applicationName={user.applicationName}
-        pageTitle="Create Invoice"
-        breadcrumb="Dashboard > Invoice Documents > Create"
-        contextMeta={[
-          { label: "Company", value: selections.com },
-          { label: "Division", value: selections.div },
-          { label: "Location", value: selections.loc },
-        ]}
-        onCreateClick={() => navigate("/invoice")}
-        createLabel="Search Invoice"
-      />
+    <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
+
 
       {toast && (
         <div style={{ position: "fixed", top: 16, right: 16, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
@@ -139,7 +105,7 @@ const CreateInvoice = () => {
         </div>
       )}
 
-      <main style={{ flex: 1, padding: "8px 16px", overflowY: "auto" }}>
+      <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
           <form onSubmit={handleSubmit}>
             <div style={cardStyle}>
@@ -244,7 +210,6 @@ const CreateInvoice = () => {
           </form>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

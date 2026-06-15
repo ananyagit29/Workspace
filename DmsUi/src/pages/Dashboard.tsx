@@ -86,7 +86,7 @@ const Dashboard: React.FC = () => {
     getApplications(com, div, loc, user?.userId).then(res => {
       const data = res.data || [];
       setApplications(data);
-      if (data.length === 1) setApp(String((Array.isArray(data[0]) ? data[0][0] : data[0]) || ""));
+      if (data.length === 1) setApp(data[0][0] || "");
     }).catch(console.error);
   }, [com, div, loc]);
 
@@ -102,11 +102,11 @@ const Dashboard: React.FC = () => {
       if (data.length === 1) setYear(data[0]);
     }).catch(console.error);
 
-    getSubApplications(com, div, loc, app).then(res => {
+    getSubApplications(com, div, loc, app, user?.userId).then(res => {
       const data = res.data || [];
-      setSubApps(data);
+      setSubApps(data as string[]);
       setModules([]); setModule("");
-      if (data.length === 1) setSubApp(data[0]);
+      if (data.length === 1) setSubApp(data[0] || "");
       else setSubApp("");
     }).catch(console.error);
   }, [com, div, loc, app]);
