@@ -121,25 +121,19 @@ public class InvoiceDocumentController {
         return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, page, size, strict));
     }
 
-    @GetMapping("/{id}/view")
-    public ResponseEntity<Resource> view(@PathVariable Long id, @RequestParam(required = false) Long otherId) {
-        return fileResponse(id, otherId, "inline");
+    @GetMapping("/{invoiceNumber}/view")
+    public ResponseEntity<Resource> view(@PathVariable String invoiceNumber, @RequestParam(required = false) String type) {
+        return fileResponse(invoiceNumber, type, "inline");
     }
 
-    @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Long id, @RequestParam(required = false) Long otherId) {
-        return fileResponse(id, otherId, "attachment");
+    @GetMapping("/{invoiceNumber}/download")
+    public ResponseEntity<Resource> download(@PathVariable String invoiceNumber, @RequestParam(required = false) String type) {
+        return fileResponse(invoiceNumber, type, "attachment");
     }
 
-    private ResponseEntity<Resource> fileResponse(Long id, Long otherId, String disposition) {
+    private ResponseEntity<Resource> fileResponse(String invoiceNumber, String type, String disposition) {
         try {
-            String filePathString;
-            if (otherId != null) {
-                filePathString = invoiceService.getOtherFilePath(otherId);
-            } else {
-                InvoiceDocumentResponse invoice = invoiceService.findById(id);
-                filePathString = invoice.getFilePath();
-            }
+            String filePathString = invoiceService.getFilePath(invoiceNumber, type);
             Path path = Paths.get(filePathString);
             Resource resource = new UrlResource(java.util.Objects.requireNonNull(path.toUri()));
 

@@ -12,12 +12,10 @@ interface Selections {
 }
 
 interface InvoiceRecord {
-  id: number;
   invoiceNumber: string;
   fileName: string;
   otherFileName?: string;
   invoiceFileName?: string;
-  otherFileId?: number;
   filePath: string;
   createdBy: string;
   createdOn: string;
@@ -25,10 +23,10 @@ interface InvoiceRecord {
 
 const PAGE_SIZE = 8;
 
-const getInvoiceFileUrl = (id: number, action: "view" | "download", otherId?: number) => {
+const getInvoiceFileUrl = (invoiceNumber: string, action: "view" | "download", type?: "invoice" | "other") => {
   const token = localStorage.getItem("jwtToken");
-  const otherQuery = otherId ? `&otherId=${otherId}` : "";
-  return `${import.meta.env.VITE_DMS_API}/invoice/${id}/${action}?token=${token}${otherQuery}`;
+  const typeQuery = type ? `&type=${type}` : "";
+  return `${import.meta.env.VITE_DMS_API}/invoice/${invoiceNumber}/${action}?token=${token}${typeQuery}`;
 };
 
 const SearchInvoice = () => {
@@ -305,18 +303,18 @@ const SearchInvoice = () => {
                       </thead>
                       <tbody>
                         {results.map((row, i) => (
-                          <tr key={row.id} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                          <tr key={row.invoiceNumber} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
                               {row.otherFileName ? (
-                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.id, "view", row.otherFileId))} style={fileButton}>
+                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.invoiceNumber, "view", "other"))} style={fileButton}>
                                   {row.otherFileName}
                                 </button>
                               ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
                               {row.invoiceFileName ? (
-                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.id, "view"))} style={fileButton}>
+                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.invoiceNumber, "view", "invoice"))} style={fileButton}>
                                   {row.invoiceFileName}
                                 </button>
                               ) : "-"}

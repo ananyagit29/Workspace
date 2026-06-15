@@ -28,16 +28,12 @@ public class CustomLdapAuthenticationProvider implements AuthenticationProvider 
 
         User user = userRepository.findByUserId(userid)
                 .orElseThrow(() -> new BadCredentialsException("USER_NOT_REGISTERED"));
-        // --- Special case: Admin user (DB password only, no lockout) ---
-        if ("admin".equalsIgnoreCase(userid)) { // replace with your actual admin ID
-            if (password.equals(user.getPassword())) { // recommend BCrypt check in production
-                return new UsernamePasswordAuthenticationToken(
-                        userid,
-                        null,
-                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
-            } else {
-                throw new BadCredentialsException("INVALID_ADMIN_CREDENTIALS");
-            }
+        // We now check DB password for all users per Oracle migration instructions.
+        boolean isPasswordValid = false;
+        
+        // 1. DB Password check
+        if (password != null && password.equals(user.getPassword())) {
+            isPasswordValid = true;
         }
 
         // Check account status
@@ -49,18 +45,27 @@ public class CustomLdapAuthenticationProvider implements AuthenticationProvider 
             throw new BadCredentialsException("ACCOUNT_LOCKED");
         }
 
-        // --- LDAP authentication check
-        if (LdapUtils.ldapCheck(userid, password) != null) {
+        // 2. Fallback to LDAP if DB password didn't match (for legacy support if needed)
+        if (!isPasswordValid) {
+            if (LdapUtils.ldapCheck(userid, password) != null) {
+                isPasswordValid = true;
+            }
+        }
+
+        if (isPasswordValid) {
             // Successful login
             user.setBadLoginCount(0);
             user.setLoginStatus("Unlocked");
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
+            // Grant ROLE_ADMIN for admin, else ROLE_USER
+            String role = "admin".equalsIgnoreCase(userid) ? "ROLE_ADMIN" : "ROLE_USER";
+
             return new UsernamePasswordAuthenticationToken(
                     userid,
                     null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+                    Collections.singletonList(new SimpleGrantedAuthority(role)));
         } else {
             // Failed login
             int badLoginCount = (user.getBadLoginCount() == null ? 0 : user.getBadLoginCount()) + 1;
