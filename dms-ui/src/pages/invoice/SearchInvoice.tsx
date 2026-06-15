@@ -15,6 +15,7 @@ interface InvoiceRecord {
   invoiceNumber: string;
   fileName: string;
   otherFileName?: string;
+  otherFilePath?: string;
   invoiceFileName?: string;
   filePath: string;
   createdBy: string;
@@ -23,11 +24,7 @@ interface InvoiceRecord {
 
 const PAGE_SIZE = 8;
 
-const getInvoiceFileUrl = (invoiceNumber: string, action: "view" | "download", type?: "invoice" | "other") => {
-  const token = localStorage.getItem("jwtToken");
-  const typeQuery = type ? `&type=${type}` : "";
-  return `${import.meta.env.VITE_DMS_API}/invoice/${invoiceNumber}/${action}?token=${token}${typeQuery}`;
-};
+
 
 const SearchInvoice = () => {
   const { user, loading } = useContext(AuthContext);
@@ -46,7 +43,7 @@ const SearchInvoice = () => {
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
-  const [viewPdfUrl, setViewPdfUrl] = useState<string | null>(null);
+
   const [replacingInvoice, setReplacingInvoice] = useState<string | null>(null);
   const fileRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -216,7 +213,7 @@ const SearchInvoice = () => {
               <button onClick={handleReset} style={linkButton}>Clear</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "300px 300px", gap: 16, alignItems: "end", padding: "10px 0 4px 0" }}>
-              <div style={{ position: "relative" }}>
+              <div style={{ position: "relative", zIndex: 50 }}>
                 <label style={labelStyle}>Invoice Number</label>
                 <input
                   value={invoiceNumber}
@@ -296,7 +293,7 @@ const SearchInvoice = () => {
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
                         <tr style={{ background: "#f9fafb" }}>
-                          {["Invoice No.", "Other File", "Invoice File", "Created By", "Created On", "Actions"].map(h => (
+                          {["Invoice No.", "Invoice File", "Other File", "Created By", "Created On", "Actions"].map(h => (
                             <th key={h} style={thStyle}>{h}</th>
                           ))}
                         </tr>
@@ -305,17 +302,17 @@ const SearchInvoice = () => {
                         {results.map((row, i) => (
                           <tr key={row.invoiceNumber} style={{ background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
-                            <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
-                              {row.otherFileName ? (
-                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.invoiceNumber, "view", "other"))} style={fileButton}>
-                                  {row.otherFileName}
+                            <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
+                              {row.invoiceFileName ? (
+                                <button onClick={() => window.open(`https://dmsdev.ipca.com/DMS/ViewDocumentServlet?filename=${row.filePath?.replace(/\\/g, '/')}`, "_blank")} style={fileButton}>
+                                  {row.invoiceFileName}
                                 </button>
                               ) : "-"}
                             </td>
-                            <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
-                              {row.invoiceFileName ? (
-                                <button onClick={() => setViewPdfUrl(getInvoiceFileUrl(row.invoiceNumber, "view", "invoice"))} style={fileButton}>
-                                  {row.invoiceFileName}
+                            <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
+                              {row.otherFileName ? (
+                                <button onClick={() => window.open(`https://dmsdev.ipca.com/DMS/ViewDocumentServlet?filename=${row.otherFilePath?.replace(/\\/g, '/')}`, "_blank")} style={fileButton}>
+                                  {row.otherFileName}
                                 </button>
                               ) : "-"}
                             </td>
@@ -356,17 +353,7 @@ const SearchInvoice = () => {
         </div>
       </main>
 
-      {viewPdfUrl && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: "80%", height: "80%", background: "#fff", borderRadius: 8, display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}>
-            <div style={{ padding: "12px 16px", background: "#f3f4f6", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: 600, color: "#374151" }}>View Invoice</span>
-              <button onClick={() => setViewPdfUrl(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#6b7280" }}>&times;</button>
-            </div>
-            <iframe src={viewPdfUrl} style={{ width: "100%", flex: 1, border: "none" }} />
-          </div>
-        </div>
-      )}
+
       <input type="file" ref={fileRef} accept=".pdf" style={{ display: "none" }} onChange={handleFileChange} />
 
       <Footer />

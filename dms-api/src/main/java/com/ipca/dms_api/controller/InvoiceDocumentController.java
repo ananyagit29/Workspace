@@ -141,6 +141,15 @@ public class InvoiceDocumentController {
                 return ResponseEntity.notFound().build();
             }
 
+            // Test if we can actually open the stream. If AccessDeniedException occurs here, we can handle it cleanly.
+            try (java.io.InputStream is = resource.getInputStream()) {
+                // If it succeeds, the stream is closed immediately and we proceed.
+            } catch (java.nio.file.AccessDeniedException e) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+            } catch (Exception e) {
+                return ResponseEntity.notFound().build();
+            }
+
             String contentType = Files.probeContentType(path);
             if (contentType == null) {
                 contentType = "application/pdf";

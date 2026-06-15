@@ -273,16 +273,17 @@ public class InvoiceDocumentService {
                 """ + where + " ORDER BY CREATED_ON DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
                 (rs, rowNum) -> InvoiceDocumentResponse.builder()
                         .invoiceNumber(rs.getString("INVOICE_NUMBER"))
-                        .fileName(rs.getString("FILE_NAME")) // for backward compatibility
-                        .filePath(rs.getString("FILE_PATH"))
+                        .fileName(rs.getString("OTHER_FILE_NAME")) // for backward compatibility
+                        .filePath(rs.getString("OTHER_FILE_PATH"))
                         .companyId(rs.getString("COMPANY_ID"))
                         .locationId(rs.getString("LOCATION_ID"))
                         .divisionName(rs.getString("DIVISION_NAME"))
                         .applicationName(rs.getString("APPLICATION_NAME"))
                         .createdBy(rs.getString("CREATED_BY"))
                         .createdOn(rs.getTimestamp("CREATED_ON") == null ? null : rs.getTimestamp("CREATED_ON").toLocalDateTime())
-                        .invoiceFileName(rs.getString("FILE_NAME"))
-                        .otherFileName(rs.getString("OTHER_FILE_NAME"))
+                        .invoiceFileName(rs.getString("OTHER_FILE_NAME"))
+                        .otherFileName(rs.getString("FILE_NAME"))
+                        .otherFilePath(rs.getString("FILE_PATH"))
                         .build(),
                 invoiceFilter, invoiceFilter == null ? null : "%" + invoiceFilter + "%",
                 locationFilter, locationFilter, page * size, size);
@@ -303,7 +304,8 @@ public class InvoiceDocumentService {
                         rs.getString("APPLICATION_NAME"),
                         rs.getString("CREATED_BY"),
                         rs.getTimestamp("CREATED_ON"),
-                        rs.getString("OTHER_FILE_NAME")),
+                        rs.getString("OTHER_FILE_NAME"),
+                        rs.getString("OTHER_FILE_PATH")),
                 invoiceNumber);
     }
     
@@ -326,19 +328,21 @@ public class InvoiceDocumentService {
             String applicationName,
             String createdBy,
             Timestamp createdOn,
-            String otherFileName) {
+            String otherFileName,
+            String otherFilePath) {
         return InvoiceDocumentResponse.builder()
                 .invoiceNumber(invoiceNumber)
-                .fileName(fileName)
-                .filePath(filePath)
+                .fileName(otherFileName)
+                .filePath(otherFilePath)
                 .companyId(companyId)
                 .locationId(locationId)
                 .divisionName(divisionName)
                 .applicationName(applicationName)
                 .createdBy(createdBy)
                 .createdOn(createdOn == null ? null : createdOn.toLocalDateTime())
-                .invoiceFileName(fileName)
-                .otherFileName(otherFileName)
+                .invoiceFileName(otherFileName)
+                .otherFileName(fileName)
+                .otherFilePath(filePath)
                 .build();
     }
 
