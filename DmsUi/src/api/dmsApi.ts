@@ -67,8 +67,51 @@ export const getApplications = async (
   return { data: unique.map((a) => [a, a]) };
 };
 
-export const getYears = (_applicationName: string) =>
-  Promise.resolve({ data: [] });
+// ── Year config — fetched from .NET API (DMS_GENERAL_PARAMETERS) ──────────────
+
+let _yearConfigCache: Record<string, number> | null = null;
+
+const getYearConfig = async (): Promise<Record<string, number>> => {
+  if (_yearConfigCache) return _yearConfigCache;
+  try {
+    const res = await dmsApi.get("/config/yearParameters");
+    const config: Record<string, number> = {};
+    for (const item of (res.data as any[])) {
+      config[item.applicationName] = item.startYear;
+    }
+    _yearConfigCache = config;
+    return config;
+  } catch {
+    _yearConfigCache = {};
+    return {};
+  }
+};
+
+/**
+ * Returns the start year of the current Indian financial year.
+ * FY starts April 1 (month index 3).
+ * June 2026  → 2026 (FY 2026-2027)
+ * Feb  2026  → 2025 (FY 2025-2026)
+ */
+const getCurrentFYStart = (): number => {
+  const now = new Date();
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+};
+
+export const getYears = async (
+  applicationName: string
+): Promise<{ data: string[] }> => {
+  const config = await getYearConfig();
+  const startYear = config[applicationName];
+  if (!startYear) return { data: [] };
+
+  const currentFYStart = getCurrentFYStart();
+  const years: string[] = [];
+  for (let y = currentFYStart; y >= startYear; y--) {
+    years.push(`${y}-${y + 1}`);
+  }
+  return { data: years };
+};
 
 export const getSubApplications = async (
   companyId: string,

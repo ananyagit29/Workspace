@@ -70,7 +70,7 @@ const getYearConfig = async (): Promise<Record<string, number>> => {
 // ── Clear all caches on logout ────────────────────────────────────────────────
 
 export const clearRightsCache = () => {
-  _rightsCache     = null;
+  _rightsCache = null;
   _yearConfigCache = null;
 };
 
