@@ -57,16 +57,32 @@ public class InvoiceDocumentService {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
         }
-        
-        String sql;
-        if (strict) {
-            sql = "SELECT INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS " +
-                  "WHERE UPPER(INVOICE_NUMBER) LIKE UPPER(?) AND FILE_NAME IS NOT NULL AND OTHER_FILE_NAME IS NOT NULL " +
-                  "ORDER BY INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
-        } else {
-            sql = "SELECT INVOICE_NUMBER FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) LIKE UPPER(?) ORDER BY INVOICE_NUMBER FETCH NEXT 15 ROWS ONLY";
+        String q = query.trim().toUpperCase();
+        File folder = new File("d:/Workspace/Docs/Invoice");
+        if (!folder.exists() || !folder.isDirectory()) {
+            return List.of();
         }
-        return invoiceJdbcTemplate.queryForList(sql, String.class, "%" + query.trim() + "%");
+        
+        java.util.List<String> results = new java.util.ArrayList<>();
+        File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".pdf"));
+        if (files != null) {
+            for (File file : files) {
+                String name = file.getName();
+                String invNum = name.substring(0, name.length() - 4).toUpperCase();
+                if (invNum.contains(q)) {
+                    if (strict) {
+                        Integer count = invoiceJdbcTemplate.queryForObject(
+                                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = ? AND OTHER_FILE_NAME IS NOT NULL",
+                                Integer.class, invNum);
+                        if (count != null && count > 0) results.add(invNum);
+                    } else {
+                        results.add(invNum);
+                    }
+                    if (results.size() >= 15) break;
+                }
+            }
+        }
+        return results;
     }
 
     public InvoiceDocumentResponse saveInvoice(
@@ -97,15 +113,11 @@ public class InvoiceDocumentService {
         }
 
         String safeFileName = cleanedInvoice + ".pdf";
-        String uploadDir = uploadBaseDir + "/InvoiceDocument/" + valueOrDefault(companyId, "NA") + "/"
-                + valueOrDefault(locationId, "NA") + "/" + cleanedInvoice + "/";
-        File dir = new File(uploadDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        Path fullPath = Paths.get(uploadDir, safeFileName);
-        Files.write(fullPath, invoiceFile.getBytes());
+        String targetDir = "d:/Workspace/Docs/Invoice";
+        Path fullPath = Paths.get(targetDir, safeFileName);
+        
+        // We do NOT write the invoiceFile to disk because it is pre-defined in the Docs/Invoice folder.
+        // Files.write(fullPath, invoiceFile.getBytes());
 
         LocalDateTime now = LocalDateTime.now();
         invoiceJdbcTemplate.update("""
@@ -146,8 +158,7 @@ public class InvoiceDocumentService {
         }
         
         String safeFileName = originalName.replaceAll("[&,]", "-");
-        String uploadDir = uploadBaseDir + "/InvoiceDocument/" + valueOrDefault(parent.getCompanyId(), "NA") + "/"
-                + valueOrDefault(parent.getLocationId(), "NA") + "/" + cleanedInvoice + "/other/";
+        String uploadDir = "d:/Workspace/Docs/Other";
         File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -226,10 +237,8 @@ public class InvoiceDocumentService {
         if (!originalName.toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("Only PDF files are allowed.");
         }
-        
         String safeFileName = originalName.replaceAll("[&,]", "-");
-        String uploadDir = uploadBaseDir + "/InvoiceDocument/" + valueOrDefault(parent.getCompanyId(), "NA") + "/"
-                + valueOrDefault(parent.getLocationId(), "NA") + "/" + cleanedInvoice + "/other/";
+        String uploadDir = "d:/Workspace/Docs/Other";
         File dir = new File(uploadDir);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -281,9 +290,9 @@ public class InvoiceDocumentService {
                         .applicationName(rs.getString("APPLICATION_NAME"))
                         .createdBy(rs.getString("CREATED_BY"))
                         .createdOn(rs.getTimestamp("CREATED_ON") == null ? null : rs.getTimestamp("CREATED_ON").toLocalDateTime())
-                        .invoiceFileName(rs.getString("OTHER_FILE_NAME"))
-                        .otherFileName(rs.getString("FILE_NAME"))
-                        .otherFilePath(rs.getString("FILE_PATH"))
+                        .invoiceFileName(rs.getString("FILE_NAME"))
+                        .otherFileName(rs.getString("OTHER_FILE_NAME"))
+                        .otherFilePath(rs.getString("OTHER_FILE_PATH"))
                         .build(),
                 invoiceFilter, invoiceFilter == null ? null : "%" + invoiceFilter + "%",
                 locationFilter, locationFilter, page * size, size);
@@ -310,11 +319,21 @@ public class InvoiceDocumentService {
     }
     
     public String getFilePath(String invoiceNumber, String type) {
-        String column = "other".equalsIgnoreCase(type) ? "OTHER_FILE_PATH" : "FILE_PATH";
-        return invoiceJdbcTemplate.queryForObject(
-                "SELECT " + column + " FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
-                String.class,
-                invoiceNumber);
+        if ("other".equalsIgnoreCase(type)) {
+            String fileName = invoiceJdbcTemplate.queryForObject(
+                    "SELECT OTHER_FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                    String.class,
+                    invoiceNumber);
+            if (fileName == null || fileName.isEmpty()) return null;
+            return "d:/Workspace/Docs/Other/" + fileName;
+        } else {
+            String fileName = invoiceJdbcTemplate.queryForObject(
+                    "SELECT FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                    String.class,
+                    invoiceNumber);
+            if (fileName == null || fileName.isEmpty()) return null;
+            return "d:/Workspace/Docs/Invoice/" + fileName;
+        }
     }
 
 

@@ -147,6 +147,7 @@ public class InvoiceDocumentController {
             } catch (java.nio.file.AccessDeniedException e) {
                 return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
             } catch (Exception e) {
+                e.printStackTrace();
                 return ResponseEntity.notFound().build();
             }
 

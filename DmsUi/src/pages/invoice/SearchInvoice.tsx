@@ -4,6 +4,17 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
 import { dmsApi } from "../../api/dmsApi";
 
+const searchInvoice = (params: Record<string, any>) =>
+  dmsApi.get("/invoice/search", { params });
+
+const removeOtherFile = (invoiceNumber: string) =>
+  dmsApi.delete(`/invoice/other-file/${invoiceNumber}`);
+
+const getViewFileUrl = (invoiceNumber: string, type: string) => {
+  const token = localStorage.getItem("jwtToken");
+  return `${import.meta.env.VITE_DMS_API}/invoice/${encodeURIComponent(invoiceNumber)}/view?type=${type}&token=${token}`;
+};
+
 interface Selections {
   com: string; div: string; loc: string; app: string;
   year: string; subApp: string | null; module: string | null;
@@ -278,14 +289,14 @@ const SearchInvoice = () => {
                             <td style={{ ...tdStyle, fontFamily: "monospace", fontWeight: 700, color: "#111827" }}>{row.invoiceNumber}</td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.invoiceFileName}>
                               {row.invoiceFileName ? (
-                                <button onClick={() => window.open(`https://dmsdev.ipca.com/DMS/ViewDocumentServlet?filename=${row.filePath?.replace(/\\/g, '/')}`, "_blank")} style={fileButton}>
+                                <button onClick={() => window.open(getViewFileUrl(row.invoiceNumber, "invoice"), "_blank")} style={fileButton}>
                                   {row.invoiceFileName}
                                 </button>
                               ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={row.otherFileName}>
                               {row.otherFileName ? (
-                                <button onClick={() => window.open(`https://dmsdev.ipca.com/DMS/ViewDocumentServlet?filename=${row.otherFilePath?.replace(/\\/g, '/')}`, "_blank")} style={fileButton}>
+                                <button onClick={() => window.open(getViewFileUrl(row.invoiceNumber, "other"), "_blank")} style={fileButton}>
                                   {row.otherFileName}
                                 </button>
                               ) : "-"}
