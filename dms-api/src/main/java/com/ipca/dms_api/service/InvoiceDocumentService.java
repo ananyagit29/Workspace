@@ -170,7 +170,7 @@ public class InvoiceDocumentService {
         invoiceJdbcTemplate.update("""
                 UPDATE DMS_INVOICE_DOCUMENTS 
                 SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ? 
-                WHERE INVOICE_NUMBER = ?
+                WHERE UPPER(INVOICE_NUMBER) = UPPER(?)
                 """,
                 safeFileName, fullPath.toString(), cleanedInvoice);
 
@@ -188,10 +188,7 @@ public class InvoiceDocumentService {
             throw new IllegalArgumentException("No other file attached to this invoice.");
         }
 
-        // Fetch the otherFilePath from DB
-        String otherFilePath = invoiceJdbcTemplate.queryForObject(
-                "SELECT OTHER_FILE_PATH FROM DMS_INVOICE_DOCUMENTS WHERE INVOICE_NUMBER = ?",
-                String.class, cleanedInvoice);
+        String otherFilePath = parent.getOtherFilePath();
 
         if (otherFilePath != null && !otherFilePath.isEmpty()) {
             try {
@@ -201,7 +198,7 @@ public class InvoiceDocumentService {
             }
         }
 
-        invoiceJdbcTemplate.update("UPDATE DMS_INVOICE_DOCUMENTS SET OTHER_FILE_NAME = NULL, OTHER_FILE_PATH = NULL WHERE INVOICE_NUMBER = ?", cleanedInvoice);
+        invoiceJdbcTemplate.update("UPDATE DMS_INVOICE_DOCUMENTS SET OTHER_FILE_NAME = NULL, OTHER_FILE_PATH = NULL WHERE UPPER(INVOICE_NUMBER) = UPPER(?)", cleanedInvoice);
     }
 
     public InvoiceDocumentResponse replaceOtherFile(String invoiceNumber, String userId, MultipartFile newFile) throws IOException {
@@ -216,14 +213,12 @@ public class InvoiceDocumentService {
         }
         
         // Delete the existing file first if it exists physically
-        String otherFilePath = invoiceJdbcTemplate.queryForObject(
-                "SELECT OTHER_FILE_PATH FROM DMS_INVOICE_DOCUMENTS WHERE INVOICE_NUMBER = ?",
-                String.class, cleanedInvoice);
-        if (otherFilePath != null && !otherFilePath.isEmpty()) {
+        String oldFilePath = parent.getOtherFilePath();
+        if (oldFilePath != null && !oldFilePath.isEmpty()) {
             try {
-                Files.deleteIfExists(Paths.get(otherFilePath));
+                Files.deleteIfExists(Paths.get(oldFilePath));
             } catch (IOException e) {
-                System.err.println("Warning: Could not delete file from disk: " + otherFilePath);
+                System.err.println("Warning: Could not delete old file from disk: " + oldFilePath);
             }
         }
 
@@ -250,7 +245,7 @@ public class InvoiceDocumentService {
         invoiceJdbcTemplate.update("""
                 UPDATE DMS_INVOICE_DOCUMENTS 
                 SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ? 
-                WHERE INVOICE_NUMBER = ?
+                WHERE UPPER(INVOICE_NUMBER) = UPPER(?)
                 """,
                 safeFileName, fullPath.toString(), cleanedInvoice);
 
@@ -351,17 +346,17 @@ public class InvoiceDocumentService {
             String otherFilePath) {
         return InvoiceDocumentResponse.builder()
                 .invoiceNumber(invoiceNumber)
-                .fileName(otherFileName)
-                .filePath(otherFilePath)
+                .fileName(fileName)
+                .filePath(filePath)
                 .companyId(companyId)
                 .locationId(locationId)
                 .divisionName(divisionName)
                 .applicationName(applicationName)
                 .createdBy(createdBy)
                 .createdOn(createdOn == null ? null : createdOn.toLocalDateTime())
-                .invoiceFileName(otherFileName)
-                .otherFileName(fileName)
-                .otherFilePath(filePath)
+                .invoiceFileName(fileName)
+                .otherFileName(otherFileName)
+                .otherFilePath(otherFilePath)
                 .build();
     }
 
