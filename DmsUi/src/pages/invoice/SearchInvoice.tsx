@@ -181,14 +181,14 @@ const SearchInvoice = () => {
       )}
 
       <main style={{ padding: "24px 32px" }}>
-        <div style={{ maxWidth: 1050, margin: "0 auto" }}>
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16, width: "fit-content", margin: "0 auto 16px auto" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={sectionTitle}>Search Filters</span>
               <button onClick={handleReset} style={linkButton}>Clear</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "300px 300px", gap: 16, alignItems: "end", padding: "10px 0 4px 0" }}>
-              <div style={{ position: "relative", zIndex: 50 }}>
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
+              <div style={{ position: "relative", zIndex: 50, width: "300px" }}>
                 <label style={labelStyle}>Invoice Number</label>
                 <input
                   value={invoiceNumber}
@@ -233,7 +233,7 @@ const SearchInvoice = () => {
                 )}
               </div>
 
-              <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, width: "100%" }}>
+              <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, padding: "8px 24px" }}>
                 {searching ? "Searching..." : "Search"}
               </button>
             </div>
@@ -294,7 +294,7 @@ const SearchInvoice = () => {
                             <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
                             <td style={{ ...tdStyle, textAlign: "center" }}>
                               {row.otherFileName ? (
-                                <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ ...primaryButton, background: "#b91c1c", padding: "4px 12px", height: "auto" }} title="Delete Other File">Delete</button>
+                                <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ color: "#ef4444", background: "#fee2e2", border: "1px solid #fecaca", padding: "4px 12px", borderRadius: "6px", fontSize: 11, fontWeight: 500, cursor: "pointer" }} title="Remove Other File">Remove</button>
                               ) : (
                                 <div style={{ fontSize: 11, color: "#9ca3af", fontStyle: "italic" }}>No Other File Present</div>
                               )}

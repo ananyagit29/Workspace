@@ -302,7 +302,7 @@ const SearchBatch = () => {
                               <td style={{ padding: "7px 10px", whiteSpace: "nowrap" }}>
                                 {row.fileName && (
                                   <button onClick={() => handleRemove(row.batchNumber, row.fileName, row.filePath)}
-                                    style={{ color: "#ef4444", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 500 }}>
+                                    style={{ color: "#ef4444", background: "#fee2e2", border: "1px solid #fecaca", padding: "4px 12px", borderRadius: "6px", fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
                                     Remove
                                   </button>
                                 )}
