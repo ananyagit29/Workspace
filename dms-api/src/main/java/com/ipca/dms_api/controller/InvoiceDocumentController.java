@@ -27,13 +27,17 @@ public class InvoiceDocumentController {
     @GetMapping("/exists")
     public ResponseEntity<Boolean> exists(
             @RequestParam String invoiceNumber,
-            @RequestParam(required = false) String year) {
-        return ResponseEntity.ok(invoiceService.exists(invoiceNumber, year));
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false) String locationId) {
+        return ResponseEntity.ok(invoiceService.exists(invoiceNumber, year, locationId));
     }
 
     @GetMapping("/suggest")
-    public ResponseEntity<List<String>> suggest(@RequestParam String query, @RequestParam(defaultValue = "false") boolean strict) {
-        return ResponseEntity.ok(invoiceService.suggestInvoiceNumbers(query, strict));
+    public ResponseEntity<List<String>> suggest(
+            @RequestParam String query, 
+            @RequestParam(required = false) String locationId,
+            @RequestParam(required = false) String year) {
+        return ResponseEntity.ok(invoiceService.suggestInvoiceNumbers(query, locationId, year));
     }
 
     @PostMapping("/save")
@@ -112,16 +116,14 @@ public class InvoiceDocumentController {
         }
     }
 
-
     @GetMapping("/search")
     public ResponseEntity<Page<InvoiceDocumentResponse>> search(
             @RequestParam(required = false) String invoiceNumber,
-            @RequestParam(required = false) String locationId,
             @RequestParam(required = false) String year,
+            @RequestParam(required = false) String locationId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size,
-            @RequestParam(defaultValue = "false") boolean strict) {
-        return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, year, page, size, strict));
+            @RequestParam(defaultValue = "8") int size) {
+        return ResponseEntity.ok(invoiceService.search(invoiceNumber, year, locationId, page, size));
     }
 
     @GetMapping("/{invoiceNumber}/view")
@@ -137,6 +139,9 @@ public class InvoiceDocumentController {
     private ResponseEntity<Resource> fileResponse(String invoiceNumber, String type, String disposition) {
         try {
             String filePathString = invoiceService.getFilePath(invoiceNumber, type);
+            if (filePathString == null) {
+                return ResponseEntity.notFound().build();
+            }
             Path path = Paths.get(filePathString);
             Resource resource = new UrlResource(java.util.Objects.requireNonNull(path.toUri()));
 

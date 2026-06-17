@@ -81,27 +81,29 @@ const SearchInvoice = () => {
           page,
           size: PAGE_SIZE,
           ...(searchNumber && { invoiceNumber: searchNumber.trim().toUpperCase() }),
-          strict: true
         },
       });
 
       const fetched = res.data.content || [];
 
-      if (searchNumber && searchNumber.trim().length > 0) {
-        const exactMatch = fetched.find((r: InvoiceRecord) => r.invoiceNumber.toUpperCase() === searchNumber.trim().toUpperCase());
-        if (!exactMatch) {
-          const existsRes = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: searchNumber.trim().toUpperCase(), year: selections.year } });
-          if (existsRes.data) {
-            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists, but it is missing files (Invoice File or Other File), hence not displayed here.`);
-          } else {
-            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist in the selected financial year (${selections.year}).`);
+      if (searchNumber && searchNumber.trim().length > 0 && fetched.length === 0) {
+        const existsRes = await dmsApi.get("/invoice/exists", {
+          params: {
+            invoiceNumber: searchNumber.trim().toUpperCase(),
+            year: selections.year,
+            locationId: selections.loc
           }
-          setResults([]);
-          setTotalPages(0);
-          setTotalElements(0);
-          setCurrentPage(0);
-          return;
+        });
+        if (existsRes.data) {
+          setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists in SCM but not on this page. Try refining your search.`);
+        } else {
+          setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist in the selected financial year (${selections.year}).`);
         }
+        setResults([]);
+        setTotalPages(0);
+        setTotalElements(0);
+        setCurrentPage(0);
+        return;
       }
 
       setResults(fetched);
@@ -209,15 +211,28 @@ const SearchInvoice = () => {
                     if (val.length > 12) return;
                     if (val !== "" && /[^A-Z0-9]/.test(val)) return;
                     setInvoiceNumber(val);
-                    if (val.trim().length > 0) {
-                      setShowSuggestions(true);
-                      dmsApi.get("/invoice/suggest", { params: { query: val, strict: true } })
-                        .then(res => setSuggestions(res.data || []))
-                        .catch(() => setSuggestions([]));
-                    } else {
-                      setShowSuggestions(false);
-                      setSuggestions([]);
-                    }
+                    setShowSuggestions(true);
+                    dmsApi.get("/invoice/suggest", { 
+                      params: { 
+                        query: val, 
+                        locationId: selections.loc,
+                        year: selections.year
+                      } 
+                    })
+                      .then(res => setSuggestions(res.data || []))
+                      .catch(() => setSuggestions([]));
+                  }}
+                  onFocus={() => {
+                    setShowSuggestions(true);
+                    dmsApi.get("/invoice/suggest", { 
+                      params: { 
+                        query: invoiceNumber, 
+                        locationId: selections.loc,
+                        year: selections.year
+                      } 
+                    })
+                      .then(res => setSuggestions(res.data || []))
+                      .catch(() => setSuggestions([]));
                   }}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   onKeyDown={e => { if (e.key === "Enter") { setShowSuggestions(false); handleSearch(0); } }}

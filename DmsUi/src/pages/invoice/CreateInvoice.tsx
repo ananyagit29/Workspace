@@ -38,7 +38,14 @@ const CreateInvoice = () => {
     setCheckingInvoice(true);
     setInvoiceExists(null);
     try {
-      const res = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: val.trim().toUpperCase() } });
+      const res = await dmsApi.get("/invoice/exists", { 
+        params: { 
+          invoiceNumber: val.trim().toUpperCase(),
+          companyId: selections.com,
+          divisionName: selections.div,
+          year: selections.year
+        } 
+      });
       const exists = !!res.data;
       setInvoiceExists(exists);
       if (!exists) showToast("Invoice number not found.", "error");
@@ -120,15 +127,28 @@ const CreateInvoice = () => {
                     if (val !== "" && /[^A-Z0-9]/.test(val)) return;
                     setInvoiceNumber(val); 
                     setInvoiceExists(null); 
-                    if (val.trim().length > 0) {
-                      setShowSuggestions(true);
-                      dmsApi.get("/invoice/suggest", { params: { query: val } })
-                        .then(res => setSuggestions(res.data || []))
-                        .catch(() => setSuggestions([]));
-                    } else {
-                      setShowSuggestions(false);
-                      setSuggestions([]);
-                    }
+                    setShowSuggestions(true);
+                    dmsApi.get("/invoice/suggest", { 
+                      params: { 
+                        query: val,
+                        locationId: selections.loc,
+                        year: selections.year
+                      } 
+                    })
+                      .then(res => setSuggestions(res.data || []))
+                      .catch(() => setSuggestions([]));
+                  }}
+                  onFocus={() => {
+                    setShowSuggestions(true);
+                    dmsApi.get("/invoice/suggest", { 
+                      params: { 
+                        query: invoiceNumber,
+                        locationId: selections.loc,
+                        year: selections.year
+                      } 
+                    })
+                      .then(res => setSuggestions(res.data || []))
+                      .catch(() => setSuggestions([]));
                   }}
                   onBlur={() => {
                     // Slight delay to allow clicking a suggestion
