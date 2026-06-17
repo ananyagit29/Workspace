@@ -25,8 +25,10 @@ public class InvoiceDocumentController {
     private InvoiceDocumentService invoiceService;
 
     @GetMapping("/exists")
-    public ResponseEntity<Boolean> exists(@RequestParam String invoiceNumber) {
-        return ResponseEntity.ok(invoiceService.exists(invoiceNumber));
+    public ResponseEntity<Boolean> exists(
+            @RequestParam String invoiceNumber,
+            @RequestParam(required = false) String year) {
+        return ResponseEntity.ok(invoiceService.exists(invoiceNumber, year));
     }
 
     @GetMapping("/suggest")
@@ -115,10 +117,11 @@ public class InvoiceDocumentController {
     public ResponseEntity<Page<InvoiceDocumentResponse>> search(
             @RequestParam(required = false) String invoiceNumber,
             @RequestParam(required = false) String locationId,
+            @RequestParam(required = false) String year,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size,
             @RequestParam(defaultValue = "false") boolean strict) {
-        return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, page, size, strict));
+        return ResponseEntity.ok(invoiceService.search(invoiceNumber, locationId, year, page, size, strict));
     }
 
     @GetMapping("/{invoiceNumber}/view")

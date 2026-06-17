@@ -45,11 +45,26 @@ public class InvoiceDocumentService {
         // Tables are managed externally in the Oracle Database.
     }
 
-    public boolean exists(String invoiceNumber) {
+    public boolean exists(String invoiceNumber, String year) {
+        String where = " WHERE UPPER(INVOICE_NUMBER) = UPPER(?) ";
+        List<Object> params = new java.util.ArrayList<>();
+        params.add(clean(invoiceNumber));
+
+        if (year != null && year.matches("\\d{4}-\\d{4}")) {
+            String[] parts = year.split("-");
+            int y1 = Integer.parseInt(parts[0]);
+            int y2 = Integer.parseInt(parts[1]);
+            java.time.LocalDateTime startDate = java.time.LocalDateTime.of(y1, 4, 1, 0, 0, 0);
+            java.time.LocalDateTime endDate = java.time.LocalDateTime.of(y2, 3, 31, 23, 59, 59);
+            where += "AND CREATED_ON >= ? AND CREATED_ON <= ? ";
+            params.add(java.sql.Timestamp.valueOf(startDate));
+            params.add(java.sql.Timestamp.valueOf(endDate));
+        }
+
         Integer count = invoiceJdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS" + where,
                 Integer.class,
-                clean(invoiceNumber));
+                params.toArray());
         return count != null && count > 0;
     }
 
@@ -108,7 +123,7 @@ public class InvoiceDocumentService {
         if (!originalName.toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("Only PDF files are allowed.");
         }
-        if (exists(cleanedInvoice)) {
+        if (exists(cleanedInvoice, null)) {
             throw new IllegalArgumentException("Invoice number already exists.");
         }
 
@@ -252,13 +267,30 @@ public class InvoiceDocumentService {
         return findByInvoiceNumber(cleanedInvoice);
     }
 
-    public Page<InvoiceDocumentResponse> search(String invoiceNumber, String locationId, int page, int size, boolean strict) {
+    public Page<InvoiceDocumentResponse> search(String invoiceNumber, String locationId, String year, int page, int size, boolean strict) {
         Pageable pageable = PageRequest.of(page, size);
         String invoiceFilter = emptyToNull(invoiceNumber);
         String locationFilter = emptyToNull(locationId);
 
         String where = " WHERE (? IS NULL OR UPPER(INVOICE_NUMBER) LIKE UPPER(?)) "
                 + "AND (? IS NULL OR LOCATION_ID = ?) ";
+        List<Object> params = new java.util.ArrayList<>();
+        params.add(invoiceFilter);
+        params.add(invoiceFilter == null ? null : "%" + invoiceFilter + "%");
+        params.add(locationFilter);
+        params.add(locationFilter);
+
+        if (year != null && year.matches("\\d{4}-\\d{4}")) {
+            String[] parts = year.split("-");
+            int y1 = Integer.parseInt(parts[0]);
+            int y2 = Integer.parseInt(parts[1]);
+            java.time.LocalDateTime startDate = java.time.LocalDateTime.of(y1, 4, 1, 0, 0, 0);
+            java.time.LocalDateTime endDate = java.time.LocalDateTime.of(y2, 3, 31, 23, 59, 59);
+            where += "AND CREATED_ON >= ? AND CREATED_ON <= ? ";
+            params.add(java.sql.Timestamp.valueOf(startDate));
+            params.add(java.sql.Timestamp.valueOf(endDate));
+        }
+
         if (strict) {
             where += "AND FILE_NAME IS NOT NULL AND OTHER_FILE_NAME IS NOT NULL ";
         }
@@ -266,8 +298,11 @@ public class InvoiceDocumentService {
         Long total = invoiceJdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS " + where,
                 Long.class,
-                invoiceFilter, invoiceFilter == null ? null : "%" + invoiceFilter + "%",
-                locationFilter, locationFilter);
+                params.toArray());
+
+        List<Object> queryParams = new java.util.ArrayList<>(params);
+        queryParams.add(pageable.getOffset());
+        queryParams.add(pageable.getPageSize());
 
         List<InvoiceDocumentResponse> rows = invoiceJdbcTemplate.query("""
                 SELECT INVOICE_NUMBER, FILE_NAME, FILE_PATH, 
@@ -289,8 +324,7 @@ public class InvoiceDocumentService {
                         .otherFileName(rs.getString("OTHER_FILE_NAME"))
                         .otherFilePath(rs.getString("OTHER_FILE_PATH"))
                         .build(),
-                invoiceFilter, invoiceFilter == null ? null : "%" + invoiceFilter + "%",
-                locationFilter, locationFilter, page * size, size);
+                queryParams.toArray());
 
         return new PageImpl<>(rows, pageable, total == null ? 0 : total);
     }

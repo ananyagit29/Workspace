@@ -77,6 +77,7 @@ const SearchInvoice = () => {
       const res = await dmsApi.get("/invoice/search", {
         params: {
           locationId: selections.loc,
+          year: selections.year,
           page,
           size: PAGE_SIZE,
           ...(searchNumber && { invoiceNumber: searchNumber.trim().toUpperCase() }),
@@ -89,11 +90,11 @@ const SearchInvoice = () => {
       if (searchNumber && searchNumber.trim().length > 0) {
         const exactMatch = fetched.find((r: InvoiceRecord) => r.invoiceNumber.toUpperCase() === searchNumber.trim().toUpperCase());
         if (!exactMatch) {
-          const existsRes = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: searchNumber.trim().toUpperCase() } });
+          const existsRes = await dmsApi.get("/invoice/exists", { params: { invoiceNumber: searchNumber.trim().toUpperCase(), year: selections.year } });
           if (existsRes.data) {
             setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists, but it is missing files (Invoice File or Other File), hence not displayed here.`);
           } else {
-            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist.`);
+            setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist in the selected financial year (${selections.year}).`);
           }
           setResults([]);
           setTotalPages(0);
