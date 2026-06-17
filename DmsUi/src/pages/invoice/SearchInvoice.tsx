@@ -206,6 +206,8 @@ const SearchInvoice = () => {
                   value={invoiceNumber}
                   onChange={e => {
                     const val = e.target.value.toUpperCase();
+                    if (val.length > 12) return;
+                    if (val !== "" && /[^A-Z0-9]/.test(val)) return;
                     setInvoiceNumber(val);
                     if (val.trim().length > 0) {
                       setShowSuggestions(true);

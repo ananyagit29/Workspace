@@ -116,6 +116,8 @@ const CreateInvoice = () => {
                   value={invoiceNumber}
                   onChange={e => { 
                     const val = e.target.value.toUpperCase();
+                    if (val.length > 12) return;
+                    if (val !== "" && /[^A-Z0-9]/.test(val)) return;
                     setInvoiceNumber(val); 
                     setInvoiceExists(null); 
                     if (val.trim().length > 0) {
