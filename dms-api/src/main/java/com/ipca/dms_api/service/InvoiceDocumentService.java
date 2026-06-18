@@ -90,7 +90,9 @@ public class InvoiceDocumentService {
         String q = query != null ? query.trim() : "";
 
         StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT doc_code FROM scm_excise_invoice_header@IPCASCMDRDB WHERE UPPER(doc_code) LIKE ?");
+            "SELECT DISTINCT s.doc_code FROM scm_excise_invoice_header@IPCASCMDRDB s " +
+            "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
+            "WHERE UPPER(s.doc_code) LIKE ? AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL");
         java.util.List<Object> params = new java.util.ArrayList<>();
         params.add("%" + q.toUpperCase() + "%");
 
@@ -162,10 +164,12 @@ public class InvoiceDocumentService {
         }
 
         // Count query
-        String countSql = "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB s " + where;
+        String countSql = "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB s " +
+                          "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
+                          where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL";
         Long total = invoiceJdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
 
-        // Data query with LEFT JOIN to local DMS_INVOICE_DOCUMENTS for file info
+        // Data query with INNER JOIN to local DMS_INVOICE_DOCUMENTS for file info
         java.util.List<Object> queryParams = new java.util.ArrayList<>(params);
         queryParams.add(pageable.getOffset());
         queryParams.add(pageable.getPageSize());
@@ -176,8 +180,8 @@ public class InvoiceDocumentService {
                    d.FILE_NAME, d.FILE_PATH, d.OTHER_FILE_NAME, d.OTHER_FILE_PATH,
                    d.APPLICATION_NAME, d.CREATED_BY AS DMS_CREATED_BY, d.CREATED_ON AS DMS_CREATED_ON
             FROM scm_excise_invoice_header@IPCASCMDRDB s
-            LEFT JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code)
-            """ + where + " ORDER BY s.doc_date DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+            INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code)
+            """ + where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL ORDER BY s.doc_date DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         System.out.println("[SEARCH] SQL=" + dataSql);
         System.out.println("[SEARCH] params=" + queryParams);
@@ -269,7 +273,7 @@ public class InvoiceDocumentService {
         // Check local DMS record exists
         InvoiceDocumentResponse parent = findByInvoiceNumberSafe(cleanedInvoice);
         if (parent == null) {
-            throw new IllegalArgumentException("Invoice number does not exist in DMS. Please save the invoice first.");
+            throw new IllegalArgumentException(cleanedInvoice + ".pdf does not exist");
         }
 
         if (parent.getOtherFileName() != null && !parent.getOtherFileName().isEmpty()) {

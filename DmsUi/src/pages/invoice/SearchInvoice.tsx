@@ -95,9 +95,9 @@ const SearchInvoice = () => {
           }
         });
         if (existsRes.data) {
-          setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists in SCM but not on this page. Try refining your search.`);
+          setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" exists but is not displayed due to invoice file or other file absent.`);
         } else {
-          setSearchMessage(`Invoice number "${searchNumber.toUpperCase()}" does not exist in the selected financial year (${selections.year}).`);
+          setSearchMessage(`Invalid/wrong invoice number: "${searchNumber.toUpperCase()}" does not exist in the selected financial year (${selections.year}).`);
         }
         setResults([]);
         setTotalPages(0);
