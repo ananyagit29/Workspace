@@ -75,7 +75,8 @@ public class InvoiceDocumentService {
         }
 
         try {
-            Integer count = invoiceJdbcTemplate.queryForObject(sql.toString(), Integer.class, params.toArray());
+            String finalSql = java.util.Objects.requireNonNull(sql.toString());
+            Integer count = invoiceJdbcTemplate.queryForObject(finalSql, Integer.class, params.toArray());
             return count != null && count > 0;
         } catch (Exception e) {
             System.err.println("Error checking exists in IPCASCMDRDB: " + e.getMessage());
@@ -115,7 +116,8 @@ public class InvoiceDocumentService {
         java.util.List<String> results = new java.util.ArrayList<>();
         try {
             System.out.println("[SUGGEST] SQL=" + sql + " params=" + params);
-            results = invoiceJdbcTemplate.queryForList(sql.toString(), String.class, params.toArray());
+            String finalSql = java.util.Objects.requireNonNull(sql.toString());
+            results = invoiceJdbcTemplate.queryForList(finalSql, String.class, params.toArray());
             System.out.println("[SUGGEST] returned " + results.size() + " results");
         } catch (Exception e) {
             System.err.println("Error suggesting from IPCASCMDRDB: " + e.getMessage());
@@ -167,7 +169,8 @@ public class InvoiceDocumentService {
         String countSql = "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB s " +
                           "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
                           where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL";
-        Long total = invoiceJdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
+        String finalCountSql = java.util.Objects.requireNonNull(countSql);
+        Long total = invoiceJdbcTemplate.queryForObject(finalCountSql, Long.class, params.toArray());
 
         // Data query with INNER JOIN to local DMS_INVOICE_DOCUMENTS for file info
         java.util.List<Object> queryParams = new java.util.ArrayList<>(params);
@@ -186,7 +189,9 @@ public class InvoiceDocumentService {
         System.out.println("[SEARCH] SQL=" + dataSql);
         System.out.println("[SEARCH] params=" + queryParams);
 
-        List<InvoiceDocumentResponse> rows = invoiceJdbcTemplate.query(dataSql,
+        String finalDataSql = java.util.Objects.requireNonNull(dataSql);
+        java.util.List<InvoiceDocumentResponse> rows = invoiceJdbcTemplate.query(
+            finalDataSql,
             (rs, rowNum) -> InvoiceDocumentResponse.builder()
                 .invoiceNumber(rs.getString("doc_code"))
                 .companyId(rs.getString("entity_code"))
