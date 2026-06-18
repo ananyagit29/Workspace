@@ -31,7 +31,7 @@ interface InvoiceRecord {
   createdOn: string;
 }
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 const SearchInvoice = () => {
   const { user, loading } = useContext(AuthContext);
@@ -335,13 +335,45 @@ const SearchInvoice = () => {
                   </div>
 
                   {totalPages > 1 && (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "#f9fafb", borderTop: "1px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderTop: "1px solid #e5e7eb" }}>
                       <span style={{ fontSize: 11, color: "#9ca3af" }}>
-                        Showing {currentPage * PAGE_SIZE + 1}-{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)} of {totalElements.toLocaleString()}
+                        Showing {currentPage * PAGE_SIZE + 1}-{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)} of {totalElements.toLocaleString()} documents
                       </span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <button onClick={() => handleSearch(currentPage - 1)} disabled={currentPage === 0} style={pagerButton(currentPage === 0)}>Prev</button>
-                        <button onClick={() => handleSearch(currentPage + 1)} disabled={currentPage === totalPages - 1} style={pagerButton(currentPage === totalPages - 1)}>Next</button>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <button onClick={() => handleSearch(currentPage - 1)} disabled={currentPage === 0} style={{ ...pagerButton(currentPage === 0), padding: "4px 12px" }}>Previous</button>
+                        
+                        {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                          let startPage = Math.max(0, currentPage - 2);
+                          let endPage = startPage + 4;
+                          if (endPage >= totalPages) {
+                            endPage = totalPages - 1;
+                            startPage = Math.max(0, endPage - 4);
+                          }
+                          const pageNum = startPage + idx;
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handleSearch(pageNum)}
+                              style={{
+                                ...pagerButton(false),
+                                background: currentPage === pageNum ? "#003366" : "#fff",
+                                color: currentPage === pageNum ? "#fff" : "#374151",
+                                borderColor: currentPage === pageNum ? "#003366" : "#e5e7eb",
+                                width: 28,
+                                height: 28,
+                                padding: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontWeight: currentPage === pageNum ? 600 : 400
+                              }}
+                            >
+                              {pageNum + 1}
+                            </button>
+                          );
+                        })}
+
+                        <button onClick={() => handleSearch(currentPage + 1)} disabled={currentPage === totalPages - 1} style={{ ...pagerButton(currentPage === totalPages - 1), padding: "4px 12px" }}>Next</button>
                       </div>
                     </div>
                   )}
