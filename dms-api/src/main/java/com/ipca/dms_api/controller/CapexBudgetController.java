@@ -10,7 +10,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +46,21 @@ public class CapexBudgetController {
             @RequestParam(required = false) String locationId,
             @RequestParam(required = false) String year) {
         return ResponseEntity.ok(capexBudgetService.getBudgetCodes(budgetType, companyId, locationId, year));
+    }
+
+    @GetMapping("/search-codes")
+    public ResponseEntity<List<String>> getSearchBudgetCodes(
+            @RequestParam(required = false) String budgetType,
+            @RequestParam(required = false) String companyId,
+            @RequestParam(required = false) String locationId,
+            @RequestParam(required = false) String year) {
+        return ResponseEntity.ok(capexBudgetService.getSearchBudgetCodes(budgetType, companyId, locationId, year));
+    }
+
+    @GetMapping("/revisions")
+    public ResponseEntity<List<String>> getRevisions(
+            @RequestParam String budgetCode) {
+        return ResponseEntity.ok(capexBudgetService.getRevisions(budgetCode));
     }
 
     @PostMapping
@@ -97,15 +111,16 @@ public class CapexBudgetController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<CapexBudgetResponse>> search(
+    public ResponseEntity<Page<CapexBudgetResponse>> searchCapex(
             @RequestParam(required = false) String budgetType,
             @RequestParam(required = false) String budgetCode,
+            @RequestParam(required = false) String revision,
             @RequestParam(required = false) String companyId,
             @RequestParam(required = false) String locationId,
             @RequestParam(required = false) String year,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(capexBudgetService.search(budgetType, budgetCode, companyId, locationId, year, page, size));
+        return ResponseEntity.ok(capexBudgetService.search(budgetType, budgetCode, revision, companyId, locationId, year, page, size));
     }
 
     @GetMapping("/{budgetCode}/view")
@@ -118,10 +133,15 @@ public class CapexBudgetController {
             InputStream in = new FileInputStream(file);
             return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
                 .body(new InputStreamResource(in));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error accessing file.");
         }
+    }
+
+    @GetMapping("/debug")
+    public ResponseEntity<?> debugTable() {
+        return ResponseEntity.ok(capexBudgetService.debugTable());
     }
 }

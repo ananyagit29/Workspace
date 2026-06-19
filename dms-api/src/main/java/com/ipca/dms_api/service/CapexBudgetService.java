@@ -108,6 +108,53 @@ public class CapexBudgetService {
         }
     }
 
+    private String formatYearForDb(String year) {
+        String cleaned = clean(year);
+        if (cleaned != null && cleaned.matches("\\d{4}-\\d{4}")) {
+            return cleaned.substring(0, 4) + cleaned.substring(7);
+        }
+        return cleaned;
+    }
+
+    public List<String> getSearchBudgetCodes(String budgetType, String companyId, String locationId, String year) {
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT BUDGET_CODE FROM DMS_CAPEX_BUDGET WHERE 1=1");
+        List<Object> params = new java.util.ArrayList<>();
+
+        if (clean(budgetType) != null) {
+            sql.append(" AND BUDGET_TYPE = ?");
+            params.add(clean(budgetType));
+        }
+        if (clean(companyId) != null) {
+            sql.append(" AND COMPANY_ID = ?");
+            params.add(clean(companyId));
+        }
+        if (clean(locationId) != null) {
+            sql.append(" AND LOCATION_ID = ?");
+            params.add(clean(locationId));
+        }
+        if (formatYearForDb(year) != null) {
+            sql.append(" AND FINANCIAL_YEAR = ?");
+            params.add(formatYearForDb(year));
+        }
+        sql.append(" ORDER BY BUDGET_CODE");
+
+        try {
+            return jdbcTemplate.queryForList(sql.toString(), String.class, params.toArray());
+        } catch (Exception e) {
+            System.err.println("Error fetching search budget codes: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    public List<String> getRevisions(String budgetCode) {
+        String sql = "SELECT DISTINCT REVISION_NO FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? ORDER BY REVISION_NO DESC";
+        try {
+            return jdbcTemplate.query(sql, (rs, rowNum) -> String.valueOf(rs.getInt("REVISION_NO")), budgetCode);
+        } catch (Exception e) {
+            return java.util.Collections.emptyList();
+        }
+    }
+
     private boolean existsInScm(String budgetCode, String companyId, String locationId) {
         String sql = "SELECT COUNT(*) FROM FA_CAPEX_BUDGET@IPCASCMDRDB WHERE DOC_CODE = ? AND COMPANY_CODE = ? AND ENTITY_CODE = ?";
         try {
@@ -164,7 +211,7 @@ public class CapexBudgetService {
                 (COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE, BUDGET_CODE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                companyId, locationId, divisionName, applicationName, financialYear, budgetType, budgetCode, 0, userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
+                companyId, locationId, divisionName, applicationName, formatYearForDb(financialYear), budgetType, budgetCode, 0, userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
 
         file.transferTo(fullPath.toFile());
 
@@ -207,55 +254,57 @@ public class CapexBudgetService {
     }
 
     public Page<CapexBudgetResponse> search(
-            String budgetType, String budgetCode, String companyId, String locationId, String year, int page, int size) {
+            String budgetType, String budgetCode, String revision, String companyId, String locationId, String year, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         java.util.List<Object> params = new java.util.ArrayList<>();
 
         if (clean(budgetCode) != null) {
-            where.append(" AND s.DOC_CODE = ?");
+            where.append(" AND BUDGET_CODE = ?");
             params.add(clean(budgetCode));
         }
         if (clean(budgetType) != null) {
-            where.append(" AND s.CAPEX_TYPE = ?");
+            where.append(" AND BUDGET_TYPE = ?");
             params.add(clean(budgetType));
         }
-        if (clean(companyId) != null) {
-            where.append(" AND s.COMPANY_CODE = ?");
-            params.add(clean(companyId));
-        }
         if (clean(locationId) != null) {
-            where.append(" AND s.ENTITY_CODE = ?");
+            where.append(" AND LOCATION_ID = ?");
             params.add(clean(locationId));
         }
-        if (false && year != null && year.matches("\\d{4}-\\d{4}")) {
-            String[] parts = year.split("-");
-            int y1 = Integer.parseInt(parts[0]);
-            int y2 = Integer.parseInt(parts[1]);
-            where.append(" AND s.DOC_DATE BETWEEN ? AND ?");
-            params.add(java.sql.Date.valueOf(y1 + "-04-01"));
-            params.add(java.sql.Date.valueOf(y2 + "-03-31"));
+        if (formatYearForDb(year) != null) {
+            where.append(" AND FINANCIAL_YEAR = ?");
+            params.add(formatYearForDb(year));
         }
 
-        String countSql = "SELECT COUNT(*) FROM FA_CAPEX_BUDGET@IPCASCMDRDB s " +
-                          "INNER JOIN DMS_CAPEX_BUDGET d ON d.BUDGET_CODE = s.DOC_CODE" + where;
+        if (clean(revision) != null && !revision.equalsIgnoreCase("All") && !revision.equalsIgnoreCase("Latest")) {
+            where.append(" AND REVISION_NO = ?");
+            try {
+                params.add(Integer.parseInt(revision));
+            } catch (NumberFormatException e) {
+                // Ignore invalid revision
+            }
+        }
+
+        String countSql = "SELECT COUNT(*) FROM DMS_CAPEX_BUDGET" + where;
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, params.toArray());
 
         java.util.List<Object> queryParams = new java.util.ArrayList<>(params);
-        queryParams.add(pageable.getOffset());
-        queryParams.add(pageable.getPageSize());
-
-        String dataSql = """
-            SELECT s.DOC_CODE, s.DOC_DATE, d.REVISION_NO, d.FILE_NAME, d.CREATED_BY, d.CREATED_ON
-            FROM FA_CAPEX_BUDGET@IPCASCMDRDB s
-            INNER JOIN DMS_CAPEX_BUDGET d ON d.BUDGET_CODE = s.DOC_CODE
-            """ + where + " ORDER BY s.DOC_DATE DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        
+        String dataSql = "SELECT BUDGET_CODE, DOC_DATE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH FROM DMS_CAPEX_BUDGET " + where + " ORDER BY REVISION_NO DESC";
+        
+        if (clean(revision) != null && revision.equalsIgnoreCase("Latest")) {
+             dataSql += " OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY";
+        } else {
+             dataSql += " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+             queryParams.add(pageable.getOffset());
+             queryParams.add(pageable.getPageSize());
+        }
 
         List<CapexBudgetResponse> rows = jdbcTemplate.query(
             dataSql,
             (rs, rowNum) -> CapexBudgetResponse.builder()
-                .budgetCode(rs.getString("DOC_CODE"))
+                .budgetCode(rs.getString("BUDGET_CODE"))
                 .docDate(rs.getTimestamp("DOC_DATE") != null ? rs.getTimestamp("DOC_DATE").toLocalDateTime() : null)
                 .revisionNo(rs.getInt("REVISION_NO"))
                 .fileName(rs.getString("FILE_NAME"))
@@ -274,5 +323,9 @@ public class CapexBudgetService {
             if (f.exists()) return f;
         }
         return null;
+    }
+
+    public java.util.List<java.util.Map<String, Object>> debugTable() {
+        return jdbcTemplate.queryForList("SELECT * FROM DMS_CAPEX_BUDGET");
     }
 }

@@ -30,6 +30,7 @@ const CreateCapex = () => {
   const [budgetCodes, setBudgetCodes] = useState<string[]>([]);
   const [budgetType, setBudgetType] = useState("");
   const [budgetCode, setBudgetCode] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -95,7 +96,8 @@ const CreateCapex = () => {
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append("budgetType", budgetType);
+      const dbBudgetType = CAPEX_TYPE_MAP[budgetType] || budgetType;
+      fd.append("budgetType", dbBudgetType);
       fd.append("budgetCode", budgetCode);
       fd.append("companyId", selections.com);
       fd.append("locationId", selections.loc);
@@ -140,17 +142,41 @@ const CreateCapex = () => {
                 </div>
               </div>
 
-              <div style={fieldStyle}>
+              <div style={{ ...fieldStyle, position: "relative" }}>
                 <label style={labelStyle}>Budget Code <span style={{ color: "#ef4444" }}>*</span></label>
-                <select
+                <input
                   value={budgetCode}
-                  onChange={e => setBudgetCode(e.target.value)}
-                  style={inputStyle}
+                  onChange={e => {
+                    setBudgetCode(e.target.value.toUpperCase());
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   disabled={saving || !budgetType}
-                >
-                  <option value="">Select</option>
-                  {budgetCodes.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  placeholder="Enter budget code"
+                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box", opacity: (!budgetType || saving) ? 0.6 : 1 }}
+                />
+                {showSuggestions && budgetType && !saving && (
+                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 50, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).map(sug => (
+                      <li 
+                        key={sug} 
+                        onClick={() => {
+                          setBudgetCode(sug);
+                          setShowSuggestions(false);
+                        }}
+                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        {sug}
+                      </li>
+                    ))}
+                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
+                      <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                    )}
+                  </ul>
+                )}
               </div>
 
               <div style={fieldStyle}>

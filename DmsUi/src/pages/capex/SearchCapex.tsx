@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
-import { getCapexBudgetTypes, getCapexBudgetCodes, searchCapex, deleteCapex, reviseCapex } from "../../api/dmsApi";
+import { getCapexSearchCodes, getCapexRevisions, searchCapex, deleteCapex, reviseCapex } from "../../api/dmsApi";
 
 const getViewFileUrl = (budgetCode: string) => {
   const token = localStorage.getItem("jwtToken");
@@ -44,6 +44,9 @@ const SearchCapex = () => {
   const [budgetCodes, setBudgetCodes] = useState<string[]>([]);
   const [budgetType, setBudgetType] = useState("");
   const [budgetCode, setBudgetCode] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [revisions, setRevisions] = useState<string[]>([]);
+  const [revision, setRevision] = useState("Latest");
 
   const [results, setResults] = useState<CapexRecord[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -80,12 +83,26 @@ const SearchCapex = () => {
   useEffect(() => {
     setBudgetCode("");
     setBudgetCodes([]);
+    setRevision("Latest");
+    setRevisions([]);
     if (!budgetType || !selections) return;
     
-    getCapexBudgetCodes(budgetType, selections.com, selections.loc, selections.year)
+    const dbBudgetType = CAPEX_TYPE_MAP[budgetType] || budgetType;
+    getCapexSearchCodes(dbBudgetType, selections.com, selections.loc, selections.year)
       .then(res => setBudgetCodes(res.data || []))
-      .catch(() => showToast("Failed to fetch budget codes", "error"));
+      .catch(() => showToast("Failed to fetch search budget codes", "error"));
   }, [budgetType, selections]);
+
+  // Fetch Revisions when a valid Budget Code is selected
+  useEffect(() => {
+    setRevision("Latest");
+    setRevisions([]);
+    if (!budgetCode || !budgetCodes.includes(budgetCode)) return;
+
+    getCapexRevisions(budgetCode)
+      .then(res => setRevisions(res.data || []))
+      .catch(() => console.error("Failed to fetch revisions"));
+  }, [budgetCode, budgetCodes]);
 
   const handleSearch = async (page = 0) => {
     if (!selections) return;
@@ -100,8 +117,9 @@ const SearchCapex = () => {
         companyId: selections.com,
         locationId: selections.loc,
         year: selections.year,
-        budgetType: budgetType || undefined,
+        budgetType: budgetType ? (CAPEX_TYPE_MAP[budgetType] || budgetType) : undefined,
         budgetCode: budgetCode || undefined,
+        revision: revision || undefined,
         page,
         size: PAGE_SIZE,
       });
@@ -213,13 +231,53 @@ const SearchCapex = () => {
                   {budgetTypes.map(t => <option key={t} value={t}>{CAPEX_TYPE_MAP[t] || t}</option>)}
                 </select>
               </div>
-              <div style={{ width: "300px" }}>
+              <div style={{ position: "relative", zIndex: 50, width: "300px" }}>
                 <label style={labelStyle}>Budget Code</label>
-                <select value={budgetCode} onChange={e => setBudgetCode(e.target.value)} style={inputStyle} disabled={!budgetType}>
-                  <option value="">Select</option>
-                  {budgetCodes.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <input
+                  value={budgetCode}
+                  onChange={e => {
+                    setBudgetCode(e.target.value.toUpperCase());
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  disabled={!budgetType}
+                  placeholder="Enter budget code"
+                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box", opacity: !budgetType ? 0.6 : 1 }}
+                />
+                {showSuggestions && budgetType && (
+                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 10, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).map(sug => (
+                      <li 
+                        key={sug} 
+                        onClick={() => {
+                          setBudgetCode(sug);
+                          setShowSuggestions(false);
+                        }}
+                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        {sug}
+                      </li>
+                    ))}
+                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
+                      <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                    )}
+                  </ul>
+                )}
               </div>
+
+              {budgetCode && budgetCodes.includes(budgetCode) && (
+                <div style={{ width: "120px" }}>
+                  <label style={labelStyle}>Revision</label>
+                  <select value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle}>
+                    <option value="Latest">Latest</option>
+                    {revisions.map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value="All">All</option>
+                  </select>
+                </div>
+              )}
 
               <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, padding: "8px 24px" }}>
                 {searching ? "Searching..." : "Search"}

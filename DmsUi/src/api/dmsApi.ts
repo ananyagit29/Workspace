@@ -46,6 +46,12 @@ export const getCapexBudgetTypes = (companyId: string, locationId: string, year:
 export const getCapexBudgetCodes = (budgetType: string, companyId: string, locationId: string, year: string) =>
   dmsApi.get("/capex/codes", { params: { budgetType, companyId, locationId, year } });
 
+export const getCapexSearchCodes = (budgetType: string, companyId: string, locationId: string, year: string) =>
+  dmsApi.get("/capex/search-codes", { params: { budgetType, companyId, locationId, year } });
+
+export const getCapexRevisions = (budgetCode: string) =>
+  dmsApi.get("/capex/revisions", { params: { budgetCode } });
+
 export const saveCapex = (formData: FormData) =>
   dmsApi.post("/capex", formData, {
     headers: { "Content-Type": "multipart/form-data" },
