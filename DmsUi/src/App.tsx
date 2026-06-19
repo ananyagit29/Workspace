@@ -7,7 +7,9 @@ import CreateBatch from "./pages/batch/CreateBatch";
 import InvoiceLayout from "./layouts/InvoiceLayout";
 import SearchInvoice from "./pages/invoice/SearchInvoice";
 import CreateInvoice from "./pages/invoice/CreateInvoice";
-
+import CapexLayout from "./layouts/CapexLayout";
+import SearchCapex from "./pages/capex/SearchCapex";
+import CreateCapex from "./pages/capex/CreateCapex";
 function App() {
   return (
     <Routes>
@@ -24,6 +26,12 @@ function App() {
       <Route path="/invoice" element={<InvoiceLayout />}>
         <Route index element={<SearchInvoice />} />
         <Route path="create" element={<CreateInvoice />} />
+      </Route>
+
+      {/* CapEx Budget Module */}
+      <Route path="/capex" element={<CapexLayout />}>
+        <Route index element={<SearchCapex />} />
+        <Route path="create" element={<CreateCapex />} />
       </Route>
     </Routes>
   );

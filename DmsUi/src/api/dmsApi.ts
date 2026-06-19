@@ -36,6 +36,32 @@ export interface UserRights {
 export const getCompanies = () =>
   authApi.get("/dashboard/getCompanies");
 
+export const deleteInvoice = (invoiceNumber: string) =>
+  authApi.delete(`/invoice-document/${invoiceNumber}`);
+
+// CapEx Budget API
+export const getCapexBudgetTypes = (companyId: string, locationId: string, year: string) =>
+  dmsApi.get("/capex/types", { params: { companyId, locationId, year } });
+
+export const getCapexBudgetCodes = (budgetType: string, companyId: string, locationId: string, year: string) =>
+  dmsApi.get("/capex/codes", { params: { budgetType, companyId, locationId, year } });
+
+export const saveCapex = (formData: FormData) =>
+  dmsApi.post("/capex", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const reviseCapex = (budgetCode: string, formData: FormData) =>
+  dmsApi.put(`/capex/${budgetCode}/revise`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const searchCapex = (params: any) =>
+  dmsApi.get("/capex/search", { params });
+
+export const deleteCapex = (budgetCode: string) =>
+  dmsApi.delete(`/capex/${budgetCode}`);
+
 export const getDivisions = (companyId: string) =>
   authApi.get("/dashboard/getDivisions", {
     params: { companyId, applicationName: "DMS 2.0" },
