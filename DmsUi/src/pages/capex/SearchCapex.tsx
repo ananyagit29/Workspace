@@ -33,7 +33,7 @@ interface CapexRecord {
   createdOn: string;
 }
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 7;
 
 const SearchCapex = () => {
   const { user, loading } = useContext(AuthContext);
@@ -185,7 +185,7 @@ const SearchCapex = () => {
   };
 
   const renderPagination = () => {
-    if (totalPages <= 1) return null;
+    if (totalPages === 0) return null;
     let startPage = Math.max(0, currentPage - 2);
     let endPage = Math.min(totalPages - 1, currentPage + 2);
     if (endPage - startPage < 4) {
@@ -287,16 +287,15 @@ const SearchCapex = () => {
 
           {hasSearched && (
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
                   Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({totalElements})</span>
                 </span>
-                {renderPagination()}
               </div>
 
-              <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}>
+              <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12 }}>
-                  <thead style={{ position: "sticky", top: 0, zIndex: 10, background: "#f3f4f6" }}>
+                  <thead style={{ background: "#f3f4f6" }}>
                     <tr style={{ color: "#374151" }}>
                       <th style={thStyle}>Budget Code</th>
                       <th style={thStyle}>Doc Date</th>
@@ -310,7 +309,7 @@ const SearchCapex = () => {
                   </thead>
                   <tbody>
                     {results.map((r) => (
-                      <tr key={r.budgetCode} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <tr key={`${r.budgetCode}-${r.revisionNo}`} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <td style={tdStyle}>{r.budgetCode}</td>
                         <td style={tdStyle}>{r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-"}</td>
                         <td style={tdStyle}>{r.revisionNo}</td>
@@ -342,6 +341,10 @@ const SearchCapex = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+              
+              <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff", display: "flex", justifyContent: "flex-end" }}>
+                {renderPagination()}
               </div>
             </div>
           )}

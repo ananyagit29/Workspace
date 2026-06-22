@@ -321,7 +321,7 @@ public class CapexBudgetService {
 
         java.util.List<Object> queryParams = new java.util.ArrayList<>(params);
         
-        String dataSql = "SELECT BUDGET_CODE, DOC_DATE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH FROM DMS_CAPEX_BUDGET " + where + " ORDER BY REVISION_NO DESC";
+        String dataSql = "SELECT BUDGET_CODE, DOC_DATE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH FROM DMS_CAPEX_BUDGET " + where + " ORDER BY BUDGET_CODE ASC, REVISION_NO DESC";
         
         if (clean(revision) != null && revision.equalsIgnoreCase("Latest")) {
              dataSql += " OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY";
