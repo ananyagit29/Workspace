@@ -56,8 +56,7 @@ const SearchCapex = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
-  const [replacingCapex, setReplacingCapex] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [reviseModal, setReviseModal] = useState<{ budgetCode: string; revisionNo: number; file: File | null } | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -157,14 +156,12 @@ const SearchCapex = () => {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !replacingCapex || !user) return;
-    const file = e.target.files[0];
+  const handleModalSubmit = async () => {
+    if (!reviseModal || !reviseModal.file || !user) return;
+    const { file, budgetCode } = reviseModal;
     
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       showToast("Only PDF files allowed", "error");
-      setReplacingCapex(null);
-      if (fileRef.current) fileRef.current.value = "";
       return;
     }
     
@@ -173,14 +170,12 @@ const SearchCapex = () => {
     formData.append("userId", user.userId);
 
     try {
-      await reviseCapex(replacingCapex, formData);
+      await reviseCapex(budgetCode, formData);
       showToast("Revision successfully uploaded", "success");
+      setReviseModal(null);
       handleSearch(currentPage);
     } catch {
       showToast("Failed to revise document", "error");
-    } finally {
-      setReplacingCapex(null);
-      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
@@ -218,7 +213,59 @@ const SearchCapex = () => {
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
+          {reviseModal ? (
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: "32px", margin: "40px auto", maxWidth: 480, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, borderBottom: "1px solid #f3f4f6", paddingBottom: 16 }}>
+                <span style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>Revise CapEx Budget</span>
+                <button onClick={() => setReviseModal(null)} style={{ ...linkButton, color: "#2563eb", fontSize: 13 }}>&larr; Back</button>
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "32px" }}>
+                <div>
+                  <label style={labelStyle}>Budget Type</label>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{CAPEX_TYPE_MAP[budgetType] || budgetType}</div>
+                </div>
+                
+                <div>
+                  <label style={labelStyle}>Budget Code</label>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.budgetCode}</div>
+                </div>
+                
+                <div>
+                  <label style={labelStyle}>New Revision No</label>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.revisionNo + 1}</div>
+                </div>
+                
+                <div>
+                  <label style={labelStyle}>Upload File</label>
+                  <input 
+                    type="file" 
+                    accept="application/pdf" 
+                    onChange={e => e.target.files && setReviseModal({ ...reviseModal, file: e.target.files[0] })}
+                    style={{ ...inputStyle, padding: "8px", cursor: "pointer", background: "#fff" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                <button 
+                  onClick={() => setReviseModal(null)} 
+                  style={{ background: "#fff", border: "1px solid #d1d5db", color: "#4b5563", borderRadius: 6, padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleModalSubmit}
+                  disabled={!reviseModal.file}
+                  style={{ ...primaryButton, padding: "10px 24px", fontSize: 13, opacity: reviseModal.file ? 1 : 0.6 }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={sectionTitle}>Search Filters</span>
               <button onClick={handleReset} style={linkButton}>Clear</button>
@@ -301,7 +348,7 @@ const SearchCapex = () => {
                       <th style={thStyle}>Doc Date</th>
                       <th style={thStyle}>Revision No</th>
                       <th style={thStyle}>Filename</th>
-                      <th style={thStyle}>Revision</th>
+                      {selections?.year === "2026-2027" && <th style={thStyle}>Revision</th>}
                       <th style={thStyle}>Remove</th>
                       <th style={thStyle}>Created By</th>
                       <th style={thStyle}>Created On</th>
@@ -318,11 +365,13 @@ const SearchCapex = () => {
                             {r.fileName || "View Document"}
                           </a>
                         </td>
-                        <td style={tdStyle}>
-                          <button onClick={() => { setReplacingCapex(r.budgetCode); fileRef.current?.click(); }} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
-                            Revise
-                          </button>
-                        </td>
+                        {selections?.year === "2026-2027" && (
+                          <td style={tdStyle}>
+                            <button onClick={() => setReviseModal({ budgetCode: r.budgetCode, revisionNo: r.revisionNo, file: null })} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
+                              Revise
+                            </button>
+                          </td>
+                        )}
                         <td style={tdStyle}>
                           <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
                             Remove
@@ -334,7 +383,7 @@ const SearchCapex = () => {
                     ))}
                     {results.length === 0 && (
                       <tr>
-                        <td colSpan={8} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                        <td colSpan={selections?.year === "2026-2027" ? 8 : 7} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
                           No documents found.
                         </td>
                       </tr>
@@ -348,11 +397,10 @@ const SearchCapex = () => {
               </div>
             </div>
           )}
-        </div>
+          </>
+        )}
+      </div>
       </main>
-
-      {/* Hidden file input for Revise */}
-      <input type="file" accept="application/pdf" ref={fileRef} style={{ display: "none" }} onChange={handleFileChange} />
     </div>
   );
 };
