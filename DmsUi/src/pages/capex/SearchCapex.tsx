@@ -119,7 +119,7 @@ const SearchCapex = () => {
         year: selections.year,
         budgetType: budgetType ? (CAPEX_TYPE_MAP[budgetType] || budgetType) : undefined,
         budgetCode: budgetCode || undefined,
-        revision: revision || undefined,
+        revision: budgetCode ? (revision || undefined) : undefined,
         page,
         size: PAGE_SIZE,
       });
@@ -294,10 +294,10 @@ const SearchCapex = () => {
                 {renderPagination()}
               </div>
 
-              <div style={{ overflowX: "auto" }}>
+              <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "60vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ background: "#f3f4f6", color: "#374151" }}>
+                  <thead style={{ position: "sticky", top: 0, zIndex: 10, background: "#f3f4f6" }}>
+                    <tr style={{ color: "#374151" }}>
                       <th style={thStyle}>Budget Code</th>
                       <th style={thStyle}>Doc Date</th>
                       <th style={thStyle}>Revision No</th>
@@ -311,7 +311,6 @@ const SearchCapex = () => {
                   <tbody>
                     {results.map((r) => (
                       <tr key={r.budgetCode} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <td style={tdStyle}>{CAPEX_TYPE_MAP[r.budgetType] || r.budgetType}</td>
                         <td style={tdStyle}>{r.budgetCode}</td>
                         <td style={tdStyle}>{r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-"}</td>
                         <td style={tdStyle}>{r.revisionNo}</td>
@@ -321,13 +320,13 @@ const SearchCapex = () => {
                           </a>
                         </td>
                         <td style={tdStyle}>
-                          <button onClick={() => { setReplacingCapex(r.budgetCode); fileRef.current?.click(); }} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#374151" }}>
+                          <button onClick={() => { setReplacingCapex(r.budgetCode); fileRef.current?.click(); }} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
                             Revise
                           </button>
                         </td>
                         <td style={tdStyle}>
-                          <button onClick={() => handleDelete(r.budgetCode)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#ef4444", fontWeight: "bold", fontSize: 14 }}>
-                            ✕
+                          <button onClick={() => handleDelete(r.budgetCode)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                            Remove
                           </button>
                         </td>
                         <td style={tdStyle}>{r.createdBy || "-"}</td>
