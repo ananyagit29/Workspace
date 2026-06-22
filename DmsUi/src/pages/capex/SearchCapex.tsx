@@ -3,9 +3,9 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
 import { getCapexSearchCodes, getCapexRevisions, searchCapex, deleteCapex, reviseCapex } from "../../api/dmsApi";
 
-const getViewFileUrl = (budgetCode: string) => {
+const getViewFileUrl = (budgetCode: string, revisionNo: number) => {
   const token = localStorage.getItem("jwtToken");
-  return `${import.meta.env.VITE_DMS_API}/capex/${encodeURIComponent(budgetCode)}/view?token=${token}`;
+  return `${import.meta.env.VITE_DMS_API}/capex/view?budgetCode=${encodeURIComponent(budgetCode)}&revision=${revisionNo}&token=${token}`;
 };
 
 interface Selections {
@@ -146,10 +146,10 @@ const SearchCapex = () => {
     setHasSearched(false);
   };
 
-  const handleDelete = async (code: string) => {
-    if (!window.confirm("Are you sure you want to remove this CapEx Budget?")) return;
+  const handleDelete = async (code: string, revisionNo: number) => {
+    if (!window.confirm(`Are you sure you want to remove revision ${revisionNo} of this CapEx Budget?`)) return;
     try {
-      await deleteCapex(code);
+      await deleteCapex(code, revisionNo);
       showToast("Deleted successfully", "success");
       handleSearch(currentPage);
     } catch {
@@ -315,7 +315,7 @@ const SearchCapex = () => {
                         <td style={tdStyle}>{r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-"}</td>
                         <td style={tdStyle}>{r.revisionNo}</td>
                         <td style={tdStyle}>
-                          <a href={getViewFileUrl(r.budgetCode)} target="_blank" rel="noreferrer" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
+                          <a href={getViewFileUrl(r.budgetCode, r.revisionNo)} target="_blank" rel="noreferrer" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
                             {r.fileName || "View Document"}
                           </a>
                         </td>
@@ -325,7 +325,7 @@ const SearchCapex = () => {
                           </button>
                         </td>
                         <td style={tdStyle}>
-                          <button onClick={() => handleDelete(r.budgetCode)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                          <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
                             Remove
                           </button>
                         </td>

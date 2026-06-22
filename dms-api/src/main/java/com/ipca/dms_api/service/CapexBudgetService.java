@@ -166,7 +166,7 @@ public class CapexBudgetService {
     }
 
     private CapexBudgetResponse findLocalByCode(String budgetCode) {
-        String sql = "SELECT * FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ?";
+        String sql = "SELECT * FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? ORDER BY REVISION_NO DESC FETCH NEXT 1 ROWS ONLY";
         try {
             List<CapexBudgetResponse> list = jdbcTemplate.query(sql, (rs, rowNum) -> CapexBudgetResponse.builder()
                 .budgetCode(rs.getString("BUDGET_CODE"))
@@ -175,6 +175,22 @@ public class CapexBudgetService {
                 .filePath(rs.getString("FILE_PATH"))
                 .revisionNo(rs.getInt("REVISION_NO"))
                 .build(), budgetCode);
+            return list.isEmpty() ? null : list.get(0);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private CapexBudgetResponse findLocalByCodeAndRevision(String budgetCode, int revision) {
+        String sql = "SELECT * FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? AND REVISION_NO = ?";
+        try {
+            List<CapexBudgetResponse> list = jdbcTemplate.query(sql, (rs, rowNum) -> CapexBudgetResponse.builder()
+                .budgetCode(rs.getString("BUDGET_CODE"))
+                .budgetType(rs.getString("BUDGET_TYPE"))
+                .fileName(rs.getString("FILE_NAME"))
+                .filePath(rs.getString("FILE_PATH"))
+                .revisionNo(rs.getInt("REVISION_NO"))
+                .build(), budgetCode, revision);
             return list.isEmpty() ? null : list.get(0);
         } catch (Exception e) {
             return null;
@@ -229,26 +245,40 @@ public class CapexBudgetService {
         Path fullPath = Paths.get(uploadDir, safeFileName);
 
         LocalDateTime now = LocalDateTime.now();
-        jdbcTemplate.update("""
-                UPDATE DMS_CAPEX_BUDGET
-                SET REVISION_NO = ?, FILE_NAME = ?, FILE_PATH = ?, CREATED_BY = ?, CREATED_ON = ?
-                WHERE BUDGET_CODE = ?
-                """,
-                newRevision, safeFileName, fullPath.toString(), userId, Timestamp.valueOf(now), budgetCode);
 
-        // Delete old file
-        Path oldPath = Paths.get(existing.getFilePath());
-        Files.deleteIfExists(oldPath);
+        // Fetch the common fields from the existing row to avoid ORA parameter binding issues in INSERT ... SELECT
+        java.util.Map<String, Object> oldRow = jdbcTemplate.queryForMap(
+            "SELECT COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? AND REVISION_NO = ?",
+            budgetCode, existing.getRevisionNo()
+        );
+
+        jdbcTemplate.update("""
+                INSERT INTO DMS_CAPEX_BUDGET
+                (COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE, BUDGET_CODE, REVISION_NO, DOC_DATE, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                oldRow.get("COMPANY_ID"), oldRow.get("LOCATION_ID"), oldRow.get("DIVISION_NAME"), oldRow.get("APPLICATION_NAME"), oldRow.get("FINANCIAL_YEAR"), oldRow.get("BUDGET_TYPE"), 
+                budgetCode, newRevision, Timestamp.valueOf(now), userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
 
         file.transferTo(fullPath.toFile());
 
         return CapexBudgetResponse.builder().budgetCode(budgetCode).fileName(safeFileName).build();
     }
 
-    public void removeCapex(String budgetCode) throws IOException {
-        CapexBudgetResponse existing = findLocalByCode(budgetCode);
+    public void removeCapex(String budgetCode, String revision) throws IOException {
+        CapexBudgetResponse existing;
+        if (revision != null) {
+            existing = findLocalByCodeAndRevision(budgetCode, Integer.parseInt(revision));
+        } else {
+            existing = findLocalByCode(budgetCode);
+        }
+        
         if (existing != null) {
-            jdbcTemplate.update("DELETE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ?", budgetCode);
+            if (revision != null) {
+                jdbcTemplate.update("DELETE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? AND REVISION_NO = ?", budgetCode, Integer.parseInt(revision));
+            } else {
+                jdbcTemplate.update("DELETE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ?", budgetCode);
+            }
             Files.deleteIfExists(Paths.get(existing.getFilePath()));
         }
     }
@@ -316,8 +346,13 @@ public class CapexBudgetService {
         return new PageImpl<>(rows, pageable, total == null ? 0 : total);
     }
     
-    public File getFile(String budgetCode) {
-        CapexBudgetResponse existing = findLocalByCode(budgetCode);
+    public File getFile(String budgetCode, String revision) {
+        CapexBudgetResponse existing;
+        if (revision != null) {
+            existing = findLocalByCodeAndRevision(budgetCode, Integer.parseInt(revision));
+        } else {
+            existing = findLocalByCode(budgetCode);
+        }
         if (existing != null && existing.getFilePath() != null) {
             File f = new File(existing.getFilePath());
             if (f.exists()) return f;

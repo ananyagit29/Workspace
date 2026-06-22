@@ -58,15 +58,16 @@ export const saveCapex = (formData: FormData) =>
   });
 
 export const reviseCapex = (budgetCode: string, formData: FormData) =>
-  dmsApi.put(`/capex/${budgetCode}/revise`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  dmsApi.put("/capex/revise", formData, {
+      params: { budgetCode },
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
 export const searchCapex = (params: any) =>
   dmsApi.get("/capex/search", { params });
 
-export const deleteCapex = (budgetCode: string) =>
-  dmsApi.delete(`/capex/${budgetCode}`);
+export const deleteCapex = (budgetCode: string, revision?: number) =>
+  dmsApi.delete("/capex/remove", { params: { budgetCode, revision } });
 
 export const getDivisions = (companyId: string) =>
   authApi.get("/dashboard/getDivisions", {

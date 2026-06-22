@@ -85,25 +85,23 @@ public class CapexBudgetController {
         }
     }
 
-    @PutMapping("/{budgetCode}/revise")
-    public ResponseEntity<?> reviseCapex(
-            @PathVariable String budgetCode,
-            @RequestParam String userId,
-            @RequestParam("file") MultipartFile file) {
+    @PutMapping("/revise")
+    public ResponseEntity<?> reviseCapex(@RequestParam("budgetCode") String budgetCode, @RequestParam("userId") String userId, @RequestParam("file") MultipartFile file) {
         try {
             CapexBudgetResponse res = capexBudgetService.reviseCapex(budgetCode, userId, file);
             return ResponseEntity.ok(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error revising CapEx budget.");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error revising document: " + e.getMessage() + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
         }
     }
 
-    @DeleteMapping("/{budgetCode}")
-    public ResponseEntity<?> removeCapex(@PathVariable String budgetCode) {
+    @DeleteMapping("/remove")
+    public ResponseEntity<?> removeCapex(@RequestParam("budgetCode") String budgetCode, @RequestParam(required = false) String revision) {
         try {
-            capexBudgetService.removeCapex(budgetCode);
+            capexBudgetService.removeCapex(budgetCode, revision);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting CapEx budget.");
@@ -123,10 +121,10 @@ public class CapexBudgetController {
         return ResponseEntity.ok(capexBudgetService.search(budgetType, budgetCode, revision, companyId, locationId, year, page, size));
     }
 
-    @GetMapping("/{budgetCode}/view")
-    public ResponseEntity<?> viewFile(@PathVariable String budgetCode) {
+    @GetMapping("/view")
+    public ResponseEntity<?> viewFile(@RequestParam("budgetCode") String budgetCode, @RequestParam(required = false) String revision) {
         try {
-            File file = capexBudgetService.getFile(budgetCode);
+            File file = capexBudgetService.getFile(budgetCode, revision);
             if (file == null || !file.exists()) {
                 return ResponseEntity.notFound().build();
             }
