@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
 import { getCapexSearchCodes, getCapexRevisions, searchCapex, deleteCapex, reviseCapex } from "../../api/dmsApi";
@@ -119,7 +119,7 @@ const SearchCapex = () => {
         year: selections.year,
         budgetType: budgetType ? (CAPEX_TYPE_MAP[budgetType] || budgetType) : undefined,
         budgetCode: budgetCode || undefined,
-        revision: budgetCode ? (revision || undefined) : undefined,
+        revision: revision || undefined,
         page,
         size: PAGE_SIZE,
       });
@@ -335,16 +335,14 @@ const SearchCapex = () => {
                     )}
                   </div>
 
-                  {budgetCode && budgetCodes.includes(budgetCode) && (
-                    <div style={{ width: "120px" }}>
-                      <label style={labelStyle}>Revision</label>
-                      <select value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle}>
-                        <option value="Latest">Latest</option>
-                        {revisions.map(r => <option key={r} value={r}>{r}</option>)}
-                        <option value="All">All</option>
-                      </select>
-                    </div>
-                  )}
+                  <div style={{ width: "120px" }}>
+                    <label style={labelStyle}>REVISION</label>
+                    <select value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle}>
+                      <option value="Latest">Latest</option>
+                      {revisions.map(r => <option key={r} value={r}>{r}</option>)}
+                      <option value="All">All</option>
+                    </select>
+                  </div>
 
                   <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, padding: "8px 24px" }}>
                     {searching ? "Searching..." : "Search"}

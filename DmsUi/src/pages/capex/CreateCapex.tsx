@@ -1,8 +1,8 @@
 import type React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
-import { getCapexBudgetTypes, getCapexBudgetCodes, saveCapex } from "../../api/dmsApi";
+import { getCapexBudgetCodes, saveCapex } from "../../api/dmsApi";
 
 interface Selections {
   com: string; div: string; loc: string; app: string;
@@ -22,7 +22,6 @@ const CAPEX_TYPE_OPTIONS = ["C", "IA", "LC", "LR", "R"];
 const MAX_FILE_SIZE = 1024 * 1024;
 
 const CreateCapex = () => {
-  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -262,7 +261,7 @@ const fileUploadContainer: React.CSSProperties = {
   gap: 12,
 };
 
-const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "8px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" };
+
 
 const uploadButton: React.CSSProperties = {
   padding: "6px 12px",
