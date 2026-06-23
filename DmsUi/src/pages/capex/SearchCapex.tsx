@@ -31,6 +31,7 @@ interface CapexRecord {
   fileName: string;
   createdBy: string;
   createdOn: string;
+  isLatestRevision?: boolean;
 }
 
 const PAGE_SIZE = 7;
@@ -349,7 +350,7 @@ const SearchCapex = () => {
                       <th style={thStyle}>Revision No</th>
                       <th style={thStyle}>Filename</th>
                       {selections?.year === "2026-2027" && <th style={thStyle}>Revision</th>}
-                      <th style={thStyle}>Remove</th>
+                      {selections?.year === "2026-2027" && <th style={thStyle}>Remove</th>}
                       <th style={thStyle}>Created By</th>
                       <th style={thStyle}>Created On</th>
                     </tr>
@@ -367,23 +368,29 @@ const SearchCapex = () => {
                         </td>
                         {selections?.year === "2026-2027" && (
                           <td style={tdStyle}>
-                            <button onClick={() => setReviseModal({ budgetCode: r.budgetCode, revisionNo: r.revisionNo, file: null })} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
-                              Revise
-                            </button>
+                            {r.isLatestRevision && (
+                              <button onClick={() => setReviseModal({ budgetCode: r.budgetCode, revisionNo: r.revisionNo, file: null })} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
+                                Revise
+                              </button>
+                            )}
                           </td>
                         )}
-                        <td style={tdStyle}>
-                          <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-                            Remove
-                          </button>
-                        </td>
+                        {selections?.year === "2026-2027" && (
+                          <td style={tdStyle}>
+                            {r.isLatestRevision && (
+                              <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                                Remove
+                              </button>
+                            )}
+                          </td>
+                        )}
                         <td style={tdStyle}>{r.createdBy || "-"}</td>
                         <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
                       </tr>
                     ))}
                     {results.length === 0 && (
                       <tr>
-                        <td colSpan={selections?.year === "2026-2027" ? 8 : 7} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                        <td colSpan={selections?.year === "2026-2027" ? 8 : 6} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
                           No documents found.
                         </td>
                       </tr>

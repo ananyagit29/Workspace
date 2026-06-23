@@ -15,6 +15,7 @@ public class CapexBudgetResponse {
     private LocalDateTime createdOn;
     private LocalDateTime docDate;
     private Integer revisionNo;
+    private Boolean isLatestRevision;
 
     public CapexBudgetResponse() {}
 
@@ -35,6 +36,7 @@ public class CapexBudgetResponse {
         private LocalDateTime createdOn;
         private LocalDateTime docDate;
         private Integer revisionNo;
+        private Boolean isLatestRevision;
 
         public Builder budgetCode(String budgetCode) { this.budgetCode = budgetCode; return this; }
         public Builder budgetType(String budgetType) { this.budgetType = budgetType; return this; }
@@ -48,6 +50,7 @@ public class CapexBudgetResponse {
         public Builder createdOn(LocalDateTime createdOn) { this.createdOn = createdOn; return this; }
         public Builder docDate(LocalDateTime docDate) { this.docDate = docDate; return this; }
         public Builder revisionNo(Integer revisionNo) { this.revisionNo = revisionNo; return this; }
+        public Builder isLatestRevision(Boolean isLatestRevision) { this.isLatestRevision = isLatestRevision; return this; }
 
         public CapexBudgetResponse build() {
             CapexBudgetResponse resp = new CapexBudgetResponse();
@@ -63,6 +66,7 @@ public class CapexBudgetResponse {
             resp.createdOn = this.createdOn;
             resp.docDate = this.docDate;
             resp.revisionNo = this.revisionNo;
+            resp.isLatestRevision = this.isLatestRevision;
             return resp;
         }
     }
@@ -102,4 +106,7 @@ public class CapexBudgetResponse {
 
     public Integer getRevisionNo() { return revisionNo; }
     public void setRevisionNo(Integer revisionNo) { this.revisionNo = revisionNo; }
+
+    public Boolean getIsLatestRevision() { return isLatestRevision; }
+    public void setIsLatestRevision(Boolean isLatestRevision) { this.isLatestRevision = isLatestRevision; }
 }

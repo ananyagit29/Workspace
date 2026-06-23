@@ -135,7 +135,18 @@ export const getYears = async (
   applicationName: string
 ): Promise<{ data: string[] }> => {
   const config = await getYearConfig();
-  const startYear = config[applicationName];
+  let startYear = config[applicationName];
+  
+  // Fallback to DMS 2.0 start year if specific app is not found in config
+  if (!startYear && config["DMS 2.0"]) {
+    startYear = config["DMS 2.0"];
+  }
+  // Hard fallback for CAPEX BUDGET to 2020 as requested by user
+  if (applicationName === "CAPEX BUDGET" || applicationName === "CAPEX_BUDGET") {
+    // If the database configured a startYear later than 2020, we can override or just default to 2020
+    startYear = 2020;
+  }
+  
   if (!startYear) return { data: [] };
 
   const currentFYStart = getCurrentFYStart();

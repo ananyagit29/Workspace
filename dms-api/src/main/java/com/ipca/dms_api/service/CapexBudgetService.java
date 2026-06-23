@@ -321,7 +321,9 @@ public class CapexBudgetService {
 
         java.util.List<Object> queryParams = new java.util.ArrayList<>(params);
         
-        String dataSql = "SELECT BUDGET_CODE, DOC_DATE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH FROM DMS_CAPEX_BUDGET " + where + " ORDER BY BUDGET_CODE ASC, REVISION_NO DESC";
+        String dataSql = "SELECT d.BUDGET_CODE, d.DOC_DATE, d.REVISION_NO, d.CREATED_BY, d.CREATED_ON, d.FILE_NAME, d.FILE_PATH, " +
+                         "(SELECT MAX(REVISION_NO) FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = d.BUDGET_CODE) AS MAX_REV " +
+                         "FROM DMS_CAPEX_BUDGET d " + where + " ORDER BY d.BUDGET_CODE ASC, d.REVISION_NO DESC";
         
         if (clean(revision) != null && revision.equalsIgnoreCase("Latest")) {
              dataSql += " OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY";
@@ -340,6 +342,7 @@ public class CapexBudgetService {
                 .fileName(rs.getString("FILE_NAME"))
                 .createdBy(rs.getString("CREATED_BY"))
                 .createdOn(rs.getTimestamp("CREATED_ON") != null ? rs.getTimestamp("CREATED_ON").toLocalDateTime() : null)
+                .isLatestRevision(rs.getInt("REVISION_NO") == rs.getInt("MAX_REV"))
                 .build(),
             queryParams.toArray());
 
