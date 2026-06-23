@@ -66,6 +66,7 @@ public class CapexBudgetController {
     @PostMapping
     public ResponseEntity<?> saveCapex(
             @RequestParam String budgetType,
+            @RequestParam String transactionId,
             @RequestParam String budgetCode,
             @RequestParam String companyId,
             @RequestParam String locationId,
@@ -76,7 +77,7 @@ public class CapexBudgetController {
             @RequestParam("file") MultipartFile file) {
         try {
             CapexBudgetResponse res = capexBudgetService.saveCapex(
-                budgetType, budgetCode, companyId, locationId, divisionName, applicationName, year, userId, file);
+                budgetType, transactionId, budgetCode, companyId, locationId, divisionName, applicationName, year, userId, file);
             return ResponseEntity.ok(res);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

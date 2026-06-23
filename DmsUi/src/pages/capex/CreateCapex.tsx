@@ -10,14 +10,14 @@ interface Selections {
 }
 
 const CAPEX_TYPE_MAP: Record<string, string> = {
-  "1": "CAPITAL",
-  "4": "INPRINCIPLE APPROVAL",
-  "2A": "LOCAL CAPITAL",
-  "2C": "LOCAL REPAIR",
-  "3A": "REPAIR",
+  "C": "CAPITAL",
+  "IA": "INPRINCIPLE APPROVAL",
+  "LC": "LOCAL CAPITAL",
+  "LR": "LOCAL REPAIR",
+  "R": "REPAIR",
 };
 
-const CAPEX_TYPE_OPTIONS = ["1", "4", "2A", "2C", "3A"];
+const CAPEX_TYPE_OPTIONS = ["C", "IA", "LC", "LR", "R"];
 
 const MAX_FILE_SIZE = 1024 * 1024;
 
@@ -31,7 +31,7 @@ const CreateCapex = () => {
   const [budgetType, setBudgetType] = useState("");
   const [budgetCode, setBudgetCode] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -58,7 +58,7 @@ const CreateCapex = () => {
     setBudgetCode("");
     setBudgetCodes([]);
     if (!budgetType || !selections) return;
-    
+
     getCapexBudgetCodes(budgetType, selections.com, selections.loc, selections.year)
       .then(res => setBudgetCodes(res.data || []))
       .catch(() => showToast("Failed to fetch budget codes", "error"));
@@ -98,6 +98,7 @@ const CreateCapex = () => {
       const fd = new FormData();
       const dbBudgetType = CAPEX_TYPE_MAP[budgetType] || budgetType;
       fd.append("budgetType", dbBudgetType);
+      fd.append("transactionId", budgetType);
       fd.append("budgetCode", budgetCode);
       fd.append("companyId", selections.com);
       fd.append("locationId", selections.loc);
@@ -106,7 +107,7 @@ const CreateCapex = () => {
       fd.append("year", selections.year);
       fd.append("userId", user.userId);
       fd.append("file", file);
-      
+
       await saveCapex(fd);
       showToast("CapEx Budget document saved successfully");
       handleCancel();
@@ -131,7 +132,7 @@ const CreateCapex = () => {
           <form onSubmit={handleSubmit}>
             <div style={cardStyle}>
               <div style={sectionTitle}>Create CapEx Budget</div>
-              
+
               <div style={fieldStyle}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: "1 1 200px" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>Select Budget Type</label>
@@ -159,8 +160,8 @@ const CreateCapex = () => {
                 {showSuggestions && budgetType && !saving && (
                   <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 50, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
                     {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).map(sug => (
-                      <li 
-                        key={sug} 
+                      <li
+                        key={sug}
                         onClick={() => {
                           setBudgetCode(sug);
                           setShowSuggestions(false);
@@ -301,7 +302,7 @@ const submitBtn = (active: boolean): React.CSSProperties => ({
   fontSize: 13,
   fontWeight: 500,
   color: "#fff",
-  background: active ? "#0ea5e9" : "#94a3b8",
+  background: active ? "#003366" : "#94a3b8",
   border: "none",
   borderRadius: 6,
   cursor: active ? "pointer" : "not-allowed",

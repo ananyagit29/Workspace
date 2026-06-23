@@ -43,30 +43,51 @@ public class CapexBudgetService {
     }
 
     public List<String> getBudgetTypes(String companyId, String locationId, String year) {
-        StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT CAPEX_TYPE FROM FA_CAPEX_BUDGET@IPCASCMDRDB WHERE CAPEX_TYPE IS NOT NULL");
-        java.util.List<Object> params = new java.util.ArrayList<>();
+        StringBuilder scmSql = new StringBuilder(
+            "SELECT DISTINCT TRANSACTION_ID as type FROM FA_ASSETS_BUDGET_HEADER@IPCASCMDB WHERE TRANSACTION_ID IS NOT NULL");
+        java.util.List<Object> scmParams = new java.util.ArrayList<>();
 
         if (companyId != null && !companyId.isEmpty()) {
-            sql.append(" AND COMPANY_CODE = ?");
-            params.add(companyId);
+            scmSql.append(" AND COMPANY_CODE = ?");
+            scmParams.add(companyId);
         }
         if (locationId != null && !locationId.isEmpty()) {
-            sql.append(" AND ENTITY_CODE = ?");
-            params.add(locationId);
+            scmSql.append(" AND ENTITY_CODE = ?");
+            scmParams.add(locationId);
         }
-        if (false && year != null && year.matches("\\d{4}-\\d{4}")) {
-            String[] parts = year.split("-");
-            int y1 = Integer.parseInt(parts[0]);
-            int y2 = Integer.parseInt(parts[1]);
-            sql.append(" AND DOC_DATE BETWEEN ? AND ?");
-            params.add(java.sql.Date.valueOf(y1 + "-04-01"));
-            params.add(java.sql.Date.valueOf(y2 + "-03-31"));
+        if (year != null && year.matches("\\d{4}-\\d{4}")) {
+            String scmYear = year.substring(0, 4) + year.substring(7);
+            scmSql.append(" AND FINANCIAL_YEAR = ?");
+            scmParams.add(Integer.parseInt(scmYear));
         }
-        sql.append(" ORDER BY CAPEX_TYPE");
+
+        StringBuilder dmsSql = new StringBuilder(
+            "SELECT DISTINCT BUDGET_TYPE as type FROM DMS_CAPEX_BUDGET WHERE BUDGET_TYPE IS NOT NULL");
+        java.util.List<Object> dmsParams = new java.util.ArrayList<>();
+
+        if (companyId != null && !companyId.isEmpty()) {
+            dmsSql.append(" AND COMPANY_ID = ?");
+            dmsParams.add(companyId);
+        }
+        if (locationId != null && !locationId.isEmpty()) {
+            dmsSql.append(" AND LOCATION_ID = ?");
+            dmsParams.add(locationId);
+        }
+        if (year != null && year.matches("\\d{4}-\\d{4}")) {
+            String formattedYear = formatYearForDb(year);
+            if (formattedYear != null) {
+                dmsSql.append(" AND FINANCIAL_YEAR = ?");
+                dmsParams.add(formattedYear);
+            }
+        }
+
+        String finalSql = "SELECT type FROM (" + scmSql.toString() + " UNION " + dmsSql.toString() + ") ORDER BY type";
+        java.util.List<Object> finalParams = new java.util.ArrayList<>();
+        finalParams.addAll(scmParams);
+        finalParams.addAll(dmsParams);
 
         try {
-            return jdbcTemplate.queryForList(sql.toString(), String.class, params.toArray());
+            return jdbcTemplate.queryForList(finalSql, String.class, finalParams.toArray());
         } catch (Exception e) {
             System.err.println("Error fetching budget types: " + e.getMessage());
             return java.util.Collections.emptyList();
@@ -74,34 +95,32 @@ public class CapexBudgetService {
     }
 
     public List<String> getBudgetCodes(String budgetType, String companyId, String locationId, String year) {
-        StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT DOC_CODE FROM FA_CAPEX_BUDGET@IPCASCMDRDB WHERE DOC_CODE IS NOT NULL");
-        java.util.List<Object> params = new java.util.ArrayList<>();
+        StringBuilder scmSql = new StringBuilder(
+            "SELECT DISTINCT BUDGET_CODE as code FROM FA_ASSETS_BUDGET_HEADER@IPCASCMDB a WHERE a.BUDGET_CODE IS NOT NULL AND NOT EXISTS (SELECT 'x' FROM DMS_CAPEX_BUDGET b WHERE b.BUDGET_CODE = a.BUDGET_CODE)");
+        java.util.List<Object> scmParams = new java.util.ArrayList<>();
 
         if (budgetType != null && !budgetType.isEmpty()) {
-            sql.append(" AND CAPEX_TYPE = ?");
-            params.add(budgetType);
+            scmSql.append(" AND a.TRANSACTION_ID = ?");
+            scmParams.add(budgetType);
         }
         if (companyId != null && !companyId.isEmpty()) {
-            sql.append(" AND COMPANY_CODE = ?");
-            params.add(companyId);
+            scmSql.append(" AND a.COMPANY_CODE = ?");
+            scmParams.add(companyId);
         }
         if (locationId != null && !locationId.isEmpty()) {
-            sql.append(" AND ENTITY_CODE = ?");
-            params.add(locationId);
+            scmSql.append(" AND a.ENTITY_CODE = ?");
+            scmParams.add(locationId);
         }
-        if (false && year != null && year.matches("\\d{4}-\\d{4}")) {
-            String[] parts = year.split("-");
-            int y1 = Integer.parseInt(parts[0]);
-            int y2 = Integer.parseInt(parts[1]);
-            sql.append(" AND DOC_DATE BETWEEN ? AND ?");
-            params.add(java.sql.Date.valueOf(y1 + "-04-01"));
-            params.add(java.sql.Date.valueOf(y2 + "-03-31"));
+        if (year != null && year.matches("\\d{4}-\\d{4}")) {
+            String scmYear = year.substring(0, 4) + year.substring(7);
+            scmSql.append(" AND a.FINANCIAL_YEAR = ?");
+            scmParams.add(Integer.parseInt(scmYear));
         }
-        sql.append(" ORDER BY DOC_CODE");
+        
+        scmSql.append(" ORDER BY code");
 
         try {
-            return jdbcTemplate.queryForList(sql.toString(), String.class, params.toArray());
+            return jdbcTemplate.queryForList(scmSql.toString(), String.class, scmParams.toArray());
         } catch (Exception e) {
             System.err.println("Error fetching budget codes: " + e.getMessage());
             return java.util.Collections.emptyList();
@@ -155,13 +174,13 @@ public class CapexBudgetService {
         }
     }
 
-    private boolean existsInScm(String budgetCode, String companyId, String locationId) {
-        String sql = "SELECT COUNT(*) FROM FA_CAPEX_BUDGET@IPCASCMDRDB WHERE DOC_CODE = ? AND COMPANY_CODE = ? AND ENTITY_CODE = ?";
+    private java.sql.Timestamp getScmDocDate(String budgetCode, String companyId, String locationId, String budgetType) {
+        String sql = "SELECT DOC_DATE FROM FA_ASSETS_BUDGET_HEADER@IPCASCMDB WHERE BUDGET_CODE = ? AND COMPANY_CODE = ? AND ENTITY_CODE = ? AND TRANSACTION_ID = ? FETCH NEXT 1 ROWS ONLY";
         try {
-            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, budgetCode, companyId, locationId);
-            return count != null && count > 0;
+            java.util.Date docDate = jdbcTemplate.queryForObject(sql, java.util.Date.class, budgetCode, companyId, locationId, budgetType);
+            return docDate != null ? new java.sql.Timestamp(docDate.getTime()) : null;
         } catch (Exception e) {
-            return false;
+            return null;
         }
     }
 
@@ -198,19 +217,21 @@ public class CapexBudgetService {
     }
 
     public CapexBudgetResponse saveCapex(
-            String budgetType, String budgetCode, String companyId, String locationId,
+            String budgetType, String transactionId, String budgetCode, String companyId, String locationId,
             String divisionName, String applicationName, String financialYear, String userId,
             MultipartFile file) throws IOException {
 
         if (budgetCode == null || budgetCode.isBlank()) throw new IllegalArgumentException("Budget code required");
         if (budgetType == null || budgetType.isBlank()) throw new IllegalArgumentException("Budget type required");
+        if (transactionId == null || transactionId.isBlank()) throw new IllegalArgumentException("Transaction ID required");
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("File required");
         if (file.getSize() > MAX_FILE_SIZE) throw new IllegalArgumentException("File size must be 1 MB or less.");
         if (!Objects.requireNonNull(file.getOriginalFilename()).toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("Only PDF files allowed.");
         }
 
-        if (!existsInScm(budgetCode, companyId, locationId)) {
+        java.sql.Timestamp scmDocDate = getScmDocDate(budgetCode, companyId, locationId, transactionId);
+        if (scmDocDate == null) {
             throw new IllegalArgumentException("Budget Code does not exist in SCM ERP.");
         }
 
@@ -224,10 +245,10 @@ public class CapexBudgetService {
         LocalDateTime now = LocalDateTime.now();
         jdbcTemplate.update("""
                 INSERT INTO DMS_CAPEX_BUDGET
-                (COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE, BUDGET_CODE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE, BUDGET_CODE, REVISION_NO, CREATED_BY, CREATED_ON, FILE_NAME, FILE_PATH, DOC_DATE)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                companyId, locationId, divisionName, applicationName, formatYearForDb(financialYear), budgetType, budgetCode, 0, userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
+                companyId, locationId, divisionName, applicationName, formatYearForDb(financialYear), budgetType, budgetCode, 0, userId, Timestamp.valueOf(now), safeFileName, fullPath.toString(), scmDocDate);
 
         file.transferTo(fullPath.toFile());
 
@@ -248,7 +269,7 @@ public class CapexBudgetService {
 
         // Fetch the common fields from the existing row to avoid ORA parameter binding issues in INSERT ... SELECT
         java.util.Map<String, Object> oldRow = jdbcTemplate.queryForMap(
-            "SELECT COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? AND REVISION_NO = ?",
+            "SELECT COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FINANCIAL_YEAR, BUDGET_TYPE, DOC_DATE FROM DMS_CAPEX_BUDGET WHERE BUDGET_CODE = ? AND REVISION_NO = ?",
             budgetCode, existing.getRevisionNo()
         );
 
@@ -258,7 +279,7 @@ public class CapexBudgetService {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 oldRow.get("COMPANY_ID"), oldRow.get("LOCATION_ID"), oldRow.get("DIVISION_NAME"), oldRow.get("APPLICATION_NAME"), oldRow.get("FINANCIAL_YEAR"), oldRow.get("BUDGET_TYPE"), 
-                budgetCode, newRevision, Timestamp.valueOf(now), userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
+                budgetCode, newRevision, oldRow.get("DOC_DATE"), userId, Timestamp.valueOf(now), safeFileName, fullPath.toString());
 
         file.transferTo(fullPath.toFile());
 

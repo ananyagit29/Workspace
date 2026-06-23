@@ -14,14 +14,14 @@ interface Selections {
 }
 
 const CAPEX_TYPE_MAP: Record<string, string> = {
-  "1": "CAPITAL",
-  "4": "INPRINCIPLE APPROVAL",
-  "2A": "LOCAL CAPITAL",
-  "2C": "LOCAL REPAIR",
-  "3A": "REPAIR",
+  "C": "CAPITAL",
+  "IA": "INPRINCIPLE APPROVAL",
+  "LC": "LOCAL CAPITAL",
+  "LR": "LOCAL REPAIR",
+  "R": "REPAIR",
 };
 
-const CAPEX_TYPE_OPTIONS = ["1", "4", "2A", "2C", "3A"];
+const CAPEX_TYPE_OPTIONS = ["C", "IA", "LC", "LR", "R"];
 
 interface CapexRecord {
   budgetCode: string;
@@ -86,7 +86,7 @@ const SearchCapex = () => {
     setRevision("Latest");
     setRevisions([]);
     if (!budgetType || !selections) return;
-    
+
     const dbBudgetType = CAPEX_TYPE_MAP[budgetType] || budgetType;
     getCapexSearchCodes(dbBudgetType, selections.com, selections.loc, selections.year)
       .then(res => setBudgetCodes(res.data || []))
@@ -160,12 +160,12 @@ const SearchCapex = () => {
   const handleModalSubmit = async () => {
     if (!reviseModal || !reviseModal.file || !user) return;
     const { file, budgetCode } = reviseModal;
-    
+
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       showToast("Only PDF files allowed", "error");
       return;
     }
-    
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("userId", user.userId);
@@ -220,28 +220,28 @@ const SearchCapex = () => {
                 <span style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>Revise CapEx Budget</span>
                 <button onClick={() => setReviseModal(null)} style={{ ...linkButton, color: "#2563eb", fontSize: 13 }}>&larr; Back</button>
               </div>
-              
+
               <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "32px" }}>
                 <div>
                   <label style={labelStyle}>Budget Type</label>
                   <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{CAPEX_TYPE_MAP[budgetType] || budgetType}</div>
                 </div>
-                
+
                 <div>
                   <label style={labelStyle}>Budget Code</label>
                   <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.budgetCode}</div>
                 </div>
-                
+
                 <div>
                   <label style={labelStyle}>New Revision No</label>
                   <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.revisionNo + 1}</div>
                 </div>
-                
+
                 <div>
                   <label style={labelStyle}>Upload File</label>
-                  <input 
-                    type="file" 
-                    accept="application/pdf" 
+                  <input
+                    type="file"
+                    accept="application/pdf"
                     onChange={e => e.target.files && setReviseModal({ ...reviseModal, file: e.target.files[0] })}
                     style={{ ...inputStyle, padding: "8px", cursor: "pointer", background: "#fff" }}
                   />
@@ -249,13 +249,13 @@ const SearchCapex = () => {
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button 
-                  onClick={() => setReviseModal(null)} 
+                <button
+                  onClick={() => setReviseModal(null)}
                   style={{ background: "#fff", border: "1px solid #d1d5db", color: "#4b5563", borderRadius: 6, padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleModalSubmit}
                   disabled={!reviseModal.file}
                   style={{ ...primaryButton, padding: "10px 24px", fontSize: 13, opacity: reviseModal.file ? 1 : 0.6 }}
@@ -267,146 +267,146 @@ const SearchCapex = () => {
           ) : (
             <>
               <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={sectionTitle}>Search Filters</span>
-              <button onClick={handleReset} style={linkButton}>Clear</button>
-            </div>
-            <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
-              <div style={{ width: "300px" }}>
-                <label style={labelStyle}>Budget Type</label>
-                <select value={budgetType} onChange={e => setBudgetType(e.target.value)} style={inputStyle}>
-                  <option value="">Select</option>
-                  {budgetTypes.map(t => <option key={t} value={t}>{CAPEX_TYPE_MAP[t] || t}</option>)}
-                </select>
-              </div>
-              <div style={{ position: "relative", zIndex: 50, width: "300px" }}>
-                <label style={labelStyle}>Budget Code</label>
-                <input
-                  value={budgetCode}
-                  onChange={e => {
-                    setBudgetCode(e.target.value.toUpperCase());
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  disabled={!budgetType}
-                  placeholder="Enter budget code"
-                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box", opacity: !budgetType ? 0.6 : 1 }}
-                />
-                {showSuggestions && budgetType && (
-                  <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 10, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
-                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).map(sug => (
-                      <li 
-                        key={sug} 
-                        onClick={() => {
-                          setBudgetCode(sug);
-                          setShowSuggestions(false);
-                        }}
-                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        {sug}
-                      </li>
-                    ))}
-                    {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
-                      <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={sectionTitle}>Search Filters</span>
+                  <button onClick={handleReset} style={linkButton}>Clear</button>
+                </div>
+                <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
+                  <div style={{ width: "300px" }}>
+                    <label style={labelStyle}>Budget Type</label>
+                    <select value={budgetType} onChange={e => setBudgetType(e.target.value)} style={inputStyle}>
+                      <option value="">Select</option>
+                      {budgetTypes.map(t => <option key={t} value={t}>{CAPEX_TYPE_MAP[t] || t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ position: "relative", zIndex: 50, width: "300px" }}>
+                    <label style={labelStyle}>Budget Code</label>
+                    <input
+                      value={budgetCode}
+                      onChange={e => {
+                        setBudgetCode(e.target.value.toUpperCase());
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                      disabled={!budgetType}
+                      placeholder="Enter budget code"
+                      style={{ ...inputStyle, width: "100%", boxSizing: "border-box", opacity: !budgetType ? 0.6 : 1 }}
+                    />
+                    {showSuggestions && budgetType && (
+                      <ul style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, zIndex: 10, maxHeight: 150, overflowY: "auto", listStyle: "none", padding: 0, margin: "4px 0 0 0", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>
+                        {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).map(sug => (
+                          <li
+                            key={sug}
+                            onClick={() => {
+                              setBudgetCode(sug);
+                              setShowSuggestions(false);
+                            }}
+                            style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          >
+                            {sug}
+                          </li>
+                        ))}
+                        {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
+                          <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                        )}
+                      </ul>
                     )}
-                  </ul>
-                )}
+                  </div>
+
+                  {budgetCode && budgetCodes.includes(budgetCode) && (
+                    <div style={{ width: "120px" }}>
+                      <label style={labelStyle}>Revision</label>
+                      <select value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle}>
+                        <option value="Latest">Latest</option>
+                        {revisions.map(r => <option key={r} value={r}>{r}</option>)}
+                        <option value="All">All</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, padding: "8px 24px" }}>
+                    {searching ? "Searching..." : "Search"}
+                  </button>
+                </div>
               </div>
 
-              {budgetCode && budgetCodes.includes(budgetCode) && (
-                <div style={{ width: "120px" }}>
-                  <label style={labelStyle}>Revision</label>
-                  <select value={revision} onChange={e => setRevision(e.target.value)} style={inputStyle}>
-                    <option value="Latest">Latest</option>
-                    {revisions.map(r => <option key={r} value={r}>{r}</option>)}
-                    <option value="All">All</option>
-                  </select>
+              {hasSearched && (
+                <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+                      Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({totalElements})</span>
+                    </span>
+                  </div>
+
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12 }}>
+                      <thead style={{ background: "#f3f4f6" }}>
+                        <tr style={{ color: "#374151" }}>
+                          <th style={thStyle}>Budget Code</th>
+                          <th style={thStyle}>Doc Date</th>
+                          <th style={thStyle}>Revision No</th>
+                          <th style={thStyle}>Filename</th>
+                          {selections?.year === "2026-2027" && <th style={thStyle}>Revision</th>}
+                          {selections?.year === "2026-2027" && <th style={thStyle}>Remove</th>}
+                          <th style={thStyle}>Created By</th>
+                          <th style={thStyle}>Created On</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {results.map((r) => (
+                          <tr key={`${r.budgetCode}-${r.revisionNo}`} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <td style={tdStyle}>{r.budgetCode}</td>
+                            <td style={tdStyle}>{r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-"}</td>
+                            <td style={tdStyle}>{r.revisionNo}</td>
+                            <td style={tdStyle}>
+                              <a href={getViewFileUrl(r.budgetCode, r.revisionNo)} target="_blank" rel="noreferrer" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
+                                {r.fileName || "View Document"}
+                              </a>
+                            </td>
+                            {selections?.year === "2026-2027" && (
+                              <td style={tdStyle}>
+                                {r.isLatestRevision && (
+                                  <button onClick={() => setReviseModal({ budgetCode: r.budgetCode, revisionNo: r.revisionNo, file: null })} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
+                                    Revise
+                                  </button>
+                                )}
+                              </td>
+                            )}
+                            {selections?.year === "2026-2027" && (
+                              <td style={tdStyle}>
+                                {r.isLatestRevision && (
+                                  <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                                    Remove
+                                  </button>
+                                )}
+                              </td>
+                            )}
+                            <td style={tdStyle}>{r.createdBy || "-"}</td>
+                            <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
+                          </tr>
+                        ))}
+                        {results.length === 0 && (
+                          <tr>
+                            <td colSpan={selections?.year === "2026-2027" ? 8 : 6} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                              No documents found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff", display: "flex", justifyContent: "flex-end" }}>
+                    {renderPagination()}
+                  </div>
                 </div>
               )}
-
-              <button onClick={() => handleSearch(0)} disabled={searching} style={{ ...primaryButton, opacity: searching ? 0.6 : 1, padding: "8px 24px" }}>
-                {searching ? "Searching..." : "Search"}
-              </button>
-            </div>
-          </div>
-
-          {hasSearched && (
-            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                  Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({totalElements})</span>
-                </span>
-              </div>
-
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 12 }}>
-                  <thead style={{ background: "#f3f4f6" }}>
-                    <tr style={{ color: "#374151" }}>
-                      <th style={thStyle}>Budget Code</th>
-                      <th style={thStyle}>Doc Date</th>
-                      <th style={thStyle}>Revision No</th>
-                      <th style={thStyle}>Filename</th>
-                      {selections?.year === "2026-2027" && <th style={thStyle}>Revision</th>}
-                      {selections?.year === "2026-2027" && <th style={thStyle}>Remove</th>}
-                      <th style={thStyle}>Created By</th>
-                      <th style={thStyle}>Created On</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((r) => (
-                      <tr key={`${r.budgetCode}-${r.revisionNo}`} style={{ borderBottom: "1px solid #e5e7eb", transition: "background 0.15s" }} onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <td style={tdStyle}>{r.budgetCode}</td>
-                        <td style={tdStyle}>{r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-"}</td>
-                        <td style={tdStyle}>{r.revisionNo}</td>
-                        <td style={tdStyle}>
-                          <a href={getViewFileUrl(r.budgetCode, r.revisionNo)} target="_blank" rel="noreferrer" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
-                            {r.fileName || "View Document"}
-                          </a>
-                        </td>
-                        {selections?.year === "2026-2027" && (
-                          <td style={tdStyle}>
-                            {r.isLatestRevision && (
-                              <button onClick={() => setReviseModal({ budgetCode: r.budgetCode, revisionNo: r.revisionNo, file: null })} style={{ padding: "4px 8px", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#2563eb" }}>
-                                Revise
-                              </button>
-                            )}
-                          </td>
-                        )}
-                        {selections?.year === "2026-2027" && (
-                          <td style={tdStyle}>
-                            {r.isLatestRevision && (
-                              <button onClick={() => handleDelete(r.budgetCode, r.revisionNo)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-                                Remove
-                              </button>
-                            )}
-                          </td>
-                        )}
-                        <td style={tdStyle}>{r.createdBy || "-"}</td>
-                        <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
-                      </tr>
-                    ))}
-                    {results.length === 0 && (
-                      <tr>
-                        <td colSpan={selections?.year === "2026-2027" ? 8 : 6} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
-                          No documents found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff", display: "flex", justifyContent: "flex-end" }}>
-                {renderPagination()}
-              </div>
-            </div>
+            </>
           )}
-          </>
-        )}
-      </div>
+        </div>
       </main>
     </div>
   );
