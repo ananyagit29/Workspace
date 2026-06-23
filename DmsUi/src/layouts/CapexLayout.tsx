@@ -37,7 +37,6 @@ const CapexLayout = () => {
     <>
       <TabLink to="/capex" end label="Search" />
       {canCreate && <TabLink to="/capex/create" label="Create" />}
-      {canReport  && <TabLink to="/capex/report"  label="Report" />}
     </>
   );
 

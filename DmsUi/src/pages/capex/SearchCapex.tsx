@@ -146,6 +146,25 @@ const SearchCapex = () => {
     setHasSearched(false);
   };
 
+  const handleExportExcel = () => {
+    if (results.length === 0) return;
+    import("xlsx").then((XLSX) => {
+      const data = results.map(r => ({
+        "Budget Code": r.budgetCode,
+        "Doc Date": r.docDate ? new Date(r.docDate).toLocaleDateString("en-GB") : "-",
+        "Revision No": r.revisionNo,
+        "Filename": r.fileName || "-",
+        "Created By": r.createdBy || "-",
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "CapEx Budgets");
+      const fileName = budgetCode ? `${budgetCode.toUpperCase().replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx` : "capex_budgets.xlsx";
+      XLSX.writeFile(wb, fileName);
+    });
+  };
+
   const handleDelete = async (code: string, revisionNo: number) => {
     if (!window.confirm(`Are you sure you want to remove revision ${revisionNo} of this CapEx Budget?`)) return;
     try {
@@ -339,6 +358,7 @@ const SearchCapex = () => {
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
                       Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({totalElements})</span>
                     </span>
+                    <button onClick={handleExportExcel} style={exportBtn}>Export to Excel</button>
                   </div>
 
                   <div style={{ overflowX: "auto" }}>
@@ -421,6 +441,7 @@ const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff
 
 const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#4b5563", whiteSpace: "nowrap" };
+const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 
 const pagerButton = (disabled: boolean, active: boolean = false): React.CSSProperties => ({
   padding: "4px 10px",

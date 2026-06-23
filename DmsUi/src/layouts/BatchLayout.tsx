@@ -37,7 +37,6 @@ const BatchLayout = () => {
     <>
       <TabLink to="/batch" end label="Search" />
       {canCreate && <TabLink to="/batch/create" label="Create" />}
-      {canReport  && <TabLink to="/batch/report"  label="Report" />}
     </>
   );
 
