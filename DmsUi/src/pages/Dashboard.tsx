@@ -13,6 +13,7 @@ const APP_ROUTES: Record<string, string> = {
   INVOICE_DOCUMENT_SYSTEM: "/invoice",
   INVOICE_DOCUMENTS: "/invoice",
   CAPEX_BUDGET: "/capex",
+  SUPPLIER_AND_CUSTOMER: "/supplier-customer",
 };
 
 const sel: React.CSSProperties = {    

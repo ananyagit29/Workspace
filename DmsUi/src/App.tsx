@@ -10,6 +10,8 @@ import CreateInvoice from "./pages/invoice/CreateInvoice";
 import CapexLayout from "./layouts/CapexLayout";
 import SearchCapex from "./pages/capex/SearchCapex";
 import CreateCapex from "./pages/capex/CreateCapex";
+import SupplierCustomerLayout from "./layouts/SupplierCustomerLayout";
+import SearchSupplierCustomer from "./pages/supplier-customer/SearchSupplierCustomer";
 function App() {
   return (
     <Routes>
@@ -32,6 +34,11 @@ function App() {
       <Route path="/capex" element={<CapexLayout />}>
         <Route index element={<SearchCapex />} />
         <Route path="create" element={<CreateCapex />} />
+      </Route>
+
+      {/* Supplier & Customer Module */}
+      <Route path="/supplier-customer" element={<SupplierCustomerLayout />}>
+        <Route index element={<SearchSupplierCustomer />} />
       </Route>
     </Routes>
   );

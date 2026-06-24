@@ -191,3 +191,13 @@ export const getModules = (
   authApi.get("/dashboard/getModules", {
     params: { applicationName, subApplicationName },
   });
+
+// Supplier & Customer API
+export const getSupplierCustomerSearchOptions = (accountType?: string, companyId?: string, locationId?: string) =>
+  dmsApi.get("/supplier-customer/search-options", { params: { accountType, companyId, locationId } });
+
+export const searchSupplierCustomer = (params: any) =>
+  dmsApi.get("/supplier-customer/search", { params });
+
+export const removeSupplierCustomer = (accountCode: string, fileName: string) =>
+  dmsApi.delete("/supplier-customer/remove", { params: { accountCode, fileName } });
