@@ -201,3 +201,8 @@ export const searchSupplierCustomer = (params: any) =>
 
 export const removeSupplierCustomer = (accountCode: string, fileName: string) =>
   dmsApi.delete("/supplier-customer/remove", { params: { accountCode, fileName } });
+
+export const saveSupplierCustomerFile = (data: FormData) =>
+  dmsApi.post("/supplier-customer/add-file", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });

@@ -23,6 +23,9 @@ public class SupplierCustomerService {
 
     private final JdbcTemplate jdbcTemplate;
 
+    @org.springframework.beans.factory.annotation.Value("${dms.upload.directory}")
+    private String uploadDir;
+
     public SupplierCustomerService(@Qualifier("primaryDataSource") DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(Objects.requireNonNull(dataSource));
     }
@@ -136,5 +139,49 @@ public class SupplierCustomerService {
             System.err.println("Error removing S&C document: " + e.getMessage());
             throw new RuntimeException("Failed to remove document");
         }
+    }
+    public SupplierCustomerResponse saveDocument(String accountType, String accountCode, String accountName, 
+            String companyId, String locationId, String divisionName, String applicationName, String userId, 
+            org.springframework.web.multipart.MultipartFile file) throws IOException {
+
+        if (file.isEmpty()) throw new IllegalArgumentException("File is empty.");
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null) originalName = "unknown.pdf";
+
+        // Generate a safe unique filename to avoid overriding
+        String safeFileName = System.currentTimeMillis() + "_" + originalName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        
+        java.io.File directory = new java.io.File(uploadDir);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        Paths.get(uploadDir, safeFileName);
+        java.nio.file.Path fullPath = Paths.get(uploadDir, safeFileName);
+        
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        jdbcTemplate.update(
+            "INSERT INTO DMS_SUPPLIER_AND_CUSTOMER " +
+            "(ACCOUNT_TYPE, ACCOUNT_CODE, ACCOUNT_NAME, COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, FILE_NAME, FILE_PATH, CREATED_BY, CREATED_ON) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            accountType, accountCode, accountName, companyId, locationId, divisionName, applicationName, safeFileName, fullPath.toString(), userId, java.sql.Timestamp.valueOf(now));
+
+        file.transferTo(fullPath);
+
+        return SupplierCustomerResponse.builder()
+                .accountType(accountType)
+                .accountCode(accountCode)
+                .accountName(accountName)
+                .fileName(safeFileName)
+                .build();
+    }
+
+    public java.io.File getFile(String accountCode, String fileName) {
+        String selectSql = "SELECT FILE_PATH FROM DMS_SUPPLIER_AND_CUSTOMER WHERE ACCOUNT_CODE = ? AND FILE_NAME = ?";
+        List<String> paths = jdbcTemplate.queryForList(selectSql, String.class, accountCode, fileName);
+        if (paths.isEmpty() || paths.get(0) == null) return null;
+        return new java.io.File(paths.get(0));
     }
 }

@@ -26,7 +26,7 @@ const SearchSupplierCustomer = () => {
   const { selections } = useOutletContext<{ selections: Selections }>();
   const navigate = useNavigate();
 
-  const [accountType, setAccountType] = useState("CUSTOMER");
+  const [accountType, setAccountType] = useState("");
   const [accountOptions, setAccountOptions] = useState<{ code: string; name: string }[]>([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -98,7 +98,7 @@ const SearchSupplierCustomer = () => {
   };
 
   const handleReset = () => {
-    setAccountType("CUSTOMER");
+    setAccountType("");
     setSelectedAccount("");
     setResults([]);
     setTotalPages(0);
@@ -180,6 +180,7 @@ const SearchSupplierCustomer = () => {
               <div style={{ width: "300px" }}>
                 <label style={labelStyle}>Account Type</label>
                 <select value={accountType} onChange={e => setAccountType(e.target.value)} style={inputStyle}>
+                  <option value="">SELECT</option>
                   {ACCOUNT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -257,7 +258,7 @@ const SearchSupplierCustomer = () => {
                         <td style={tdStyle}>{r.accountName}</td>
                         <td style={tdStyle}>{r.accountCode}</td>
                         <td style={tdStyle}>
-                          <a href="#" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
+                          <a href={`http://localhost:8080/dmsApi/supplier-customer/view?accountCode=${encodeURIComponent(r.accountCode)}&fileName=${encodeURIComponent(r.fileName)}`} target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9", textDecoration: "none", fontWeight: 500 }}>
                             {r.fileName}
                           </a>
                         </td>

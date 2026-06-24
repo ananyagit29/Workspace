@@ -3,9 +3,16 @@ package com.ipca.dms_api.controller;
 import com.ipca.dms_api.dto.SupplierCustomerResponse;
 import com.ipca.dms_api.service.SupplierCustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 import java.util.List;
 import java.util.Map;
@@ -42,5 +49,44 @@ public class SupplierCustomerController {
             @RequestParam String fileName) {
         service.removeDocument(accountCode, fileName);
         return ResponseEntity.ok(Map.of("message", "Document removed successfully"));
+    }
+    @PostMapping("/add-file")
+    public ResponseEntity<?> saveSupplierCustomer(
+            @RequestParam String accountType,
+            @RequestParam String accountCode,
+            @RequestParam String accountName,
+            @RequestParam String companyId,
+            @RequestParam String locationId,
+            @RequestParam String divisionName,
+            @RequestParam String applicationName,
+            @RequestParam String userId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            SupplierCustomerResponse res = service.saveDocument(
+                accountType, accountCode, accountName, companyId, locationId, divisionName, applicationName, userId, file);
+            return ResponseEntity.ok(res);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving Supplier & Customer document: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/view")
+    public ResponseEntity<?> viewFile(@RequestParam("accountCode") String accountCode, @RequestParam("fileName") String fileName) {
+        try {
+            File file = service.getFile(accountCode, fileName);
+            if (file == null || !file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            InputStream in = new FileInputStream(file);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+                .body(new InputStreamResource(in));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error accessing file.");
+        }
     }
 }

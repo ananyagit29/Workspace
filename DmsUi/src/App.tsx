@@ -12,6 +12,7 @@ import SearchCapex from "./pages/capex/SearchCapex";
 import CreateCapex from "./pages/capex/CreateCapex";
 import SupplierCustomerLayout from "./layouts/SupplierCustomerLayout";
 import SearchSupplierCustomer from "./pages/supplier-customer/SearchSupplierCustomer";
+import AddSupplierCustomerFile from "./pages/supplier-customer/AddSupplierCustomerFile";
 function App() {
   return (
     <Routes>
@@ -39,6 +40,7 @@ function App() {
       {/* Supplier & Customer Module */}
       <Route path="/supplier-customer" element={<SupplierCustomerLayout />}>
         <Route index element={<SearchSupplierCustomer />} />
+        <Route path="add-files" element={<AddSupplierCustomerFile />} />
       </Route>
     </Routes>
   );
