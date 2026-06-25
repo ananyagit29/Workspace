@@ -32,6 +32,11 @@ public class SupplierCustomerController {
         return ResponseEntity.ok(service.getSearchAccountOptions(accountType, companyId, locationId));
     }
 
+    @GetMapping("/scm-options")
+    public ResponseEntity<List<Map<String, Object>>> getScmSearchOptions(@RequestParam(required = false) String accountType) {
+        return ResponseEntity.ok(service.getScmAccountOptions(accountType));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<Page<SupplierCustomerResponse>> searchDocuments(
             @RequestParam(required = false) String accountType,

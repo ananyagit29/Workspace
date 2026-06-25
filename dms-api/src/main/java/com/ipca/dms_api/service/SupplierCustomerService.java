@@ -14,9 +14,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class SupplierCustomerService {
@@ -60,6 +62,45 @@ public class SupplierCustomerService {
             return jdbcTemplate.queryForList(sql.toString(), params.toArray());
         } catch (Exception e) {
             System.err.println("Error fetching S&C account options: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    public List<Map<String, Object>> getScmAccountOptions(String accountType) {
+        String controlCode = "1"; // Default to CUSTOMER
+        if (accountType != null) {
+            switch (accountType.toUpperCase()) {
+                case "CUSTOMER":
+                    controlCode = "1";
+                    break;
+                case "SUPPLIER":
+                    controlCode = "2";
+                    break;
+                case "SUPPLIER AND CUSTOMER":
+                    controlCode = "3";
+                    break;
+                case "NON-SCM PARTIES":
+                    controlCode = "4";
+                    break;
+            }
+        }
+
+        String sql = "select name,Code,substr(Name,1,30) as displayname from ipcaprod.account_head@ipcascmdb ah \n" +
+                     "where company_code = '1' and control_code = ? and Name is not null \n" +
+                     "and entity_code='*' and not exists (select 'x' from DMS_SUPPLIER_AND_CUSTOMER cd \n" +
+                     "where ah.code = cd.ACCOUNT_CODE) group by Code,name order by Name";
+
+        try {
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, controlCode);
+            return results.stream().map(row -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("code", row.get("CODE"));
+                map.put("name", row.get("NAME"));
+                map.put("displayname", row.get("DISPLAYNAME"));
+                return map;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error fetching SCM account options: " + e.getMessage());
             return java.util.Collections.emptyList();
         }
     }

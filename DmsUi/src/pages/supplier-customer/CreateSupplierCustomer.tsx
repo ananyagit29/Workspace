@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
-import { getSupplierCustomerSearchOptions, saveSupplierCustomerFile } from "../../api/dmsApi";
+import { getScmSupplierCustomerOptions, saveSupplierCustomerFile } from "../../api/dmsApi";
 
 interface Selections {
   com: string; div: string; loc: string; app: string;
@@ -39,9 +39,9 @@ const CreateSupplierCustomer = () => {
     setAccountOptions([]);
     if (!accountType || !selections) return;
 
-    getSupplierCustomerSearchOptions(accountType, selections.com, selections.loc)
+    getScmSupplierCustomerOptions(accountType)
       .then(res => setAccountOptions(res.data || []))
-      .catch(() => showToast("Failed to fetch accounts", "error"));
+      .catch(() => showToast("Failed to fetch SCM accounts. Oracle DB link might be down.", "error"));
   }, [accountType, selections]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

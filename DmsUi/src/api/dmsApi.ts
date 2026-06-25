@@ -196,6 +196,9 @@ export const getModules = (
 export const getSupplierCustomerSearchOptions = (accountType?: string, companyId?: string, locationId?: string) =>
   dmsApi.get("/supplier-customer/search-options", { params: { accountType, companyId, locationId } });
 
+export const getScmSupplierCustomerOptions = (accountType?: string) =>
+  dmsApi.get("/supplier-customer/scm-options", { params: { accountType } });
+
 export const searchSupplierCustomer = (params: any) =>
   dmsApi.get("/supplier-customer/search", { params });
 
