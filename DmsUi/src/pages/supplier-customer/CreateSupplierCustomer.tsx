@@ -129,7 +129,7 @@ const CreateSupplierCustomer = () => {
             </div>
 
             <div style={{ position: "relative", zIndex: 50, width: "100%" }}>
-              <label style={labelStyle}>Select {accountType === "SUPPLIER" ? "Supplier" : accountType === "SUPPLIER AND CUSTOMER" ? "Account" : "Customer"}</label>
+              <label style={labelStyle}>{accountType ? `Select ${accountType === "SUPPLIER" ? "Supplier" : accountType === "NON-SCM PARTIES" ? "Non-SCM Parties" : accountType === "CUSTOMER" ? "Customer" : "Party"}` : "Select"}</label>
               <input
                 value={selectedAccount}
                 onChange={e => {
