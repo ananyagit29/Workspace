@@ -172,10 +172,10 @@ const SearchSupplierCustomer = () => {
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={sectionTitle}>Search Filters</span>
+              <span style={sectionTitle}>SEARCH FILTERS</span>
               <button onClick={handleReset} style={linkButton}>Clear</button>
             </div>
-            
+
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
               <div style={{ width: "300px" }}>
                 <label style={labelStyle}>Account Type</label>
@@ -205,19 +205,19 @@ const SearchSupplierCustomer = () => {
                       .map(acc => `${acc.name} (${acc.code})`)
                       .filter(c => c.toUpperCase().includes(selectedAccount.toUpperCase()))
                       .map(sug => (
-                      <li
-                        key={sug}
-                        onClick={() => {
-                          setSelectedAccount(sug);
-                          setShowSuggestions(false);
-                        }}
-                        style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      >
-                        {sug}
-                      </li>
-                    ))}
+                        <li
+                          key={sug}
+                          onClick={() => {
+                            setSelectedAccount(sug);
+                            setShowSuggestions(false);
+                          }}
+                          style={{ padding: "8px 12px", fontSize: 12, cursor: "pointer", borderBottom: "1px solid #f3f4f6", color: "#374151" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          {sug}
+                        </li>
+                      ))}
                     {accountOptions.filter(c => `${c.name} (${c.code})`.toUpperCase().includes(selectedAccount.toUpperCase())).length === 0 && (
                       <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
                     )}

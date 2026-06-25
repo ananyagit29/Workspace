@@ -11,7 +11,7 @@ interface Selections {
 const ACCOUNT_TYPE_OPTIONS = ["CUSTOMER", "SUPPLIER", "SUPPLIER AND CUSTOMER", "NON-SCM PARTIES"];
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
-const AddSupplierCustomerFile = () => {
+const CreateSupplierCustomer = () => {
   const { user } = useContext(AuthContext);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -117,7 +117,7 @@ const AddSupplierCustomerFile = () => {
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 600, margin: "0 auto", background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: "0 0 20px 0" }}>ADD SUPPLIER AND CUSTOMER FILES</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: "0 0 20px 0" }}>CREATE SUPPLIER AND CUSTOMER</h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ width: "100%" }}>
@@ -230,4 +230,4 @@ const uploadButton: React.CSSProperties = {
   cursor: "pointer",
 };
 
-export default AddSupplierCustomerFile;
+export default CreateSupplierCustomer;

@@ -287,7 +287,7 @@ const SearchCapex = () => {
             <>
               <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={sectionTitle}>Search Filters</span>
+                  <span style={sectionTitle}>SEARCH FILTERS</span>
                   <button onClick={handleReset} style={linkButton}>Clear</button>
                 </div>
                 <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
