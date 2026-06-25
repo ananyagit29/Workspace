@@ -117,7 +117,7 @@ const CreateSupplierCustomer = () => {
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 600, margin: "0 auto", background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "20px 24px" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111827", margin: "0 0 20px 0" }}>CREATE SUPPLIER AND CUSTOMER</h2>
+          <h2 style={{ fontSize: 11, fontWeight: 600, color: "#8aa2b9", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 20px 0" }}>CREATE SUPPLIER AND CUSTOMER</h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ width: "100%" }}>
@@ -169,8 +169,8 @@ const CreateSupplierCustomer = () => {
             </div>
 
             <div style={{ width: "100%" }}>
-              <label style={labelStyle}>Upload File</label>
-              <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8aa2b9", marginBottom: 8, textTransform: "uppercase" }}>Upload File</label>
+              <div style={{ fontSize: 12, color: "#8aa2b9", marginBottom: 12 }}>
                 Upload other file in PDF format only. Maximum file size: 1 MB.
               </div>
               <div style={fileUploadContainer}>
@@ -208,15 +208,18 @@ const CreateSupplierCustomer = () => {
 };
 
 // --- STYLES --- //
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#4b5563", marginBottom: 4, textTransform: "uppercase" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#8aa2b9", marginBottom: 4, textTransform: "uppercase" };
 const inputStyle: React.CSSProperties = { width: "100%", padding: "8px 12px", fontSize: 13, color: "#111827", background: "#f9fafb", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" };
-const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 16, padding: "8px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" };
+const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "8px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" };
 
 const fileUploadContainer: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: 12,
-  padding: "6px 0",
+  padding: "12px 16px",
+  background: "#f8fafc",
+  border: "1px dashed #cbd5e1",
+  borderRadius: 6
 };
 
 const uploadButton: React.CSSProperties = {

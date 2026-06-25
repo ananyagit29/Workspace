@@ -178,7 +178,7 @@ const SearchSupplierCustomer = () => {
 
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end", padding: "10px 0 4px 0" }}>
               <div style={{ width: "300px" }}>
-                <label style={labelStyle}>Account Type</label>
+                <label style={labelStyle}>Select Account Type</label>
                 <select value={accountType} onChange={e => setAccountType(e.target.value)} style={inputStyle}>
                   <option value="">SELECT</option>
                   {ACCOUNT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -294,9 +294,9 @@ const SearchSupplierCustomer = () => {
 };
 
 // --- STYLES --- //
-const sectionTitle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: "#111827" };
+const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#8aa2b9", textTransform: "uppercase", letterSpacing: "0.05em" };
 const linkButton: React.CSSProperties = { background: "none", border: "none", color: "#6b7280", fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0 };
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#4b5563", marginBottom: 4, textTransform: "uppercase" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#8aa2b9", marginBottom: 4, textTransform: "uppercase" };
 const inputStyle: React.CSSProperties = { width: "100%", padding: "6px 10px", fontSize: 12, color: "#111827", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
