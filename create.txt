@@ -1,0 +1,274 @@
+<%-- 
+    Document   : Create
+    Created on : 17 Aug, 2022, 5:44:29 PM
+    Author     : ruchita.saroj
+--%>
+<%@page import="com.ipca.connection.SCMConnection"%>
+<%@page import="com.ipca.connection.DMSConnection"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+         pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+        
+        <%
+            String uid = "", app = "", com = "", div = "", loc = "", com_name = "", loc_name = "", finyear = "";
+            uid = ((session.getAttribute("userid") != null) ? (String) session.getAttribute("userid") : "");
+            com = ((session.getAttribute("com") != null) ? (String) session.getAttribute("com") : "");
+            div = ((session.getAttribute("div") != null) ? (String) session.getAttribute("div") : "");
+            loc = ((session.getAttribute("loc") != null) ? (String) session.getAttribute("loc") : "");
+            app = ((session.getAttribute("app") != null) ? (String) session.getAttribute("app") : "");
+            finyear = ((session.getAttribute("finyear") != null) ? (String) session.getAttribute("finyear") : "");
+            com_name = ((session.getAttribute("com_name") != null) ? (String) session.getAttribute("com_name") : "");
+            loc_name = ((session.getAttribute("loc_name") != null) ? (String) session.getAttribute("loc_name") : "");
+            String frm_dt = "", to_dt = "";
+            if (finyear != "") {
+                String[] fin_year = finyear.split("-");
+                frm_dt = "01-APR-" + fin_year[0];
+                to_dt = "31-MAR-" + fin_year[1];
+            }
+
+            session.setAttribute("userid", uid);
+            session.setAttribute("com", com);
+            session.setAttribute("div", div);
+            session.setAttribute("loc", loc);
+            session.setAttribute("app", app);
+            session.setAttribute("finyear", finyear);
+            session.setAttribute("com_name", com_name);
+            session.setAttribute("loc_name", loc_name);
+        %>
+        <script language="javascript" type="text/javascript">
+            function repl() {
+                document.location.replace("index.jsp");
+            }
+            function getxmlHttpRequest() {
+                try {
+                    xmlHttpRequest = new XMLHttpRequest();
+                } catch (e) {
+                    try {
+                        xmlHttpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+                    } catch (ee) {
+                        try {
+                            xmlHttpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                        } catch (ex) {
+                            alert("your browser doesn't support Ajax");
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            function getDocCodeDetails() {
+                document.getElementById("details").innerHTML = "";
+                document.getElementById("showdata").innerHTML = "";
+                const tlStuffType = document.getElementById('tlStuffType');
+                var tlStuffTypeCode = tlStuffType.options[tlStuffType.selectedIndex].value;
+                var tlStuffTypeName = tlStuffType.options[tlStuffType.selectedIndex].text;
+                document.getElementById("tlStuffTypeName").value = tlStuffTypeName;
+                if (tlStuffType === "SELECT")
+                {
+                    alert("Please Select Budget Type!");
+                } else
+                {
+                    getxmlHttpRequest();
+                    var url = "<%=request.getContextPath()%>/GetTruckLoadStuffServlet?page=create&op=getdoclist&tlStuffTypeCode=" + tlStuffTypeCode + "&tlStuffTypeName=" + tlStuffTypeName;
+                    xmlHttpRequest.onreadystatechange = getdoccodedetail;
+                    xmlHttpRequest.open("POST", url, true);
+                    xmlHttpRequest.send(null);
+                }
+            }
+
+            function getdoccodedetail() {
+                if (xmlHttpRequest.readyState === 4) {
+                    if (xmlHttpRequest.status === 200) {
+                        document.getElementById("details").innerHTML = this.responseText;
+                    }
+                }
+            }
+            function clearText()
+            {
+                if (document.getElementById("message") !== null)
+                    document.getElementById("message").innerHTML = "";
+                if (document.getElementById("error") !== null)
+                    document.getElementById("error").innerHTML = "";
+            }
+
+            function doClick() {
+                var options = document.getElementById("tlsSelectedInvoice").options;
+                var tlsSelectedInvoice = document.getElementById("tlsSelectedInvoice");
+                var tlsFile = document.getElementById("tlsFile");
+                if (tlsSelectedInvoice !== null) {
+                    if (tlsSelectedInvoice.length < 1) {
+                        alert("Please select atleast one Invoice Number");
+                    } else if (tlsFile.value === "")
+                    {
+                        alert("Please select File");
+                    } else
+                    {
+                        var ext = tlsFile.value.split('.').pop();
+                        if (ext === "pdf" || ext === "docx" || ext === "doc") {
+                            for (var i = 0; i < options.length; i++) {
+                                options[i].selected = true;
+                            }
+                            document.getElementById("formCreateTruckLoadStuff").submit();
+                        } else
+                        {
+                            alert("Only Word or PDF format are allowed")
+                            tlsFile.value = "";
+                        }
+                    }
+                }
+            }
+
+            function callservlet(file) {
+                window.open('<%=request.getContextPath()%>/ViewDocumentServlet?filename=' + file, '_blank');
+            }
+
+            function moveInvoice(lstbxFrom, lstbxTo) {
+                var varFromBox = document.getElementById(lstbxFrom);
+                var varToBox = document.getElementById(lstbxTo);
+                if ((varFromBox !== null) && (varToBox !== null)) {
+                    if (varFromBox.length < 1) {
+                        if (lstbxFrom === "tlsSelectInvoice")
+                        {
+                            alert('There are no items in the Select Invoice Number listbox.');
+                        } else
+                        {
+                            alert('There are no items in the Selected Invoice Number listbox.');
+                        }
+                        return false;
+                    }
+                    if (varFromBox.options.selectedIndex === -1)
+                    {
+                        if (lstbxFrom === "tlsSelectInvoice")
+                        {
+                            alert('Please select an Invoice Number to add.');
+                        } else
+                        {
+                            alert('Please select an Invoice Number to remove.');
+                        }
+                        return false;
+                    }
+                    while (varFromBox.options.selectedIndex >= 0) {
+                        var newOption = new Option();
+                        newOption.text = varFromBox.options[varFromBox.options.selectedIndex].text;
+                        newOption.value = varFromBox.options[varFromBox.options.selectedIndex].value;
+                        varToBox.options[varToBox.length] = newOption;
+                        varFromBox.remove(varFromBox.options.selectedIndex);
+                    }
+                }
+                return false;
+            }
+        </script>
+    </head>
+    <body class="create">
+        <%
+            if (uid == "") {
+                response.sendRedirect(request.getContextPath() + "/index.jsp");
+            } else {
+        %>
+        <jsp:include page="../header.jsp"></jsp:include>
+            <div id="templatemo_body" align="center">
+                <form action="<%=request.getContextPath()%>/CreateTruckLoadStuffServlet" id="formCreateTruckLoadStuff" name="formCreateTruckLoadStuff" method="post" enctype="multipart/form-data">
+                <div id="alldetails"> <%=com_name%> | <%=div%> | <%=loc_name%> | <%=app%> | <%=finyear%></div>
+                <div id="heading">
+                    <h3>Create Truck Load Stuff</h3>
+                </div>
+                <table>
+                    <tr>
+                        <td>
+                            Select Inv No/s. (Multi Select)
+                            <br/>
+                            <select name="tlsSelectInvoice" id="tlsSelectInvoice" style="height:250px; width: 300px;" multiple="multiple" onchange="clearText();">
+                                <%
+                                    try {
+                                        Connection conn = DMSConnection.getNewInstance().getConnection();
+                                        Statement stmt = conn.createStatement();
+                                        String query1 = "SELECT ltrim(rtrim(REPLACE(h.FINAL_PREFIX, '/', '-') || h.FINAL_INV_DOC_CODE || h.suffix)) as Invoice_no "
+                                                + "FROM ipcaprod.ea_custom_invoice_header@ipcascmdb h "
+                                                + "inner join ipcaprod.ea_custom_invoice_detail@ipcascmdb d on h.doc_code = d.doc_code "
+                                                + "where h.division_code=d.division_code "
+                                                + "and h.entity_code = d.entity_code "
+                                                + "and h.transaction_id = d.transaction_id "
+                                                + "and h.doc_date=d.doc_date "
+                                                + "and h.STATUS <> '4' "
+                                                + "and h.DOC_DATE between '" + frm_dt + "' and '" + to_dt + "' "
+                                                + "and d.pl_entity_code='" + loc + "' "
+                                                + "and h.FINAL_INV_DOC_CODE is not null "
+                                                + "and not exists (select 'x' from DMS_TRUCK_LOAD_STUFF "
+                                                + "where location_id = d.pl_entity_code "
+                                                + "and INVOICE_NO = ltrim(rtrim(REPLACE(h.FINAL_PREFIX, '/', '-') || h.FINAL_INV_DOC_CODE || h.suffix))) "
+                                                + "group by h.FINAL_PREFIX,h.FINAL_INV_DOC_CODE,h.suffix "
+                                                + "order by to_number(h.FINAL_INV_DOC_CODE) desc";
+                                        ResultSet rs1 = stmt.executeQuery(query1);
+                                        while (rs1.next()) {
+                                %>
+                                <option value='<%=rs1.getString("Invoice_no")%>'><%=rs1.getString("Invoice_no")%></option>
+                                <%
+                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                %>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="button" name="add" value=">" style="height:25px; width:25px;" onclick="moveInvoice('tlsSelectInvoice', 'tlsSelectedInvoice');" /> 
+                            <br/><br/>
+                            <input type="button" name="remove" value="<" style="height:25px; width:25px" onclick="moveInvoice('tlsSelectedInvoice', 'tlsSelectInvoice');" />
+                        </td>
+                        <td>
+                            Selected Inv No/s.
+                            <br/>
+                            <select name="tlsSelectedInvoice" id="tlsSelectedInvoice" style="height:250px; width: 250px;" multiple="multiple">
+                            </select>
+                            <br/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <br/>
+                            Upload File : 
+                            <br/>
+                            <input type='file' name='tlsFile' id='tlsFile'/>
+                            <br/>
+                            <span style="color: firebrick; font-size: 15px;">Note: Please compress file before uploading.</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <br/>
+                            <input type="button" value="Submit" id="submitbutton" onclick="doClick();"/>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <div id="message" align="center">
+                <%
+                    String message = (String) request.getAttribute("message");
+                    if (message != null) {
+                %> 
+                <%=message%> 
+                <%
+                    }
+                %>
+            </div>
+            <div id="error" align="center">
+                <%
+                    String error = (String) request.getAttribute("error");
+                    if (error != null) {
+                %> 
+                <%=error%> 
+                <%
+                    }
+                %>
+            </div>
+        </div>    
+    </body>
+    <% }%>
+</html>

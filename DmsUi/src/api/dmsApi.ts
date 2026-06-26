@@ -217,5 +217,13 @@ export const getTlsSearchOptions = (companyId?: string, locationId?: string, yea
 export const searchTls = (params: any) =>
   dmsApi.get("/truck-load-stuff/search", { params });
 
+export const getTlsScmInvoices = (companyId?: string, locationId?: string, year?: string) =>
+  dmsApi.get("/truck-load-stuff/scm-invoices", { params: { companyId, locationId, year } });
+
+export const createTlsRecords = (data: FormData) =>
+  dmsApi.post("/truck-load-stuff/create", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
 export const removeTlsFile = (invoiceNo: string, fileName: string) =>
   dmsApi.delete("/truck-load-stuff/remove", { params: { invoiceNo, fileName } });

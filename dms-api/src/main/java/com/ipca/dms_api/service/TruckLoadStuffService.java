@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,23 +35,27 @@ public class TruckLoadStuffService {
     }
 
     public List<String> getSearchOptions(String companyId, String locationId, String year) {
-        StringBuilder sql = new StringBuilder("SELECT DISTINCT INVOICE_NO FROM DMS_TRUCK_LOAD_STUFF WHERE 1=1 ");
+        StringBuilder sql = new StringBuilder(
+                "select d.INVOICE_NO " +
+                "from DMS_TRUCK_LOAD_STUFF d, hrms_live.pms_master_entity@hrmsdrdb h " +
+                "where d.Location_Id = h.code "
+        );
         List<Object> params = new ArrayList<>();
 
         if (clean(year) != null) {
-            sql.append(" AND FINANCIAL_YEAR = ?");
+            sql.append(" AND d.FINANCIAL_YEAR = ?");
             params.add(clean(year));
         }
         if (clean(companyId) != null) {
-            sql.append(" AND COMPANY_ID = ?");
+            sql.append(" AND d.COMPANY_ID = ?");
             params.add(clean(companyId));
         }
         if (clean(locationId) != null) {
-            sql.append(" AND LOCATION_ID = ?");
+            sql.append(" AND d.LOCATION_ID = ?");
             params.add(clean(locationId));
         }
 
-        sql.append(" ORDER BY INVOICE_NO");
+        sql.append(" order by d.INVOICE_NO desc");
 
         try {
             List<Map<String, Object>> results = jdbcTemplate.queryForList(sql.toString(), params.toArray());
@@ -141,5 +146,78 @@ public class TruckLoadStuffService {
         } catch (Exception e) {
             System.err.println("Error removing TLS document: " + e.getMessage());
         }
+    }
+
+    public List<String> getScmInvoices(String companyId, String locationId, String year) {
+        String frm_dt = "";
+        String to_dt = "";
+        if (year != null && !year.isEmpty()) {
+            String[] fin_year = year.split("-");
+            if (fin_year.length == 2) {
+                frm_dt = "01-APR-" + fin_year[0];
+                to_dt = "31-MAR-" + fin_year[1];
+            }
+        }
+        
+        String query = "SELECT ltrim(rtrim(REPLACE(h.FINAL_PREFIX, '/', '-') || h.FINAL_INV_DOC_CODE || h.suffix)) as Invoice_no "
+                + "FROM ipcaprod.ea_custom_invoice_header@ipcascmdb h "
+                + "inner join ipcaprod.ea_custom_invoice_detail@ipcascmdb d on h.doc_code = d.doc_code "
+                + "where h.division_code=d.division_code "
+                + "and h.entity_code = d.entity_code "
+                + "and h.transaction_id = d.transaction_id "
+                + "and h.doc_date=d.doc_date "
+                + "and h.STATUS <> '4' "
+                + "and h.DOC_DATE between ? and ? "
+                + "and d.pl_entity_code= ? "
+                + "and h.FINAL_INV_DOC_CODE is not null "
+                + "and not exists (select 'x' from DMS_TRUCK_LOAD_STUFF "
+                + "where location_id = d.pl_entity_code "
+                + "and INVOICE_NO = ltrim(rtrim(REPLACE(h.FINAL_PREFIX, '/', '-') || h.FINAL_INV_DOC_CODE || h.suffix))) "
+                + "group by h.FINAL_PREFIX,h.FINAL_INV_DOC_CODE,h.suffix "
+                + "order by to_number(h.FINAL_INV_DOC_CODE) desc";
+
+        try {
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(query, frm_dt, to_dt, locationId);
+            return results.stream()
+                    .map(row -> (String) row.get("INVOICE_NO"))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Error fetching SCM invoices: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public boolean createTruckLoadStuff(List<String> invoiceNos, MultipartFile file, String companyId, String locationId, String year, String division, String app, String createdBy) throws IOException {
+        if (invoiceNos == null || invoiceNos.isEmpty() || file == null || file.isEmpty()) {
+            return false;
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null) {
+            originalFilename = "uploaded_file.pdf";
+        }
+        
+        // Save the file physically once in a common location
+        java.nio.file.Path targetDir = Paths.get(uploadDir, "TRUCK_LOAD_STUFF", "Shared");
+        if (!Files.exists(targetDir)) {
+            Files.createDirectories(targetDir);
+        }
+        
+        String savedFileName = System.currentTimeMillis() + "_" + originalFilename.replaceAll("[\\\\s\\\\/]", "_");
+        java.nio.file.Path targetPath = targetDir.resolve(savedFileName);
+        file.transferTo(targetPath.toFile());
+        
+        String absoluteFilePath = targetPath.toAbsolutePath().toString();
+
+        String insertSql = "INSERT INTO DMS_TRUCK_LOAD_STUFF " +
+                           "(INVOICE_NO, FILE_NAME, CREATED_BY, CREATED_ON, FILE_PATH, FINANCIAL_YEAR, COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME) " +
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                           
+        for (String invoiceNo : invoiceNos) {
+            jdbcTemplate.update(insertSql, invoiceNo, originalFilename, createdBy, new Date(), absoluteFilePath, year, companyId, locationId, division, app);
+        }
+        
+        return true;
     }
 }
