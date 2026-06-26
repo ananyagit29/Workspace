@@ -128,10 +128,10 @@ const CreateTruckLoadStuff = () => {
   const btnStyle = {
     display: "flex", alignItems: "center", justifyContent: "center",
     width: 32, height: 32,
-    background: "#0ea5e9", color: "#fff",
+    background: "#003366", color: "#fff",
     border: "none", borderRadius: "50%",
     cursor: "pointer", fontWeight: "bold" as const,
-    boxShadow: "0 2px 4px rgba(14, 165, 233, 0.3)"
+    boxShadow: "0 2px 4px rgba(0, 51, 102, 0.3)"
   };
 
   return (
@@ -207,7 +207,7 @@ const CreateTruckLoadStuff = () => {
                 onClick={handleSubmit} 
                 disabled={submitting}
                 style={{
-                  background: submitting ? "#94a3b8" : "#0ea5e9",
+                  background: submitting ? "#94a3b8" : "#003366",
                   color: "#fff", border: "none", borderRadius: 6,
                   padding: "8px 24px", fontSize: 13, fontWeight: 600,
                   cursor: submitting ? "not-allowed" : "pointer",

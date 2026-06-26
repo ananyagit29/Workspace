@@ -2,7 +2,6 @@ import { useContext, useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
 import { useAppRights } from "../hooks/useAppRights";
 
 interface Selections {
@@ -60,7 +59,6 @@ const TruckLoadStuffLayout = () => {
         tabs={tabs}
       />
       <Outlet context={{ selections, user }} />
-      <Footer />
     </div>
   );
 };

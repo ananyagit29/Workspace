@@ -65,6 +65,23 @@ const SearchTruckLoadStuff = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    if (results.length === 0) return;
+    import("xlsx").then((XLSX) => {
+      const data = results.map(r => ({
+        "Invoice Number": r.invoiceNo || "-",
+        "File Name": r.fileName || "-",
+        "Created By": r.createdBy || "-",
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Truck_Load_Stuff");
+      const fileName = invoiceNo ? `${invoiceNo.replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx` : "truck_load_stuff.xlsx";
+      XLSX.writeFile(wb, fileName);
+    });
+  };
+
   const handleClear = () => {
     setInvoiceNo("");
     setResults([]);
@@ -145,6 +162,7 @@ const SearchTruckLoadStuff = () => {
                 <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
                   Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({results.length})</span>
                 </span>
+                <button onClick={handleExportExcel} style={exportBtn}>Export to Excel</button>
               </div>
 
               <div style={{ overflowX: "auto" }}>
@@ -203,5 +221,6 @@ const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff
 
 const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#4b5563", whiteSpace: "nowrap" };
+const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 
 export default SearchTruckLoadStuff;
