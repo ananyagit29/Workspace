@@ -14,6 +14,9 @@ import SupplierCustomerLayout from "./layouts/SupplierCustomerLayout";
 import SearchSupplierCustomer from "./pages/supplier-customer/SearchSupplierCustomer";
 import AddSupplierCustomerFile from "./pages/supplier-customer/AddSupplierCustomerFile";
 import CreateSupplierCustomer from "./pages/supplier-customer/CreateSupplierCustomer";
+import TruckLoadStuffLayout from "./layouts/TruckLoadStuffLayout";
+import SearchTruckLoadStuff from "./pages/truck-load-stuff/SearchTruckLoadStuff";
+import CreateTruckLoadStuff from "./pages/truck-load-stuff/CreateTruckLoadStuff";
 function App() {
   return (
     <Routes>
@@ -43,6 +46,12 @@ function App() {
         <Route index element={<SearchSupplierCustomer />} />
         <Route path="create" element={<CreateSupplierCustomer />} />
         <Route path="add-files" element={<AddSupplierCustomerFile />} />
+      </Route>
+
+      {/* Truck Load Stuff Module */}
+      <Route path="/truck-load-stuff" element={<TruckLoadStuffLayout />}>
+        <Route index element={<SearchTruckLoadStuff />} />
+        <Route path="create" element={<CreateTruckLoadStuff />} />
       </Route>
     </Routes>
   );

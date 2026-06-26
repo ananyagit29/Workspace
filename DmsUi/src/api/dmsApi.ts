@@ -209,3 +209,13 @@ export const saveSupplierCustomerFile = (data: FormData) =>
   dmsApi.post("/supplier-customer/add-file", data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+
+// Truck Load Stuff API
+export const getTlsSearchOptions = (companyId?: string, locationId?: string, year?: string) =>
+  dmsApi.get("/truck-load-stuff/search-options", { params: { companyId, locationId, year } });
+
+export const searchTls = (params: any) =>
+  dmsApi.get("/truck-load-stuff/search", { params });
+
+export const removeTlsFile = (invoiceNo: string, fileName: string) =>
+  dmsApi.delete("/truck-load-stuff/remove", { params: { invoiceNo, fileName } });
