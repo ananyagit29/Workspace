@@ -137,7 +137,7 @@ const CreateTruckLoadStuff = () => {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f3f4f6", height: "calc(100vh - 100px)", padding: "24px 32px" }}>
       {toast && (
-        <div style={{ position: "fixed", top: 20, right: 20, zIndex: 9999, background: toast.type === "success" ? "#10b981" : "#ef4444", color: "#fff", padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, background: toast.type === "success" ? "#10b981" : "#ef4444", color: "#fff", padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
           {toast.msg}
         </div>
       )}

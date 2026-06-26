@@ -226,7 +226,7 @@ const SearchCapex = () => {
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
       {toast && (
-        <div style={{ position: "fixed", top: 16, right: 16, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
           {toast.msg}
         </div>
       )}

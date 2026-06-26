@@ -30,13 +30,6 @@ const SearchTruckLoadStuff = () => {
   };
 
   useEffect(() => {
-    if (!selections) return;
-    getTlsSearchOptions(selections.com, selections.loc, selections.year)
-      .then(res => setInvoiceOptions(res.data || []))
-      .catch(() => showToast("Failed to fetch Invoice options", "error"));
-  }, [selections]);
-
-  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (invoiceRef.current && !invoiceRef.current.contains(e.target as Node)) {
         setShowInvoiceSuggestions(false);
@@ -45,6 +38,30 @@ const SearchTruckLoadStuff = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!selections) return;
+    
+    // Fetch dropdown options
+    getTlsSearchOptions(selections.com, selections.loc, selections.year)
+      .then(res => setInvoiceOptions(res.data || []))
+      .catch(() => showToast("Failed to fetch Invoice options", "error"));
+
+    // Automatically search all available records on load
+    setSearching(true);
+    searchTls({
+      companyId: selections.com,
+      locationId: selections.loc,
+      year: selections.year,
+      invoiceNo: undefined,
+    })
+      .then(res => {
+        setResults(res.data || []);
+        setHasSearched(true);
+      })
+      .catch(() => showToast("Search failed", "error"))
+      .finally(() => setSearching(false));
+  }, [selections]);
 
   const handleSearch = async () => {
     if (!selections) return;
@@ -106,7 +123,7 @@ const SearchTruckLoadStuff = () => {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f3f4f6", height: "calc(100vh - 100px)", position: "relative" }}>
       {toast && (
-        <div style={{ position: "fixed", top: 20, right: 20, padding: "12px 20px", borderRadius: 4, color: "#fff", background: toast.type === "success" ? "#10b981" : "#ef4444", zIndex: 9999, boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: 13, fontWeight: 500 }}>
+        <div style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 20px", borderRadius: 4, color: "#fff", background: toast.type === "success" ? "#10b981" : "#ef4444", zIndex: 9999, boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: 13, fontWeight: 500 }}>
           {toast.msg}
         </div>
       )}

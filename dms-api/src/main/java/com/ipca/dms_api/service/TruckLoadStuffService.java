@@ -58,7 +58,8 @@ public class TruckLoadStuffService {
         sql.append(" order by d.INVOICE_NO desc");
 
         try {
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            String query = Objects.requireNonNull(sql.toString());
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(query, params.toArray());
             return results.stream()
                     .map(row -> (String) row.get("INVOICE_NO"))
                     .filter(Objects::nonNull)
@@ -97,7 +98,8 @@ public class TruckLoadStuffService {
         sql.append(" ORDER BY CREATED_ON DESC");
 
         try {
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            String query = Objects.requireNonNull(sql.toString());
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(query, params.toArray());
             List<TruckLoadStuffResponse> responses = new ArrayList<>();
             for (Map<String, Object> row : results) {
                 TruckLoadStuffResponse res = new TruckLoadStuffResponse();
@@ -206,7 +208,7 @@ public class TruckLoadStuffService {
         
         String savedFileName = System.currentTimeMillis() + "_" + originalFilename.replaceAll("[\\\\s\\\\/]", "_");
         java.nio.file.Path targetPath = targetDir.resolve(savedFileName);
-        file.transferTo(targetPath.toFile());
+        file.transferTo(Objects.requireNonNull(targetPath.toFile()));
         
         String absoluteFilePath = targetPath.toAbsolutePath().toString();
 
