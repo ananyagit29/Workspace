@@ -59,7 +59,7 @@ public class SupplierCustomerService {
         sql.append(" ORDER BY ACCOUNT_NAME");
 
         try {
-            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            return jdbcTemplate.queryForList(Objects.requireNonNull(sql.toString()), params.toArray());
         } catch (Exception e) {
             System.err.println("Error fetching S&C account options: " + e.getMessage());
             return java.util.Collections.emptyList();
@@ -91,7 +91,7 @@ public class SupplierCustomerService {
                      "where ah.code = cd.ACCOUNT_CODE) group by Code,name order by Name";
 
         try {
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, controlCode);
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(Objects.requireNonNull(sql), controlCode);
             return results.stream().map(row -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("code", row.get("CODE"));
