@@ -54,16 +54,17 @@ const ReportInvoice = () => {
         </div>
       )}
 
-      <main style={{ padding: "24px 32px" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <main style={{ padding: "24px 32px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        
+        <div style={{ width: "100%", maxWidth: 450 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "#003366", margin: 0 }}>Invoice Documents Report</h2>
             <button onClick={handleExportExcel} style={{ ...primaryButton, opacity: loading || results.length === 0 ? 0.6 : 1 }} disabled={loading || results.length === 0}>
               Save As Excel
             </button>
           </div>
 
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: 0, maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}>
+          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: 0, maxHeight: 490, overflowY: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: "#f9fafb" }}>
