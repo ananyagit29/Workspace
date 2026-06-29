@@ -37,6 +37,7 @@ const InvoiceLayout = () => {
     <>
       <TabLink to="/invoice" end label="Search" />
       {canCreate && <TabLink to="/invoice/create" label="Create" />}
+      {canReport && <TabLink to="/invoice/report" label="Report" />}
     </>
   );
 

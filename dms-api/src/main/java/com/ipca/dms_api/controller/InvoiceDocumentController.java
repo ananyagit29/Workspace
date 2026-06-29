@@ -126,6 +126,13 @@ public class InvoiceDocumentController {
         return ResponseEntity.ok(invoiceService.search(invoiceNumber, year, locationId, page, size));
     }
 
+    @GetMapping("/missing")
+    public ResponseEntity<List<String>> getMissingInvoices(
+            @RequestParam String locationId,
+            @RequestParam String year) {
+        return ResponseEntity.ok(invoiceService.getMissingInvoices(locationId, year));
+    }
+
     @GetMapping("/{invoiceNumber}/view")
     public ResponseEntity<Resource> view(@PathVariable String invoiceNumber, @RequestParam(required = false) String type) {
         return fileResponse(invoiceNumber, type, "inline");

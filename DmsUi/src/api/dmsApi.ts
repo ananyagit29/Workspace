@@ -39,6 +39,9 @@ export const getCompanies = () =>
 export const deleteInvoice = (invoiceNumber: string) =>
   authApi.delete(`/invoice-document/${invoiceNumber}`);
 
+export const getMissingInvoices = (locationId: string, year: string) =>
+  dmsApi.get("/invoice/missing", { params: { locationId, year } });
+
 // CapEx Budget API
 export const getCapexBudgetTypes = (companyId: string, locationId: string, year: string) =>
   dmsApi.get("/capex/types", { params: { companyId, locationId, year } });

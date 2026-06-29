@@ -212,6 +212,43 @@ public class InvoiceDocumentService {
         return new PageImpl<>(rows, pageable, total == null ? 0 : total);
     }
 
+    public java.util.List<String> getMissingInvoices(String locationId, String year) {
+        if (locationId == null || locationId.trim().isEmpty() || year == null || year.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        String[] parts = year.split("-");
+        if (parts.length != 2) return java.util.Collections.emptyList();
+        
+        int y1 = Integer.parseInt(parts[0]);
+        int y2 = parts[1].length() == 2 ? Integer.parseInt(parts[0].substring(0, 2) + parts[1]) : Integer.parseInt(parts[1]);
+
+        String sql = """
+            SELECT s.doc_code AS invoice_number 
+            FROM scm_excise_invoice_header@IPCASCMDRDB s 
+            WHERE s.division_code='F' AND s.entity_code=? 
+            AND s.doc_date BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')
+            AND NOT EXISTS (
+                SELECT 'x' FROM DMS_INVOICE_DOCUMENTS 
+                WHERE location_id = s.entity_code AND UPPER(invoice_number) = UPPER(s.doc_code)
+            )
+            ORDER BY s.doc_date DESC
+            """;
+            
+        try {
+            return invoiceJdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> rs.getString("invoice_number"),
+                locationId,
+                y1 + "-04-01",
+                y2 + "-03-31"
+            );
+        } catch (Exception e) {
+            System.err.println("Error fetching missing invoices: " + e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
+
     // ────────────────────────────────────────────────────────────────────
     // SAVE: validate invoice exists in SCM, then insert into local DMS
     // ────────────────────────────────────────────────────────────────────
