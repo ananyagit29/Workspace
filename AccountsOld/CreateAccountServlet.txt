@@ -1,0 +1,241 @@
+package com.ipca.accounts;
+
+import com.ipca.common.Support;
+import com.ipca.connection.DMSConnection;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.jakarta.servlet5.JakartaServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
+
+public class CreateAccountsServlet extends HttpServlet {
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        String uid = ((session.getAttribute("userid") != null) ? (String) session.getAttribute("userid") : "");
+        String userName = Support.getName(uid);
+        String loc = ((session.getAttribute("loc") != null) ? (String) session.getAttribute("loc").toString() : "");
+        String com = ((session.getAttribute("com") != null) ? (String) session.getAttribute("com").toString() : "");
+        String div = ((session.getAttribute("div") != null) ? (String) session.getAttribute("div").toString() : "");
+        String app = ((session.getAttribute("app") != null) ? (String) session.getAttribute("app").toString() : "");
+        String finyear = ((session.getAttribute("finyear") != null) ? (String) session.getAttribute("finyear").toString() : "");
+        session.setAttribute("com", com);
+        session.setAttribute("div", div);
+        session.setAttribute("loc", loc);
+        session.setAttribute("app", app);
+        session.setAttribute("finyear", finyear);
+
+        ResourceBundle rb = ResourceBundle.getBundle("com.ipca.connection.ConnectionFile");
+
+        String accDocMonth = "", accDaybook = "", accDaybookCode = "", accDaybookName = "", accAccountCode = "", accAccountName = "",
+                accDocCode = "", accDocYear = "", accBillNumber = "", filepath = "", name = "", filename = "";
+        double accTranAmount = 0;
+        Date accDocDate = null, accBillDate = null;
+        int insertresult = 0;
+        Connection con = null;
+        PreparedStatement stmt = null;
+
+        try {
+            con = DMSConnection.getNewInstance().getConnection();
+            boolean ismultipart = JakartaServletFileUpload.isMultipartContent(request);
+
+            String UPLOAD_DIRECTORY = rb.getString("UPLOAD_DIRECTORY");
+            UPLOAD_DIRECTORY = UPLOAD_DIRECTORY + "/" + app + "/" + com + "/" + loc + "/" + finyear + "/";
+
+            String NEW_UPLOAD_DIRECTORY;
+            SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+
+            if (ismultipart) {
+                DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
+                JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
+                List<FileItem> multiparts = upload.parseRequest(request);
+
+                for (FileItem item : multiparts) {
+                    String fieldName = item.getFieldName();
+                    if (fieldName.equals("accFile")) {
+                        // This is the file field; handled later
+                    } else {
+                        String desc = item.getString();
+                        if (fieldName.equalsIgnoreCase("accDaybook")) {
+                            accDaybook = desc;
+                        } else if (fieldName.equalsIgnoreCase("accDocMonth")) {
+                            accDocMonth = desc;
+                        } else if (fieldName.equalsIgnoreCase("accDaybookCode")) {
+                            accDaybookCode = desc;
+                            UPLOAD_DIRECTORY = UPLOAD_DIRECTORY + accDaybookCode + "/";
+                            NEW_UPLOAD_DIRECTORY = UPLOAD_DIRECTORY;
+
+                            // Second loop over multiparts to get other fields and file
+                            for (FileItem item1 : multiparts) {
+                                String fieldName1 = item1.getFieldName();
+                                String desc1 = item1.getString();
+                                switch (fieldName1.toLowerCase()) {
+                                    case "accdaybookname":
+                                        accDaybookName = desc1;
+                                        break;
+                                    case "accdoccode":
+                                        UPLOAD_DIRECTORY = NEW_UPLOAD_DIRECTORY;
+                                        accDocCode = desc1;
+                                        UPLOAD_DIRECTORY = UPLOAD_DIRECTORY + accDocCode + "/";
+                                        break;
+                                    case "accaccountname":
+                                        accAccountName = desc1;
+                                        break;
+                                    case "accbillnumber":
+                                        accBillNumber = desc1;
+                                        break;
+                                    case "accaccountcode":
+                                        accAccountCode = desc1;
+                                        break;
+                                    case "accbilldate":
+                                        if (!desc1.equals("null")) {
+                                            java.util.Date date = sdf1.parse(desc1);
+                                            accBillDate = new java.sql.Date(date.getTime());
+                                        } else {
+                                            accBillDate = null;
+                                        }
+                                        break;
+                                    case "accdocdate":
+                                        if (!desc1.equals("null")) {
+                                            java.util.Date date = sdf1.parse(desc1);
+                                            accDocDate = new java.sql.Date(date.getTime());
+                                        } else {
+                                            accDocDate = null;
+                                        }
+                                        break;
+                                    case "accdocyear":
+                                        accDocYear = desc1;
+                                        break;
+                                    case "acctranamount":
+                                        if (desc1 != null && !desc1.isEmpty()) {
+                                            accTranAmount = Double.parseDouble(desc1);
+                                        } else {
+                                            accTranAmount = 0;
+                                        }
+                                        break;
+                                }
+
+                                if (!item1.isFormField()) {
+                                    filename = new File(item1.getName()).getName();
+                                    if (!filename.isEmpty()) {
+                                        File directory = new File(UPLOAD_DIRECTORY);
+                                        if (!directory.exists()) {
+                                            directory.mkdirs();
+                                        }
+                                        String base = FilenameUtils.removeExtension(filename);
+                                        String extension = FilenameUtils.getExtension(filename);
+                                        name = base + "-" + accDocMonth + "." + extension;
+                                        name = name.replaceAll("&", "and");
+                                        name = name.replaceAll("'", "-");
+                                        filepath = UPLOAD_DIRECTORY + name;
+                                        Path fullPath = Paths.get(UPLOAD_DIRECTORY, name);
+                                        item1.write(fullPath);
+
+                                        // Prepare and execute DB insert
+                                        stmt = con.prepareStatement("insert into DMS_ACCOUNTS "
+                                                + "(COMPANY_ID,LOCATION_ID,DIVISION_NAME,APPLICATION_NAME,Financial_Year, "
+                                                + "Daybook_Code,Daybook_Name,Account_Code,Account_Name,Doc_Code,Doc_Date, "
+                                                + "Doc_Year,Bill_Number,Bill_Date,Tran_Amount,CREATED_BY,CREATED_ON,FILE_NAME,FILE_PATH) "
+                                                + "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+
+                                        con.setAutoCommit(false);
+                                        stmt.setString(1, com);
+                                        stmt.setString(2, loc);
+                                        stmt.setString(3, div);
+                                        stmt.setString(4, app);
+                                        stmt.setString(5, finyear);
+                                        stmt.setString(6, accDaybookCode);
+                                        stmt.setString(7, accDaybookName);
+                                        stmt.setString(8, accAccountCode);
+                                        stmt.setString(9, accAccountName);
+                                        stmt.setString(10, accDocCode);
+                                        stmt.setDate(11, accDocDate);
+                                        stmt.setString(12, accDocYear);
+                                        stmt.setString(13, accBillNumber);
+                                        stmt.setDate(14, accBillDate);
+                                        stmt.setDouble(15, accTranAmount);
+                                        stmt.setString(16, uid);
+                                        stmt.setTimestamp(17, new java.sql.Timestamp(System.currentTimeMillis()));
+                                        stmt.setString(18, name);
+                                        stmt.setString(19, filepath);
+
+                                        insertresult = stmt.executeUpdate();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (insertresult != 0) {
+                    con.commit();
+                    con.setAutoCommit(true);
+                    request.setAttribute("message", "File Uploaded Successfully");
+                    request.setAttribute("accDaybook", accDaybook);
+                    request.setAttribute("accDocMonth", accDocMonth);
+                    request.getRequestDispatcher(app + "/Create.jsp").forward(request, response);
+                }
+            }
+        } catch (Exception ex) {
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (SQLException ex1) {
+                // ignore
+            }
+            request.setAttribute("accDaybook", accDaybook);
+            request.setAttribute("accDocMonth", accDocMonth);
+            request.setAttribute("error", ex.getMessage());
+            request.getRequestDispatcher(app + "/Create.jsp").forward(request, response);
+        } finally {
+            request.setAttribute("accDaybook", accDaybook);
+            request.setAttribute("accDocMonth", accDocMonth);
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (con != null) {
+                    con.close();
+                }
+            } catch (SQLException ex) {
+                // ignore
+            }
+        }
+    }
+
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }
+}

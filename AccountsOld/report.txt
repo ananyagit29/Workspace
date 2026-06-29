@@ -1,0 +1,380 @@
+<%-- 
+    Document   : ddCreate
+    Created on : 17 Aug, 2022, 5:44:29 PM
+    Author     : ruchita.saroj
+--%>
+
+<%@page import="com.ipca.connection.SCMConnection"%>
+<%@page import="com.ipca.connection.DMSConnection"%>
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="java.sql.Connection"%>
+<%@page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+        
+        <% String uid = "", app = "", com = "", div = "", loc = "", com_name = "", loc_name = "", finyear = "", daybook = "";
+            uid = ((session.getAttribute("userid") != null) ? (String) session.getAttribute("userid") : "");
+            com = ((session.getAttribute("com") != null) ? (String) session.getAttribute("com") : "");
+            div = ((session.getAttribute("div") != null) ? (String) session.getAttribute("div") : "");
+            loc = ((session.getAttribute("loc") != null) ? (String) session.getAttribute("loc") : "");
+            app = ((session.getAttribute("app") != null) ? (String) session.getAttribute("app") : "");
+            finyear = ((session.getAttribute("finyear") != null) ? (String) session.getAttribute("finyear") : "");
+            com_name = ((session.getAttribute("com_name") != null) ? (String) session.getAttribute("com_name") : "");
+            loc_name = ((session.getAttribute("loc_name") != null) ? (String) session.getAttribute("loc_name") : "");
+            String accDaybook = ((request.getAttribute("accDaybook") != null) ? (String) request.getAttribute("accDaybook") : "12~Export Sales");
+            String amountMoreThan = ((session.getAttribute("amountMoreThan") != null) ? (String) session.getAttribute("amountMoreThan") : "");
+            session.setAttribute("userid", uid);
+            session.setAttribute("com", com);
+            session.setAttribute("div", div);
+            session.setAttribute("loc", loc);
+            session.setAttribute("app", app);
+            session.setAttribute("finyear", finyear);
+            session.setAttribute("com_name", com_name);
+            session.setAttribute("loc_name", loc_name);
+            session.setAttribute("amountMoreThan", amountMoreThan);
+        %>
+        <script language="javascript" type="text/javascript">
+
+
+            function repl() {
+                document.location.replace("index.jsp");
+            }
+            function getxmlHttpRequest() {
+                try {
+                    xmlHttpRequest = new XMLHttpRequest();
+                } catch (e) {
+                    try {
+                        xmlHttpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+                    } catch (ee) {
+                        try {
+                            xmlHttpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                        } catch (ex) {
+                            alert("your browser doesn't support Ajax");
+                            return false;
+                        }
+                    }
+                }
+            }
+            function getDocCodeDetails() {
+                document.getElementById("btnGo").disabled = true;
+                document.getElementById("loading").style.visibility = "visible";
+                document.getElementById("data").innerHTML = "";
+                var accDaybook = document.getElementById('accDaybook').value;
+                var accReportType = document.getElementById('accReportType').value;
+                if (accDaybook === "SELECT")
+                {
+                    alert("Please Select Daybook Code!");
+                    document.getElementById("loading").style.visibility = "hidden";
+                } else if (accReportType === "SELECT")
+                {
+                    alert("Please Select Report Type!");
+                    document.getElementById("loading").style.visibility = "hidden";
+                } else
+                {
+                    getxmlHttpRequest();
+                    if (accReportType === "getpartydetails")
+                    {
+                        var accAccName = document.getElementById('accAccName').value;
+                        var amountMoreThan = document.getElementById('amountMoreThan').value;
+                        var accFromMonth = document.getElementById('accFromMonth').value;
+                        var accToMonth = document.getElementById('accToMonth').value;
+                        var url = "<%=request.getContextPath()%>/GetAccountsDetailServlet?page=search&filter=yes&op=getuploadeddocdetails&accDaybook=" + accDaybook + "&accAccName=" + accAccName + "&amountMoreThan=" + amountMoreThan + "&accFromMonth=" + accFromMonth + "&accToMonth=" + accToMonth;
+                    } else if (accReportType === "getaccountcodedetails")
+                    {
+                        var accAccCode = document.getElementById('accAccCode').value;
+                        var amountMoreThan = document.getElementById('amountMoreThan').value;
+                        var accFromMonth = document.getElementById('accFromMonth').value;
+                        var accToMonth = document.getElementById('accToMonth').value;
+                        var url = "<%=request.getContextPath()%>/GetAccountsDetailServlet?page=search&filter=yes&op=getuploadeddocdetails&accDaybook=" + accDaybook + "&accAccCode=" + accAccCode + "&amountMoreThan=" + amountMoreThan + "&accFromMonth=" + accFromMonth + "&accToMonth=" + accToMonth;
+                    } else if (accReportType === "getmissingdocuments")
+                    {
+                        var url = "<%=request.getContextPath()%>/GetAccountsDetailServlet?page=create&filter=no&op=getmissingdocuments&accDaybook=" + accDaybook;
+                    }
+                    xmlHttpRequest.onreadystatechange = getdoccodedetail;
+                    xmlHttpRequest.open("POST", url, true);
+                    xmlHttpRequest.send(null);
+                }
+            }
+
+            function getdoccodedetail() {
+                if (xmlHttpRequest.readyState === 4) {
+                    if (xmlHttpRequest.status === 200) {
+                        document.getElementById("data").innerHTML = this.responseText;
+                        document.getElementById("loading").style.visibility = "hidden";
+                        document.getElementById("btnGo").disabled = false;
+                    }
+                }
+            }
+
+            function displayAccountName()
+            {
+                if (document.getElementById("accAccName") !== null)
+                    document.getElementById('accAccName').value = "SELECT";
+                document.getElementById("accAccCode").value = "";
+                document.getElementById("accToMonth").value = "";
+                document.getElementById("accFromMonth").value = "";
+                document.getElementById("amountMoreThan").value = 0;
+                document.getElementById("data").innerHTML = "";
+                var accDaybook = document.getElementById('accDaybook').value;
+                var accReportType = document.getElementById('accReportType').value;
+                if (accReportType === "getpartydetails")
+                {
+                    document.getElementById("traccAccName").style.display = "block";
+                    document.getElementById("traccAccCode").style.display = "none";
+                    document.getElementById("traccAmountMoreThan").style.display = "block";
+                    document.getElementById("traccMonth").style.display = "block";
+                    var accAccName = document.getElementById('accAccName').value;
+                    getxmlHttpRequest();
+                    var url = "<%=request.getContextPath()%>/GetAccountsDetailServlet?page=report&op=getpartydetails&accDaybook=" + accDaybook + "&accAccName=" + accAccName;// + "&amountMoreThan=" + amountMoreThan;
+                    xmlHttpRequest.onreadystatechange = displayParty;
+                    xmlHttpRequest.open("POST", url, true);
+                    xmlHttpRequest.send(null);
+                } else if (accReportType === "getaccountcodedetails")
+                {
+                    document.getElementById("traccAccName").style.display = "none";
+                    document.getElementById("traccAccCode").style.display = "block";
+                    document.getElementById("traccAmountMoreThan").style.display = "block";
+                    document.getElementById("traccMonth").style.display = "block";
+                } else
+                {
+                    document.getElementById("traccAccName").style.display = "none";
+                    document.getElementById("traccAccCode").style.display = "none";
+                    document.getElementById("traccAmountMoreThan").style.display = "none";
+                    document.getElementById("traccMonth").style.display = "none";
+                }
+            }
+
+            function displayParty() {
+                if (xmlHttpRequest.readyState === 4) {
+                    if (xmlHttpRequest.status === 200) {
+                        document.getElementById("accAccName").innerHTML = this.responseText;
+                    }
+                }
+            }
+
+            function clearText()
+            {
+                if (document.getElementById("accReportType") !== null)
+                    document.getElementById('accReportType').value = "SELECT";
+                if (document.getElementById("accAccName") !== null)
+                    document.getElementById('accAccName').value = "SELECT";
+                if (document.getElementById('amountMoreThan') !== null)
+                    document.getElementById('amountMoreThan').value = 0;
+                if (document.getElementById("message") !== null)
+                    document.getElementById("message").innerHTML = "";
+                if (document.getElementById("error") !== null)
+                    document.getElementById("error").innerHTML = "";
+            }
+
+            function callservlet(file) {
+                window.open('<%=request.getContextPath()%>/ViewDocumentServlet?filename=' + file, '_blank');
+            }
+
+            function downloadFiles(i)
+            {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                if (checkboxes.length <= 100)
+                {
+                    var filepathlist = "";
+                    var arr = [];
+                    var count = 0;
+                    for (var j = 1; j < i; j++) {
+                        if (checkboxes[j].checked)
+                        {
+                            count++;
+                            document.getElementById('btndownload').disabled = true;
+                            filepathlist = document.getElementById("row" + j).value;
+                            arr.push(filepathlist.toString());
+                        }
+                    }
+                    if (count === 0)
+                    {
+                        alert("Please select atleast one row to download");
+                    } else
+                    {
+                        window.open('<%=request.getContextPath()%>/DownloadMultipleFilesServlet?filepathlist=' + arr, '_self');
+                    }
+                    document.getElementById('btndownload').disabled = false;
+                } else
+                {
+                    alert("You can select only upto 100 rows");
+                    document.getElementById('selectall').checked = false;
+                }
+            }
+
+            function checkSelection(source) {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                if (checkboxes.length <= 100)
+                {
+                    for (var i = 0; i < checkboxes.length; i++) {
+                        if (checkboxes[i] !== source)
+                        {
+                            checkboxes[i].checked = source.checked;
+                        }
+                    }
+                } else
+                {
+                    alert("You can select only upto 100 rows");
+                    document.getElementById('selectall').checked = false;
+                }
+            }
+        </script>
+    </head>
+    <body class="report">
+        <%
+            if (uid == "") {
+                response.sendRedirect(request.getContextPath() + "/index.jsp");
+            } else {
+        %>
+        <jsp:include page="../header.jsp"></jsp:include>
+            <div id="templatemo_body" align="center">
+                <form action="" id="formReportAccounts" name="formReportAccounts" method="post">
+                    <div id="alldetails"> <%=com_name%> | <%=div%> | <%=loc_name%> | <%=app%> | <%=finyear%></div>
+                <div id="heading">
+                    <h3>Accounts Document Report</h3>
+                </div>
+                <table>
+                    <tr>
+                        <td>
+                            Select Daybook Code :
+                        </td>
+                        <td>
+                            <select name='accDaybook' id='accDaybook' onchange="clearText();" style="width: 250px;">
+                                <%
+                                    Connection conn = null;
+                                    Statement stmt = null;
+                                    try {
+                                        conn = DMSConnection.getNewInstance().getConnection();
+                                        stmt = conn.createStatement();
+                                        String query = "SELECT name,code from ipcaprod.fa_daybooks@ipcascmdb i, DMS_GENERAL_PARAMETERS d "
+                                                + "where i.code = d.PARAMETER_NAME and d.APPLICATION_NAME='ACCOUNTS' "
+                                                + "and d.PARAMETER_NAME <> 'Year' order by CODE";
+                                        ResultSet rs = stmt.executeQuery(query);
+                                        while (rs.next()) {%>
+                                <option value='<%=rs.getString("CODE")%>~<%=rs.getString("NAME")%>'><%=rs.getString("CODE")%>~<%=rs.getString("NAME")%></option>
+                                <%  }
+                                    } finally {
+                                        if (conn != null) {
+                                            conn.close();
+                                        }
+                                        if (stmt != null) {
+                                            stmt.close();
+                                        }
+                                    }
+                                %>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Select Report Type : </td>
+                        <td>
+                            <select id="accReportType" name="accReportType" onchange="displayAccountName();" style="width: 250px;">
+                                <option value="SELECT">SELECT</option>
+                                <option value="getaccountcodedetails">Account Code Wise</option>
+                                <option value="getpartydetails">Party Wise</option>
+                                <option value="getmissingdocuments">Missing Documents</option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr id="traccAccName" style="display: none">
+                        <td>Select Account Name : </td>
+                        <td>
+                            <select id='accAccName' name='accAccName' style='width: 250px;'>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr id="traccAccCode" style="display: none">
+                        <td>Enter Account Code : </td>
+                        <td>
+                            <input type="number" id='accAccCode' name='accAccCode' style='width: 250px;'/>
+                        </td>
+                    </tr>
+                    <tr id ="traccAmountMoreThan" style="display: none">
+                        <td>Amount More Than : </td>
+                        <td>
+                            <input type="number" value="0" id='amountMoreThan' name='amountMoreThan'/>
+                        </td>
+                    </tr>
+                    <!--ADDED-->
+                    <tr id ="traccMonth" style="display: none">
+                        <td>
+                            From Month:
+                        </td>
+                        <td>
+                            <select name='accFromMonth' id='accFromMonth' style="width: 100px;">
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                            </select>
+                        </td>
+                        <td>
+                            To Month:
+                        </td>
+                        <td>
+                            <select name='accToMonth' id='accToMonth' style="width: 100px;">
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <!--ADDED-->
+                    <tr>
+                        <td align="center" colspan="2">
+                            <input type="button" value="Go" id="btnGo" name="btnGo" onclick="getDocCodeDetails();"/>&nbsp;&nbsp;&nbsp;
+                            <i class='loader' id='loading' style='visibility:hidden'></i>
+                        </td>
+                    </tr>
+                </table>
+                <div align="center" id="data" name="data">
+                </div>
+            </form>
+            <div id="message" align="center">
+                <%
+                    String message = (String) request.getAttribute("message");
+                    if (message != null) {
+                %> 
+                <%=message%> 
+                <%
+                    }
+                %>
+            </div>
+            <div id="error" align="center">
+                <%
+                    String error = (String) request.getAttribute("error");
+                    if (error != null) {
+                %> 
+                <%=error%> 
+                <%
+                    }
+                %>
+            </div>
+        </div>    
+    </body>
+    <%}%>
+</html>

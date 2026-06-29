@@ -1,0 +1,513 @@
+package com.ipca.accounts;
+
+import com.ipca.common.Support;
+import com.ipca.connection.DMSConnection;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+/**
+ *
+ * @author ruchita.saroj
+ */
+public class GetAccountsDetailServlet extends HttpServlet {
+
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        PrintWriter out = response.getWriter();
+        String op = request.getParameter("op");
+        String page = request.getParameter("page");
+        String filter = request.getParameter("filter");
+        String accDocCode = request.getParameter("accDocCode");
+        String accDaybook = request.getParameter("accDaybook");
+        String accDocMonth = request.getParameter("accDocMonth");
+        String accAccName = request.getParameter("accAccName");
+        String accAccCode = request.getParameter("accAccCode");
+        String amountMoreThan = request.getParameter("amountMoreThan");
+        String accFromMonth = ((request.getParameter("accFromMonth") != "") ? request.getParameter("accFromMonth") : null);
+        String accToMonth = ((request.getParameter("accToMonth") != "") ? request.getParameter("accToMonth") : null);
+        if (amountMoreThan == null || amountMoreThan.equals("")) {
+            amountMoreThan = "0";
+        }
+        if (accAccName == null || accAccName.equalsIgnoreCase("SELECT")) {
+            accAccName = null;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        HttpSession session = request.getSession();
+        String uid = ((session.getAttribute("userid") != null) ? (String) session.getAttribute("userid") : "");
+        String com = ((session.getAttribute("com") != null) ? (String) session.getAttribute("com") : "");
+        String div = ((session.getAttribute("div") != null) ? (String) session.getAttribute("div") : "");
+        String loc = ((session.getAttribute("loc") != null) ? (String) session.getAttribute("loc") : "");
+        String app = ((session.getAttribute("app") != null) ? (String) session.getAttribute("app") : "");
+        String finyear = ((session.getAttribute("finyear") != null) ? (String) session.getAttribute("finyear") : "");
+        String com_name = ((session.getAttribute("com_name") != null) ? (String) session.getAttribute("com_name") : "");
+        String loc_name = ((session.getAttribute("loc_name") != null) ? (String) session.getAttribute("loc_name") : "");
+        String start_year = "", end_year = "", from_date = "", to_date = "", accDaybookCode = "", accDaybookName = "";
+        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format2 = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        java.util.Date createdon = null;
+        String createdOn = null;
+        int year = 0;
+
+        if (!"".equals(finyear)) {
+            String[] financialyear = finyear.split("-");
+            start_year = financialyear[0];
+            end_year = financialyear[1];
+            from_date = start_year + "04";
+            to_date = end_year + "03";
+            year = Integer.parseInt(start_year);
+
+            if (accDocMonth != null) {
+                if (accDocMonth.equals("01") || accDocMonth.equals("02") || accDocMonth.equals("03")) {
+                    from_date = end_year + accDocMonth;
+                    to_date = end_year + accDocMonth;
+                } else {
+                    from_date = start_year + accDocMonth;
+                    to_date = start_year + accDocMonth;
+                }
+            }
+
+            if (accFromMonth != null && accToMonth != null) {
+                if (accFromMonth.equals("01") || accFromMonth.equals("02") || accFromMonth.equals("03")) {
+                    from_date = end_year + accFromMonth;
+                } else {
+                    from_date = start_year + accFromMonth;
+                }
+                if (accToMonth.equals("01") || accToMonth.equals("02") || accToMonth.equals("03")) {
+                    to_date = end_year + accToMonth;
+                } else {
+                    to_date = start_year + accToMonth;
+                }
+            }
+        }
+
+        if (accDaybook != null) {
+            String[] accountDaybook = accDaybook.split("~");
+            accDaybookCode = accountDaybook[0];
+            accDaybookName = accountDaybook[1];
+        }
+        String Role = Support.getRole(uid, app, loc);
+        Connection con = null, con1 = null;
+        Statement st = null, st1 = null;
+        try {
+            String connectionname, databasename;
+            if (year >= 2011 && year <= 2015) {
+                connectionname = "SCMGST";
+                databasename = "DMSDEV_OLDSCM";
+            } else {
+                connectionname = "IPCAPROD";
+                databasename = "IPCASCMDB";
+            }
+            if (com.equals("4")) {
+                connectionname = "makersprod";
+            }
+            con = DMSConnection.getNewInstance().getConnection();
+            st = con.createStatement();
+            String query = "", savequery = "", querydetail = "";
+            if (page.equalsIgnoreCase("create")) {
+                if (op.equalsIgnoreCase("getdoclist") || op.equalsIgnoreCase("getmissingdocuments") || op.equalsIgnoreCase("getdocdetails")) {
+                    query = "select th.doc_code,th.doc_date,th.doc_year ";
+                    if (year > 2015) {
+                        query = query + ",u.user_name as fas_user ";
+                    }
+                    query = query + "from " + connectionname + ".FA_TRANSACTION_HEADER@" + databasename + " th ";
+                    if (year > 2015) {
+                        query = query + ",commondata.scm_users@" + databasename + " u  ";
+                    }
+                    query = query + "where entity_code='" + loc + "' and daybook_code='" + accDaybookCode + "'  "
+                            + "and doc_year between '" + from_date + "' and '" + to_date + "'  "
+                            + "and not exists (select 'x' from DMS_ACCOUNTS  "
+                            + "where location_id = th.entity_code and doc_year = th.doc_year  ";
+                    query = query + "and doc_code = th.doc_code and daybook_code=th.daybook_code) ";
+                    if (year > 2015) {
+                        query = query + "and th.user_id = u.user_id (+) ";
+                    }
+                    query = query + "and (case when th.RECEIPT_PAYMENT is null then 'R' else th.receipt_payment end ) <> 'O' ";
+                    if (accDocCode != null) {
+                        query = query + "and th.doc_code='" + accDocCode + "' ";
+                    }
+                    query = query + "group by th.doc_code,th.doc_date,th.doc_year ";
+                    if (year > 2015) {
+                        query = query + ",u.user_name ";
+                    }
+                    query = query + "order by to_number(th.doc_code) ";
+
+                    querydetail = "select td.account_code, "
+                            + "max((select max(ah.name) from " + connectionname + ".account_head@" + databasename + " ah, "
+                            + "" + connectionname + ".entity@" + databasename + " e "
+                            + "where ah.code = td.account_code and (ah.control_code = td.control_code or ah.control_code = (case td.control_code when '0' then '0' else '3' end))  "
+                            + "and ah.ENTITY_CODE = (case when td.control_code = 1 then (case when nvl(e.TYPES,'X') = 'D' then td.ENTITY_CODE else '*' end) else '*' end)))  "
+                            + "as account_name, "
+                            + "td.doc_code,td.doc_date,td.doc_year,td.bill_number,td.bill_date, "
+                            + "sum(td.tran_amount) as tran_amount "
+                            + "from " + connectionname + ".fa_transaction_detail@" + databasename + " td "
+                            + "where td.company_code='" + com + "' "
+                            + "and td.entity_code='" + loc + "' "
+                            + "and td.daybook_code='" + accDaybookCode + "'  "
+                            + "and td.doc_code='" + accDocCode + "'  "
+                            + "and td.doc_year between '" + from_date + "' and '" + to_date + "' "
+                            + "and td.tran_serial = (case daybook_code "
+                            + "when '12' then 1 when '13' then 0  "
+                            + "when '21' then 0 when '22' then 0  "
+                            + "when '26' then 0 when '27' then 0  "
+                            + "when '31' then 0 when '35' then 1  "
+                            + "when '41' then 0 when '56' then 0  "
+                            + "when '57' then 1 when '57B' then 1 "
+                            + "when '12A' then 0 when '22A' then 0 "
+                            + "when '22B' then 0 "
+                            + "else 2 end) "
+                            + "and dr_cr = (case daybook_code when '13' then 1 when '12' then 1 when '12A' then 1 else -1 end) "
+                            + "group by td.doc_code, td.doc_date, td.daybook_code, td.account_code, "
+                            + "td.doc_year, td.bill_number, td.bill_date, td.doc_year "
+                            + "order by to_number(doc_code),doc_date";
+                }
+                System.out.println("query:" + query);
+                System.out.println("querydetail:" + querydetail);
+            } else if (page.equalsIgnoreCase("search")) {
+                query = "select Daybook_Code,Daybook_Name, account_code,account_name,"
+                        + "doc_code,doc_date,doc_year,bill_number,bill_date,tran_amount,created_by,to_char(created_on,'yyyy-mm-dd HH:mi:ss') as created_on, "
+                        + "File_Name,File_Path "
+                        + "from DMS_ACCOUNTS "
+                        + "where location_id='" + loc + "' "
+                        + "and daybook_code='" + accDaybookCode + "' "
+                        + "and doc_year between '" + from_date + "' and '" + to_date + "' ";
+                if (accDocCode != null) {
+                    query = query + "and doc_code='" + accDocCode + "' ";
+                }
+                if (accAccName != null) {
+                    query = query + "and ACCOUNT_CODE='" + accAccName + "'";
+                }
+                if (amountMoreThan != null) {
+                    query = query + "and TRAN_AMOUNT >='" + amountMoreThan + "'";
+                }
+                query = query + "AND DOC_CODE!='Select'"
+                        + "order by to_number(doc_code)";
+
+                savequery = query.replace(",File_Path", " ");
+
+                System.out.println("Search: " + query);
+
+            } else if (page.equalsIgnoreCase("report")) {
+                query = "select ACCOUNT_CODE, ACCOUNT_NAME from DMS_ACCOUNTS  "
+                        + "where DAYBOOK_CODE='" + accDaybookCode + "' "
+                        + "and FINANCIAL_YEAR='" + finyear + "' "
+                        + "and LOCATION_ID='" + loc + "' "
+                        + "and ACCOUNT_CODE is not null and ACCOUNT_NAME is not null "
+                        + "group by ACCOUNT_CODE,ACCOUNT_NAME order by 2";
+                System.out.println("Report: " + query);
+            }
+            if (op.equalsIgnoreCase("getdoclist")) {
+                ResultSet rs = st.executeQuery(query);
+                out.println("<tr><td><input type='hidden' id='accDaybookCode' name='accDaybookCode' value='" + accDaybookCode + "'/></td></tr>");
+                out.println("<tr><td><input type='hidden' id='accDaybookName' name='accDaybookName' value='" + accDaybookName + "'/></td></tr>");
+                out.println("<tr><td>Select Doc Code :</td><td>");
+                out.println("<select id='accDocCode' name='accDocCode' onchange='getAccountCodeDetails();' style='width: 280px;'>");
+                out.println("<option value='Select'>Select</option>");
+                while (rs.next()) {
+                    out.println("<option value='" + rs.getString("doc_code") + "'>" + rs.getString("doc_code") + "</option>");
+                }
+                out.println("</select></td></tr>");
+            } else if (op.equalsIgnoreCase("getdocdetails")) {
+                con1 = DMSConnection.getNewInstance().getConnection();
+                st1 = con1.createStatement();
+                String query1 = "select Required from Dms_General_Parameters where Application_Name='" + app + "' and Parameter_Name='" + accDaybookCode + "'";
+                ResultSet rs1 = st1.executeQuery(query1);
+                String accAccountName = "", accBillNumber = "", accAccountCode = "", accDocYear = "", accTranAmount = "";
+                Date accBillDate = null, accDocDate = null;
+                ResultSet rs = st.executeQuery(query);
+                if (rs.next()) {
+                    accDocDate = rs.getDate("DOC_DATE") == null ? null : rs.getDate("DOC_DATE");
+                    accDocYear = rs.getString("DOC_YEAR") == null ? "" : rs.getString("DOC_YEAR");
+                    if (rs1.next()) {
+                        ResultSet rsdetail = st.executeQuery(querydetail);
+                        if (rsdetail.next()) {
+                            accAccountName = rsdetail.getString("ACCOUNT_NAME") == null ? "" : rsdetail.getString("ACCOUNT_NAME").trim().toUpperCase();
+                            accBillNumber = rsdetail.getString("BILL_NUMBER") == null ? "" : rsdetail.getString("BILL_NUMBER").trim().toUpperCase();
+                            accAccountCode = rsdetail.getString("ACCOUNT_CODE") == null ? "" : rsdetail.getString("ACCOUNT_CODE").trim().toUpperCase();
+                            accBillDate = rsdetail.getDate("BILL_DATE") == null ? null : rsdetail.getDate("BILL_Date");
+                            accTranAmount = rsdetail.getString("TRAN_AMOUNT") == null ? "" : rsdetail.getString("TRAN_AMOUNT");
+                        }
+                        if (rs1.getString("Required").equalsIgnoreCase("YES")) {
+                            out.println("<tr><td>Account Name : </td><td><input type='text' id='accAccountName' name='accAccountName' value='" + accAccountName + "' style='width: 400px;' readonly/></td></tr>");
+                            out.println("<tr><td>Bill Number : </td><td><input type='text' id='accBillNumber' name='accBillNumber' value='" + accBillNumber + "' readonly/></td></tr>");
+                        } else {
+                            out.println("<tr><td><input type='hidden' id='accAccountName' name='accAccountName' value='" + accAccountName + "'/></td></tr>");
+                            out.println("<tr><td><input type='hidden' id='accBillNumber' name='accBillNumber' value='" + accBillNumber + "'/></td></tr>");
+                        }
+                        out.println("<tr><td><input type='hidden' id='accAccountCode' name='accAccountCode' value='" + accAccountCode + "'/></td></tr>");
+                        out.println("<tr><td><input type='hidden' id='accBillDate' name='accBillDate' value='" + accBillDate + "'/>");
+                        out.println("<tr><td><input type='hidden' id='accTranAmount' name='accTranAmount' value='" + accTranAmount + "'/></td></tr>");
+                        out.println("<tr><td><input type='hidden' id='accDocDate' name='accDocDate' value='" + accDocDate + "'/></td></tr>");
+                        out.println("<tr><td><input type='hidden' id='accDocYear' name='accDocYear' value='" + accDocYear + "'/></td></tr>");
+                        out.println("<tr><td>Upload File : </td><td><input type='file' name='accFile' id='accFile' accept='application/pdf'/></td></tr>");
+                        out.println("<tr><td colspan='7' align='center'>"
+                                + "<input type='button' value='Submit' id='btnsearch' name='btnsearch' onclick='doClick();'/>&nbsp;"
+                                + "</td></tr>");
+                    }
+                } else {
+                    out.println("<tr>");
+                    out.println("<td><h1>Data Not Found</h1></td>");
+                    out.println("</tr>");
+                }
+            } else if (op.equalsIgnoreCase("getuploadeddocdetails")) {
+                if (accAccCode != null) {
+                    switch (accAccCode) {
+                        case "402010":
+                        case "403010":
+                            query = "select Daybook_Code,Daybook_Name, account_code,account_name, "
+                                    + "doc_code,doc_date,doc_year,bill_number,bill_date,tran_amount, "
+                                    + "created_by,to_char(created_on,'yyyy-mm-dd HH:mi:ss') as created_on, "
+                                    + "File_Name,File_Path "
+                                    + "from DMS_ACCOUNTS d "
+                                    + "where  "
+                                    + "exists (select 'x' from " + connectionname + ".fa_transaction_detail@" + databasename + " f "
+                                    + "where entity_code='" + loc + "' and  "
+                                    + "f.doc_year between '" + from_date + "' and '" + to_date + "' "
+                                    + "and f.daybook_code='81F' "
+                                    + "and f.account_code = '" + accAccCode + "' "
+                                    + "and d.daybook_code = '" + accDaybookCode + "' "
+                                    + "and d.bill_number = f.bill_number) "
+                                    + "and location_id = '" + loc + "' and daybook_code = '" + accDaybookCode + "' "
+                                    + "and d.doc_year between '" + from_date + "' and '" + to_date + "' ";
+                            if (amountMoreThan != null) {
+                                query = query + "and TRAN_AMOUNT >='" + amountMoreThan + "' ";
+                            }
+                            query = query + "order by to_number(doc_code)";
+                            break;
+                        case "404020": // for warehouse 198
+                            query = "select Daybook_Code,Daybook_Name, account_code,account_name, "
+                                    + "doc_code,doc_date,doc_year,bill_number,bill_date,tran_amount, "
+                                    + "created_by,to_char(created_on,'yyyy-mm-dd HH:mi:ss') as created_on, "
+                                    + "File_Name,File_Path "
+                                    + "from DMS_ACCOUNTS d "
+                                    + "where  "
+                                    + "exists (select 'x' from " + connectionname + ".fa_transaction_detail@" + databasename + " f "
+                                    + "where entity_code='" + loc + "' and  "
+                                    + "f.doc_year between '" + from_date + "' and '" + to_date + "' "
+                                    + "and f.daybook_code='81A' "
+                                    + "and f.account_code = '" + accAccCode + "' "
+                                    + "and d.daybook_code = '" + accDaybookCode + "' "
+                                    + "and d.bill_number = f.rem_doc_code) "
+                                    + "and location_id = '" + loc + "' and daybook_code = '" + accDaybookCode + "' "
+                                    + "and d.doc_year between '" + from_date + "' and '" + to_date + "' ";
+                            if (amountMoreThan != null) {
+                                query = query + "and TRAN_AMOUNT >='" + amountMoreThan + "' ";
+                            }
+                            query = query + "order by to_number(doc_code)";
+                            break;
+                        case "547058": // for depot
+                            query = "select Daybook_Code,Daybook_Name, account_code,account_name, "
+                                    + "doc_code,doc_date,doc_year,bill_number,bill_date,tran_amount,  "
+                                    + "created_by,to_char(created_on,'yyyy-mm-dd HH:mi:ss') as created_on, "
+                                    + "File_Name,File_Path  "
+                                    + "from DMS_ACCOUNTS d "
+                                    + "where "
+                                    + "exists (select 'x' from " + connectionname + ".fa_transaction_detail@" + databasename + " f "
+                                    + "where entity_code='" + loc + "' and  "
+                                    + "f.doc_year between '" + from_date + "' and '" + to_date + "' "
+                                    + "and f.daybook_code='" + accDaybookCode + "' and d.bill_number = f.bill_number "
+                                    + "and gim_number is not null and exists  "
+                                    + "(select 'x' from " + connectionname + ".fa_transaction_detail@" + databasename + " t where  "
+                                    + "t.entity_code= f.entity_code and t.doc_year = f.doc_year "
+                                    + "and t.daybook_code= f.daybook_code and t.doc_code = f.doc_code))  "
+                                    + "and location_id = '" + loc + "' and daybook_code = '" + accDaybookCode + "' "
+                                    + "and d.doc_year between '" + from_date + "' and '" + to_date + "'";
+                            if (amountMoreThan != null) {
+                                query = query + "and TRAN_AMOUNT >='" + amountMoreThan + "' ";
+                            }
+                            query = query + "order by to_number(doc_code)";
+                            break;
+                        default:
+                            query = "select Daybook_Code,Daybook_Name, account_code,account_name, "
+                                    + "doc_code,doc_date,doc_year,bill_number,bill_date,tran_amount, "
+                                    + "created_by,to_char(created_on,'yyyy-mm-dd HH:mi:ss') as created_on, "
+                                    + "File_Name,File_Path "
+                                    + "from DMS_ACCOUNTS d "
+                                    + "where exists (select 'x' from " + connectionname + ".fa_transaction_detail@" + databasename + " f "
+                                    + "where location_id='" + loc + "' and daybook_code='" + accDaybookCode + "' "
+                                    + "and doc_year between '" + from_date + "' and '" + to_date + "' "
+                                    + "and account_code = '" + accAccCode + "' "
+                                    + "and d.LOCATION_ID = f.entity_code and d.daybook_code = f.daybook_code "
+                                    + "and d.doc_year = f.doc_year and d.doc_code = f.doc_code) ";
+                            if (amountMoreThan != null) {
+                                query = query + "and TRAN_AMOUNT >='" + amountMoreThan + "' ";
+                            }
+                            query = query + "order by to_number(doc_code)";
+
+                            break;
+                    }
+                    savequery = query.replace(",File_Path", " ");
+                }
+                ResultSet rs = st.executeQuery(query);
+                if (rs.next()) {
+                    savequery = savequery.replaceAll("'", "%27");
+                    savequery = savequery.replaceAll(" ", "%20");
+                    savequery = savequery.replaceAll("-", "%2D");
+                    savequery = savequery.replaceAll(":", "%3a");
+                    savequery = savequery.replaceAll("_", "%5F");
+                    savequery = savequery.replaceAll("\\+", "plus");
+                    String accDocumentNumber = "", accDocYear = "", accAccountName = "", accBillNumber = "", accTranAmount = "", accCreatedBy = "", accCreatedOn = "", filename = "", filepath = "";
+                    String accBillDate, accDocDate;
+                    out.println("<div style='float: right;'>");
+
+                    out.println("<input type='button' id='btnexcel' value='Save As Excel' onclick=\"document.getElementById('btnexcel').disabled = true ;window.open('" + request.getContextPath() + "/SaveAsExcel?filename=PartyWiseDocumentsReport&query=" + savequery + "','_self')\"/></div>");
+                    out.println("<br/><br/><div id='scrollacc'><table id='showData' name='showData' width='120%'>");
+                    out.println("<tr><th>Doc Code</th><th>Doc Date</th><th>Account Name</th><th>Filename</th>");
+                    if (filter.equals("yes")) {
+                        out.println("<th>Download (max 100 files)<input type='checkbox' id='selectall' name='selectall' onclick='checkSelection(this);'/></th>");
+                    } else {
+                        if (Role.contains("Remove")) {
+                            out.println("<th>Remove</th>");
+                        }
+                    }
+                    out.println("<th>Bill No.</th><th>Bill Date</th><th>Trans Amt</th>");
+                    out.println("<th>Created By</th><th>Created On</th>");
+                    out.println("</tr>");
+                    int i = 1;
+                    do {
+                        accDocYear = rs.getString("doc_year") == null ? "" : rs.getString("doc_year").trim().toUpperCase();
+                        accDocumentNumber = rs.getString("DOC_CODE") == null ? "" : rs.getString("DOC_CODE").trim().toUpperCase();
+                        accAccountName = rs.getString("ACCOUNT_NAME") == null ? "" : rs.getString("ACCOUNT_NAME").trim().toUpperCase();
+                        accBillNumber = rs.getString("BILL_NUMBER") == null ? "" : rs.getString("BILL_NUMBER").trim().toUpperCase();
+                        if (rs.getDate("BILL_DATE") == null) {
+                            accBillDate = "";
+                        } else {
+                            accBillDate = sdf.format(rs.getDate("BILL_DATE"));
+                        }
+                        if (rs.getDate("DOC_DATE") == null) {
+                            accDocDate = "";
+                        } else {
+                            accDocDate = sdf.format(rs.getDate("DOC_DATE"));
+                        }
+                        accTranAmount = rs.getString("TRAN_AMOUNT") == null ? "" : rs.getString("TRAN_AMOUNT");
+                        accCreatedBy = rs.getString("created_by") == null ? "" : rs.getString("created_by");
+                        createdon = format1.parse(rs.getString("created_on"));
+                        createdOn = format2.format(createdon);
+                        if (rs.getString("created_on") == null) {
+                            accCreatedOn = "";
+                        } else {
+                            accCreatedOn = createdOn;
+                        }
+                        filename = rs.getString("file_name") == null ? "" : rs.getString("file_name");
+                        filepath = rs.getString("File_Path") == null ? "" : rs.getString("File_Path");
+                        out.println("<tr><td style='text-align: end;width:100px;'>" + accDocumentNumber + "</td><td style='width:120px;'>" + accDocDate + "</td><td style='width:400px;'>" + accAccountName + "</td>");
+                        if (filename != null) {
+                            String path = filepath.replaceAll(" ", "%20");
+                            path = path.replaceAll("\\\\", "/");
+                            out.println("<td style='width:350px;'><input type='button' id='buttonlink' onclick=\"callservlet('" + path + "')\" value='" + filename + "'/></td>");
+                            if (filter.equals("yes")) {
+                                out.println("<td style='width:100px;'><input type='checkbox' id='row" + i + "' name='row' value='" + path + "' /></td>");
+                            } else {
+                                if (Role.contains("Remove")) {
+                                    out.println("<td style='width:50px;'><button type='button' onclick=\"removeFile('" + accDaybook + "','" + accDocMonth + "','" + accDocYear + "','" + accDocumentNumber + "','" + filename + "','" + path + "')\"><img src='" + request.getContextPath() + "/images/remove.png' alt='Remove'></button></td>");
+                                }
+                            }
+                        }
+                        out.println("<td style='width:120px;'>" + accBillNumber + "</td><td style='width:120px;'>" + accBillDate + "</td><td style='text-align: end;width:100px;'>" + accTranAmount + "</td>");
+                        out.println("<td style='width:100px;'>" + accCreatedBy + "</td><td style='width:200px;'>" + accCreatedOn + "</td>");
+                        out.println("</tr>");
+                        i++;
+                    } while (rs.next());
+                    out.println("</table></div>");
+                    if (filter.equals("yes")) {
+                        out.println("<div style='float:right'><input type='button' id='btndownload' value='Download' onclick='downloadFiles(" + i + ");'/></div>");
+                    }
+                } else {
+                    out.println("<tr>");
+                    out.println("<td><h1>Data Not Found</h1></td>");
+                    out.println("</tr>");
+                }
+            } else if (op.equalsIgnoreCase("getpartydetails")) {
+                ResultSet rs = st.executeQuery(query);
+                out.println("<option value='SELECT'>SELECT</option>");
+                while (rs.next()) {
+                    String accName = rs.getString("ACCOUNT_CODE");
+                    if (accName.equalsIgnoreCase(accAccName)) {
+                        out.println("<option value='" + rs.getString("ACCOUNT_CODE") + "' selected>" + rs.getString("ACCOUNT_NAME") + "</option>");
+                    } else {
+                        out.println("<option value='" + rs.getString("ACCOUNT_CODE") + "'>" + rs.getString("ACCOUNT_NAME") + "</option>");
+                    }
+                }
+            } else if (op.equalsIgnoreCase("getmissingdocuments")) {
+                ResultSet rs = st.executeQuery(query);
+                if (rs.next()) {
+                    query = query.replaceAll("'", "%27");
+                    query = query.replaceAll(" ", "%20");
+                    query = query.replaceAll("-", "%2D");
+                    query = query.replaceAll(":", "%3a");
+                    query = query.replaceAll("_", "%5F");
+                    query = query.replaceAll("\\+", "plus");
+                    out.println("<tr><td><input type='hidden' id='accDaybookCode' name='accDaybookCode' value='" + accDaybookCode + "'/></td></tr>");
+                    out.println("<tr><td><input type='hidden' id='accDaybookName' name='accDaybookName' value='" + accDaybookName + "'/></td></tr>");
+                    out.println("<div style='float: right;'><input type='button' value='Save As Excel' onclick=\"window.open('" + request.getContextPath() + "/SaveAsExcel?filename=MissingDocumentsReport&query=" + query + "','_self')\"/></div>");
+                    out.println("<br/><br/><div id='scrollacc' style='width: 1000px;'><table id='showData' name='showData' width='100%'>");
+                    out.println("<tr><th>Document Number</th><th>Doc Date</th><th>FAS User</th></tr>");
+                    do {
+                        out.println("<tr><td>" + rs.getString("doc_code") + "</td>");
+                        out.println("<td>" + sdf.format(rs.getDate("DOC_DATE")) + "</td>");
+                        if (rs.getString("fas_user") == null) {
+                            out.println("<td></td></tr>");
+                        } else {
+                            out.println("<td>" + rs.getString("fas_user") + "</td></tr>");
+                        }
+                    } while (rs.next());
+                    out.println("</table></div>");
+                } else {
+                    out.println("<tr>");
+                    out.println("<td><h1>No Missing Data Found</h1></td>");
+                    out.println("</tr>");
+                }
+            }
+        } catch (Exception ex) {
+            request.setAttribute("error", ex.getMessage());
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+                if (st != null) {
+                    st.close();
+                }
+                if (con1 != null) {
+                    con1.close();
+                }
+                if (st1 != null) {
+                    st1.close();
+                }
+            } catch (SQLException ex) {
+            }
+        }
+    }
+
+    /**
+     *
+     * @return
+     */
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }
+
+}
