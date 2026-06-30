@@ -7,6 +7,8 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import com.ipca.dms_api.security.UserRightsValidator;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -22,6 +24,9 @@ public class TruckLoadStuffController {
 
     @Autowired
     private TruckLoadStuffService service;
+
+    @Autowired
+    private UserRightsValidator userRightsValidator;
 
     @GetMapping("/search-options")
     public ResponseEntity<List<String>> getSearchOptions(
@@ -42,8 +47,10 @@ public class TruckLoadStuffController {
 
     @DeleteMapping("/remove")
     public ResponseEntity<Map<String, String>> removeDocument(
+            Authentication authentication,
             @RequestParam String invoiceNo,
             @RequestParam String fileName) {
+        userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Truck Load Stuff", "Remove");
         service.removeDocument(invoiceNo, fileName);
         return ResponseEntity.ok(Map.of("message", "Document removed successfully"));
     }
@@ -65,8 +72,10 @@ public class TruckLoadStuffController {
             @RequestParam(value = "year", required = false) String year,
             @RequestParam(value = "division", required = false) String division,
             @RequestParam(value = "app", required = false) String app,
-            @RequestParam(value = "createdBy", required = false) String createdBy) {
+            @RequestParam(value = "createdBy", required = false) String createdBy,
+            Authentication authentication) {
         try {
+            userRightsValidator.requireRight(authentication.getName(), companyId, division, locationId, app != null ? app : "Truck Load Stuff", null, "Creator");
             boolean success = service.createTruckLoadStuff(invoiceNos, file, companyId, locationId, year, division, app, createdBy);
             if (success) {
                 return ResponseEntity.ok(Map.of("message", "Created successfully"));

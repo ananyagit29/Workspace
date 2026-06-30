@@ -22,9 +22,40 @@ import AccountsLayout from "./layouts/AccountsLayout";
 import SearchAccounts from "./pages/accounts/SearchAccounts";
 import CreateAccounts from "./pages/accounts/CreateAccounts";
 import ReportAccounts from "./pages/accounts/ReportAccounts";
+import { useEffect, useState } from "react";
 function App() {
+  const [globalToast, setGlobalToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    const handleAppToast = (e: any) => {
+      setGlobalToast(e.detail);
+      setTimeout(() => setGlobalToast(null), 4000);
+    };
+    window.addEventListener("app-toast", handleAppToast);
+    return () => window.removeEventListener("app-toast", handleAppToast);
+  }, []);
+
   return (
-    <Routes>
+    <>
+      {globalToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            background: globalToast.type === "success" ? "#4caf50" : "#f44336",
+            color: "#fff",
+            padding: "12px 24px",
+            borderRadius: 6,
+            boxShadow: "0 4px 6px rgba(0,0,0,0.3)",
+            zIndex: 9999,
+            animation: "fadein 0.3s"
+          }}
+        >
+          {globalToast.msg}
+        </div>
+      )}
+      <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
 
@@ -66,7 +97,8 @@ function App() {
         <Route path="create" element={<CreateAccounts />} />
         <Route path="report" element={<ReportAccounts />} />
       </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

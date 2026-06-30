@@ -22,6 +22,11 @@ const CreateTruckLoadStuff = () => {
   const selectionsStr = sessionStorage.getItem("dms2Selections");
   const selections = selectionsStr ? JSON.parse(selectionsStr) : null;
 
+  const showToast = (msg: string, type: "success" | "error") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   useEffect(() => {
     if (!selections) return;
     setLoading(true);
@@ -35,11 +40,6 @@ const CreateTruckLoadStuff = () => {
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const moveToRight = () => {
     if (leftSelection.length === 0) {

@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import com.ipca.dms_api.security.UserRightsValidator;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
@@ -23,6 +25,9 @@ public class SupplierCustomerController {
 
     @Autowired
     private SupplierCustomerService service;
+
+    @Autowired
+    private UserRightsValidator userRightsValidator;
 
     @GetMapping("/search-options")
     public ResponseEntity<List<Map<String, Object>>> getSearchOptions(
@@ -50,8 +55,10 @@ public class SupplierCustomerController {
 
     @DeleteMapping("/remove")
     public ResponseEntity<Map<String, String>> removeDocument(
+            Authentication authentication,
             @RequestParam String accountCode,
             @RequestParam String fileName) {
+        userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Supplier & Customer", "Remove");
         service.removeDocument(accountCode, fileName);
         return ResponseEntity.ok(Map.of("message", "Document removed successfully"));
     }
@@ -65,8 +72,10 @@ public class SupplierCustomerController {
             @RequestParam String divisionName,
             @RequestParam String applicationName,
             @RequestParam String userId,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) {
         try {
+            userRightsValidator.requireRight(authentication.getName(), companyId, divisionName, locationId, applicationName, null, "Creator");
             SupplierCustomerResponse res = service.saveDocument(
                 accountType, accountCode, accountName, companyId, locationId, divisionName, applicationName, userId, file);
             return ResponseEntity.ok(res);

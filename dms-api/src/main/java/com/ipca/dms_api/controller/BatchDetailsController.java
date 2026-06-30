@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import com.ipca.dms_api.security.UserRightsValidator;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,8 @@ public class BatchDetailsController {
     private BatchDetailsService batchService;
     @Autowired
     private ZipMailService zipMailService;
+    @Autowired
+    private UserRightsValidator userRightsValidator;
 
     // ── GET PRODUCT DETAILS ───────────────────────────────────────────────────
     @GetMapping("/getProductDetails")
@@ -64,6 +67,7 @@ public class BatchDetailsController {
             @RequestParam(required = false) MultipartFile imageFile) {
         try {
             String userId = authentication.getName();
+            userRightsValidator.requireRight(userId, companyId, divisionName, locationId, applicationName, null, "Creator");
             batchService.createBatch(
                     batchType, productCode, productName, vendorCode, vendorName,
                     batchNumber, userId, companyId, locationId, divisionName,
@@ -87,8 +91,13 @@ public class BatchDetailsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "8") int size) {
 
-        boolean isCreator = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().contains("Creator"));
+        boolean isCreator = false;
+        try {
+            userRightsValidator.requireRight(authentication.getName(), null, null, locationId, "Batch Details", null, "Creator");
+            isCreator = true;
+        } catch (Exception e) {
+            isCreator = false;
+        }
 
         return ResponseEntity.ok(batchService.searchBatch(
                 locationId, subApplicationName, type,
@@ -107,10 +116,12 @@ public class BatchDetailsController {
     // ── REMOVE FILE ───────────────────────────────────────────────────────────
     @DeleteMapping("/remove")
     public ResponseEntity<?> removeFile(
+            Authentication authentication,
             @RequestParam String batchNumber,
             @RequestParam String fileName,
             @RequestParam String filePath) {
         try {
+            userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Batch Details", "Remove");
             batchService.removeFile(batchNumber, fileName, filePath);
             return ResponseEntity.ok("File removed successfully.");
         } catch (Exception e) {

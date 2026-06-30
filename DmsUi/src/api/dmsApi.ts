@@ -18,6 +18,17 @@ dmsApi.interceptors.request.use((config) => {
   return config;
 });
 
+const handleResponseError = (error: any) => {
+  if (error.response && error.response.status === 403) {
+    const msg = error.response.data?.message || "User cannot perform respective operation due to unsupported access rights.";
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type: "error" } }));
+  }
+  return Promise.reject(error);
+};
+
+dmsApi.interceptors.response.use((res) => res, handleResponseError);
+authApi.interceptors.response.use((res) => res, handleResponseError);
+
 /* ── Dashboard workspace dropdown APIs (still use authApi) ── */
 
 export interface UserRights {

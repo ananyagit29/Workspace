@@ -73,4 +73,13 @@ public class UserRightsId implements Serializable {
                             locationId, applicationName,
                             subApplicationName, module, accessType);
     }
+
+    public String getUserId() { return userId; }
+    public String getCompanyId() { return companyId; }
+    public String getDivisionName() { return divisionName; }
+    public String getLocationId() { return locationId; }
+    public String getApplicationName() { return applicationName; }
+    public String getSubApplicationName() { return subApplicationName; }
+    public String getModule() { return module; }
+    public String getAccessType() { return accessType; }
 }

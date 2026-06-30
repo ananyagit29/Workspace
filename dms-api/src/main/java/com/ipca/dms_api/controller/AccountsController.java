@@ -12,6 +12,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+import com.ipca.dms_api.security.UserRightsValidator;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ipca.dms_api.service.AccountsService;
 
@@ -19,7 +22,11 @@ import com.ipca.dms_api.service.AccountsService;
 @RequestMapping("/dmsApi/accounts")
 public class AccountsController {
 
-    private final AccountsService accountsService;
+    @Autowired
+    private AccountsService accountsService;
+
+    @Autowired
+    private UserRightsValidator userRightsValidator;
 
     public AccountsController(AccountsService accountsService) {
         this.accountsService = accountsService;
@@ -69,6 +76,7 @@ public class AccountsController {
 
     @PostMapping("/upload")
     public ResponseEntity<String> upload(
+            Authentication authentication,
             @RequestParam String companyId,
             @RequestParam String locationId,
             @RequestParam String divisionName,
@@ -88,6 +96,7 @@ public class AccountsController {
             @RequestParam String createdBy,
             @RequestParam("file") MultipartFile file) {
         try {
+            userRightsValidator.requireRight(authentication.getName(), companyId, divisionName, locationId, applicationName, null, "Creator");
             String msg = accountsService.uploadDocument(companyId, locationId, divisionName,
                     applicationName, financialYear, daybookCode, daybookName,
                     accountCode, accountName, docCode, docDate, docYear,
@@ -114,11 +123,13 @@ public class AccountsController {
 
     @DeleteMapping("/remove")
     public ResponseEntity<String> remove(
+            Authentication authentication,
             @RequestParam String daybookCode,
             @RequestParam(required = false) String docMonth,
             @RequestParam(required = false) String docYear,
             @RequestParam String docCode,
             @RequestParam String filename) {
+        userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Accounts", "Remove");
         accountsService.removeDocument(daybookCode, docMonth, docYear, docCode, filename);
         return ResponseEntity.ok("Document removed");
     }

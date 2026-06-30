@@ -17,6 +17,9 @@ import com.ipca.dms_api.entity.UserRightsId;
 @Repository
 public interface UserRightsRepository extends JpaRepository<UserRights, UserRightsId> {
 
+   @Query("SELECT r FROM UserRights r WHERE r.id.userId = :userId")
+   List<UserRights> findByUserId(@Param("userId") String userId);
+
    @Query("SELECT DISTINCT ur.id.companyId, ur.companyName FROM UserRights ur " +
          "WHERE ur.id.userId = :userId " +
          "ORDER BY ur.companyName")
