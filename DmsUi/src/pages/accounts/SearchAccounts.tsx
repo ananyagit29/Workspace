@@ -257,9 +257,9 @@ const SearchAccounts: React.FC = () => {
           )}
 
           {!loading && results.length === 0 && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#9ca3af" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#333" }}>
               <div style={{ fontSize: 28, marginBottom: 10 }}>📄</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>No records found</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>No records found</div>
               <div style={{ fontSize: 11, marginTop: 4 }}>Select a daybook and month to view uploaded documents.</div>
             </div>
           )}
@@ -269,11 +269,11 @@ const SearchAccounts: React.FC = () => {
   );
 };
 
-const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" };
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
+const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.05em" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
 const iconButton: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 2 };

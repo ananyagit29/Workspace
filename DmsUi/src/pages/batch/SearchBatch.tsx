@@ -193,12 +193,12 @@ const SearchBatch = () => {
         {/* Filter card */}
         <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "8px 12px", marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Search Filters</span>
-            <button onClick={handleReset} style={{ fontSize: 11, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0 }}>✕ Clear</button>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.05em" }}>Search Filters</span>
+            <button onClick={handleReset} style={{ fontSize: 11, color: "#333", background: "none", border: "none", cursor: "pointer", padding: 0 }}>✕ Clear</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Batch Type</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Batch Type</div>
               <select value={batchType} onChange={(e) => handleBatchTypeChange(e.target.value)}
                 style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "5px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none" }}>
                 <option value="">All Types</option>
@@ -208,19 +208,19 @@ const SearchBatch = () => {
               </select>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Vendor Code</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Vendor Code</div>
               <input list="vendorList" value={vendorCode} onChange={(e) => setVendorCode(e.target.value.toUpperCase())} placeholder="Type or select..."
                 style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "5px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" }} />
               <datalist id="vendorList">{vendorOptions.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Product Code</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Product Code</div>
               <input list="productList" value={productCode} onChange={(e) => setProductCode(e.target.value.toUpperCase())} placeholder="Type or select..."
                 style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "5px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" }} />
               <datalist id="productList">{productOptions.map((p) => <option key={p} value={p} />)}</datalist>
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Batch No.</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Batch No.</div>
               <input list="batchList" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value.toUpperCase())} placeholder="Type or select..."
                 style={{ width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "5px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" }} />
               <datalist id="batchList">{batchOptions.map((b) => <option key={b} value={b} />)}</datalist>
@@ -241,7 +241,7 @@ const SearchBatch = () => {
               <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
                 {results.length > 0 ? `${totalElements.toLocaleString()} records found` : "No records found"}
               </span>
-              {results.length > 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Page {currentPage + 1} of {totalPages}</span>}
+              {results.length > 0 && <span style={{ fontSize: 11, color: "#333" }}>Page {currentPage + 1} of {totalPages}</span>}
             </div>
 
             {results.length > 0 ? (
@@ -256,7 +256,7 @@ const SearchBatch = () => {
                           "Sub Type", "File", "Uploaded By", "Date",
                           ...(canRemove ? [""] : []),   // Action col only if canRemove
                         ].map((h, i) => (
-                          <th key={i} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                          <th key={i} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                             {h}
                           </th>
                         ))}
@@ -291,10 +291,10 @@ const SearchBatch = () => {
                                     style={{ color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 }}>
                                     📄 {row.fileName}
                                   </button>
-                                : <span style={{ color: "#d1d5db" }}>—</span>}
+                                : <span style={{ color: "#333" }}>—</span>}
                             </td>
-                            <td style={{ padding: "7px 10px", fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{row.createdBy}</td>
-                            <td style={{ padding: "7px 10px", fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>
+                            <td style={{ padding: "7px 10px", fontSize: 11, color: "#333", whiteSpace: "nowrap" }}>{row.createdBy}</td>
+                            <td style={{ padding: "7px 10px", fontSize: 11, color: "#333", whiteSpace: "nowrap" }}>
                               {row.createdOn ? new Date(row.createdOn).toLocaleDateString("en-GB") : "—"}
                             </td>
                             {/* Remove — only rendered if user has Remove right */}
@@ -317,7 +317,7 @@ const SearchBatch = () => {
 
                 {totalPages > 1 && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "#f9fafb", borderTop: "1px solid #e5e7eb" }}>
-                    <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                    <span style={{ fontSize: 11, color: "#333" }}>
                       Showing {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)} of {totalElements.toLocaleString()}
                     </span>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -349,9 +349,9 @@ const SearchBatch = () => {
                 )}
               </>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#9ca3af" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#333" }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: "#6b7280" }}>No records found</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#333" }}>No records found</div>
                 <div style={{ fontSize: 11, marginTop: 4 }}>Try adjusting your search filters</div>
               </div>
             )}
@@ -359,9 +359,9 @@ const SearchBatch = () => {
         )}
 
         {!hasSearched && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#9ca3af" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#333" }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-            <div style={{ fontSize: 13, color: "#6b7280" }}>Select filters and click Search to view batch records</div>
+            <div style={{ fontSize: 13, color: "#333" }}>Select filters and click Search to view batch records</div>
           </div>
         )}
       </div>
@@ -390,10 +390,10 @@ const SearchBatch = () => {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Send via Email</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{selected.size} file(s) · max 5 recipients</div>
+                <div style={{ fontSize: 11, color: "#333", marginTop: 2 }}>{selected.size} file(s) · max 5 recipients</div>
               </div>
               <button onClick={() => { setShowMailModal(false); setMailTo(""); setRecipients([]); }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#9ca3af", padding: 0 }}>✕</button>
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#333", padding: 0 }}>✕</button>
             </div>
             <div style={{ marginBottom: 10 }}>
               <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#374151", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 5 }}>
@@ -408,7 +408,7 @@ const SearchBatch = () => {
                   Add
                 </button>
               </div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3 }}>Press Enter or click Add</div>
+              <div style={{ fontSize: 10, color: "#333", marginTop: 3 }}>Press Enter or click Add</div>
             </div>
             {recipients.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14, padding: "8px 10px", background: "#f9fafb", borderRadius: 7, border: "1px solid #e5e7eb" }}>

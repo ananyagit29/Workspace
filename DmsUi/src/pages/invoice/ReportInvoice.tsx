@@ -74,7 +74,7 @@ const ReportInvoice = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                    <td style={{ padding: "32px", textAlign: "center", color: "#333" }}>
                       <div style={{ display: "inline-block", width: 20, height: 20, border: "2px solid #e5e7eb", borderTopColor: "#003366", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
                     </td>
                   </tr>
@@ -86,7 +86,7 @@ const ReportInvoice = () => {
                   ))
                 ) : (
                   <tr>
-                    <td style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>No missing invoices found.</td>
+                    <td style={{ padding: "32px", textAlign: "center", color: "#333" }}>No missing invoices found.</td>
                   </tr>
                 )}
               </tbody>

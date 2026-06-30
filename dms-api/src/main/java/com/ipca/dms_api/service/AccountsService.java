@@ -3,7 +3,6 @@ package com.ipca.dms_api.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -281,7 +280,9 @@ public class AccountsService {
         sql.append("AND DOC_CODE != 'Select' ORDER BY TO_NUMBER(Doc_Code)");
 
         try {
-            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            String queryStr = sql.toString();
+            if (queryStr == null) return new ArrayList<>();
+            return jdbcTemplate.queryForList(queryStr, params.toArray());
         } catch (Exception e) {
             System.err.println("[Accounts] search error: " + e.getMessage());
             return new ArrayList<>();
@@ -365,7 +366,9 @@ public class AccountsService {
         sql.append("AND DOC_CODE != 'Select' ORDER BY TO_NUMBER(Doc_Code)");
 
         try {
-            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            String queryStr = sql.toString();
+            if (queryStr == null) return new ArrayList<>();
+            return jdbcTemplate.queryForList(queryStr, params.toArray());
         } catch (Exception e) {
             System.err.println("[Accounts] getReportDocuments error: " + e.getMessage());
             return new ArrayList<>();

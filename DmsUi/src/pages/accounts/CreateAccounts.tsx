@@ -284,7 +284,7 @@ const CreateAccounts: React.FC = () => {
             )}
 
             {selectedDocCode && !docDetails && (
-              <div style={{ textAlign: "center", padding: "20px 0", color: "#6b7280", fontSize: 12 }}>
+              <div style={{ textAlign: "center", padding: "20px 0", color: "#333", fontSize: 12 }}>
                 Loading details...
               </div>
             )}
@@ -295,7 +295,7 @@ const CreateAccounts: React.FC = () => {
   );
 };
 
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" as const };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 32 };
 

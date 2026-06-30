@@ -1,6 +1,5 @@
 package com.ipca.dms_api.security;
 
-import com.ipca.dms_api.entity.UserRights;
 import com.ipca.dms_api.repository.UserRightsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,16 +16,23 @@ public class UserRightsValidator {
     public void requireRight(String userId, String companyId, String divisionName, String locationId,
                              String applicationName, String subApplicationName, String requiredAccessType) {
         
-        List<UserRights> userRights = userRightsRepository.findByUserId(userId);
+        List<Object[]> rawRights = userRightsRepository.findRawRightsByUserId(userId);
 
-        boolean hasRight = userRights.stream().anyMatch(r ->
-                (companyId == null || companyId.equalsIgnoreCase(r.getId().getCompanyId())) &&
-                (divisionName == null || divisionName.equalsIgnoreCase(r.getId().getDivisionName())) &&
-                (locationId == null || locationId.equalsIgnoreCase(r.getId().getLocationId())) &&
-                (applicationName == null || applicationName.equalsIgnoreCase(r.getId().getApplicationName())) &&
-                (subApplicationName == null || subApplicationName.equalsIgnoreCase(r.getId().getSubApplicationName())) &&
-                requiredAccessType.equalsIgnoreCase(r.getId().getAccessType())
-        );
+        boolean hasRight = rawRights.stream().anyMatch(row -> {
+            String rCompanyId = (String) row[0];
+            String rDivisionName = (String) row[1];
+            String rLocationId = (String) row[2];
+            String rApplicationName = (String) row[3];
+            String rSubApplicationName = (String) row[4];
+            String rAccessType = (String) row[5];
+
+            return matches(companyId, rCompanyId) &&
+                   matches(divisionName, rDivisionName) &&
+                   matches(locationId, rLocationId) &&
+                   matches(applicationName, rApplicationName) &&
+                   matches(subApplicationName, rSubApplicationName) &&
+                   matches(requiredAccessType, rAccessType);
+        });
 
         if (!hasRight) {
             throw new AccessDeniedException("User cannot perform respective operation due to unsupported access rights.");
@@ -37,18 +43,30 @@ public class UserRightsValidator {
     public void requireAnySubAppRight(String userId, String companyId, String divisionName, String locationId,
                                       String applicationName, String requiredAccessType) {
 
-        List<UserRights> userRights = userRightsRepository.findByUserId(userId);
+        List<Object[]> rawRights = userRightsRepository.findRawRightsByUserId(userId);
 
-        boolean hasRight = userRights.stream().anyMatch(r ->
-                (companyId == null || companyId.equalsIgnoreCase(r.getId().getCompanyId())) &&
-                (divisionName == null || divisionName.equalsIgnoreCase(r.getId().getDivisionName())) &&
-                (locationId == null || locationId.equalsIgnoreCase(r.getId().getLocationId())) &&
-                (applicationName == null || applicationName.equalsIgnoreCase(r.getId().getApplicationName())) &&
-                requiredAccessType.equalsIgnoreCase(r.getId().getAccessType())
-        );
+        boolean hasRight = rawRights.stream().anyMatch(row -> {
+            String rCompanyId = (String) row[0];
+            String rDivisionName = (String) row[1];
+            String rLocationId = (String) row[2];
+            String rApplicationName = (String) row[3];
+            String rAccessType = (String) row[5]; // index 5 is ACCESS_TYPE in the native query
+
+            return matches(companyId, rCompanyId) &&
+                   matches(divisionName, rDivisionName) &&
+                   matches(locationId, rLocationId) &&
+                   matches(applicationName, rApplicationName) &&
+                   matches(requiredAccessType, rAccessType);
+        });
 
         if (!hasRight) {
             throw new AccessDeniedException("User cannot perform respective operation due to unsupported access rights.");
         }
+    }
+
+    private boolean matches(String required, String actual) {
+        if (required == null) return true;
+        if (actual == null || actual.equalsIgnoreCase("ALL") || actual.equals("*")) return true;
+        return required.equalsIgnoreCase(actual);
     }
 }

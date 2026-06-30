@@ -30,7 +30,7 @@ const selFilled: React.CSSProperties = {
 };
 
 const lbl: React.CSSProperties = {
-  display: "block", fontSize: 10, fontWeight: 600, color: "#6b7280",
+  display: "block", fontSize: 10, fontWeight: 600, color: "#333",
   textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 3,
 };
 
@@ -263,8 +263,8 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div style={{ textAlign: "center", padding: "8px 0", fontSize: 10, color: "#9ca3af" }}>
-        ©2026 Copyright <strong style={{ color: "#6b7280" }}>Ipca Laboratories Limited</strong> · DMS v2.0
+      <div style={{ textAlign: "center", padding: "8px 0", fontSize: 10, color: "#333" }}>
+        ©2026 Copyright <strong style={{ color: "#333" }}>Ipca Laboratories Limited</strong> · DMS v2.0
       </div>
 
     </div>

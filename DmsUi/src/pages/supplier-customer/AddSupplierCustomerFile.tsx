@@ -162,7 +162,7 @@ const AddSupplierCustomerFile = () => {
                       </li>
                     ))}
                   {accountOptions.filter(c => `${c.name} (${c.code})`.toUpperCase().includes(selectedAccount.toUpperCase())).length === 0 && (
-                    <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                    <li style={{ padding: "8px 12px", fontSize: 12, color: "#333", textAlign: "center" }}>No matches</li>
                   )}
                 </ul>
               )}
@@ -185,7 +185,7 @@ const AddSupplierCustomerFile = () => {
                 <label htmlFor="file-upload" style={uploadButton}>
                   Choose Files
                 </label>
-                <span style={{ fontSize: 12, color: "#6b7280" }}>
+                <span style={{ fontSize: 12, color: "#333" }}>
                   {file ? file.name : "No file chosen"}
                 </span>
               </div>

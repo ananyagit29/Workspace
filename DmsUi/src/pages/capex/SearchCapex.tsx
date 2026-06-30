@@ -243,17 +243,17 @@ const SearchCapex = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "32px" }}>
                 <div>
                   <label style={labelStyle}>Budget Type</label>
-                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{CAPEX_TYPE_MAP[budgetType] || budgetType}</div>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#333" }}>{CAPEX_TYPE_MAP[budgetType] || budgetType}</div>
                 </div>
 
                 <div>
                   <label style={labelStyle}>Budget Code</label>
-                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.budgetCode}</div>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#333" }}>{reviseModal.budgetCode}</div>
                 </div>
 
                 <div>
                   <label style={labelStyle}>New Revision No</label>
-                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#6b7280" }}>{reviseModal.revisionNo + 1}</div>
+                  <div style={{ ...inputStyle, background: "#f9fafb", color: "#333" }}>{reviseModal.revisionNo + 1}</div>
                 </div>
 
                 <div>
@@ -270,7 +270,7 @@ const SearchCapex = () => {
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
                 <button
                   onClick={() => setReviseModal(null)}
-                  style={{ background: "#fff", border: "1px solid #d1d5db", color: "#4b5563", borderRadius: 6, padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                  style={{ background: "#fff", border: "1px solid #d1d5db", color: "#333", borderRadius: 6, padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}
                 >
                   Cancel
                 </button>
@@ -329,7 +329,7 @@ const SearchCapex = () => {
                           </li>
                         ))}
                         {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
-                          <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                          <li style={{ padding: "8px 12px", fontSize: 12, color: "#333", textAlign: "center" }}>No matches</li>
                         )}
                       </ul>
                     )}
@@ -354,7 +354,7 @@ const SearchCapex = () => {
                 <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
-                      Results <span style={{ color: "#6b7280", fontWeight: 400 }}>({totalElements})</span>
+                      Results <span style={{ color: "#333", fontWeight: 400 }}>({totalElements})</span>
                     </span>
                     <button onClick={handleExportExcel} style={exportBtn}>Export to Excel</button>
                   </div>
@@ -408,7 +408,7 @@ const SearchCapex = () => {
                         ))}
                         {results.length === 0 && (
                           <tr>
-                            <td colSpan={selections?.year === "2026-2027" ? 8 : 6} style={{ padding: "32px", textAlign: "center", color: "#6b7280" }}>
+                            <td colSpan={selections?.year === "2026-2027" ? 8 : 6} style={{ padding: "32px", textAlign: "center", color: "#333" }}>
                               No documents found.
                             </td>
                           </tr>
@@ -432,13 +432,13 @@ const SearchCapex = () => {
 
 // --- STYLES --- //
 const sectionTitle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: "#111827" };
-const linkButton: React.CSSProperties = { background: "none", border: "none", color: "#6b7280", fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0 };
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#4b5563", marginBottom: 4, textTransform: "uppercase" };
+const linkButton: React.CSSProperties = { background: "none", border: "none", color: "#333", fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0 };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase" };
 const inputStyle: React.CSSProperties = { width: "100%", padding: "6px 10px", fontSize: 12, color: "#111827", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
 const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
-const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#4b5563", whiteSpace: "nowrap" };
+const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#333", whiteSpace: "nowrap" };
 const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 
 const pagerButton = (disabled: boolean, active: boolean = false): React.CSSProperties => ({

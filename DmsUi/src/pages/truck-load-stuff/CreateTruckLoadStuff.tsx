@@ -146,7 +146,7 @@ const CreateTruckLoadStuff = () => {
         <h2 style={{ fontSize: 13, fontWeight: 700, color: "#5f7a98", margin: "0 0 20px 0", borderBottom: "1px solid #f3f4f6", paddingBottom: 12 }}>CREATE TRUCK LOAD STUFF</h2>
         
         {loading ? (
-          <div style={{ fontSize: 13, color: "#6b7280", textAlign: "center", padding: "40px 0" }}>Loading invoices from SCM...</div>
+          <div style={{ fontSize: 13, color: "#333", textAlign: "center", padding: "40px 0" }}>Loading invoices from SCM...</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             

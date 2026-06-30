@@ -189,7 +189,7 @@ const CreateBatch = () => {
                 <label style={labelStyle}>Product Name</label>
                 <input value={fetchingProduct ? "Fetching..." : productDetails?.productName || ""}
                   readOnly placeholder="Auto-filled"
-                  style={{ ...inputStyle, background: "#f3f4f6", color: "#6b7280" }} />
+                  style={{ ...inputStyle, background: "#f3f4f6", color: "#333" }} />
               </div>
             </div>
 
@@ -197,12 +197,12 @@ const CreateBatch = () => {
               <div style={fieldStyle}>
                 <label style={labelStyle}>Vendor Code</label>
                 <input value={productDetails?.vendorCode || ""} readOnly placeholder="Auto-filled"
-                  style={{ ...inputStyle, background: "#f3f4f6", color: "#6b7280" }} />
+                  style={{ ...inputStyle, background: "#f3f4f6", color: "#333" }} />
               </div>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Vendor Name</label>
                 <input value={productDetails?.vendorName || ""} readOnly placeholder="Auto-filled"
-                  style={{ ...inputStyle, background: "#f3f4f6", color: "#6b7280" }} />
+                  style={{ ...inputStyle, background: "#f3f4f6", color: "#333" }} />
               </div>
             </div>
 
@@ -211,19 +211,19 @@ const CreateBatch = () => {
               <input value={batchNumber} onChange={e => setBatchNumber(e.target.value.toUpperCase())}
                 onBlur={handleBatchNumberBlur} disabled={!productDetails} placeholder="e.g. BCH-2025-001"
                 style={{ ...inputStyle, opacity: !productDetails ? 0.5 : 1 }} />
-              {fetchingFiles && <span style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>Checking files...</span>}
+              {fetchingFiles && <span style={{ fontSize: 10, color: "#333", marginTop: 2 }}>Checking files...</span>}
             </div>
           </div>
 
           {fileEntries.length > 0 && (
             <div style={{ ...cardStyle, marginTop: 10 }}>
               <div style={sectionTitle}>Upload Documents</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 10 }}>Max file size: 1 MB per file</div>
+              <div style={{ fontSize: 10, color: "#333", marginBottom: 10 }}>Max file size: 1 MB per file</div>
               {fileEntries.map(entry => (
                 <div key={entry.subType} style={{ ...fieldStyle, marginBottom: 10 }}>
                   <label style={labelStyle}>
                     {entry.label}
-                    <span style={{ color: "#9ca3af", fontWeight: 400, marginLeft: 4 }}>
+                    <span style={{ color: "#333", fontWeight: 400, marginLeft: 4 }}>
                       ({entry.subType === "IMAGE" ? ".docx, .png, .jpg" : ".pdf"})
                     </span>
                   </label>
@@ -245,8 +245,8 @@ const CreateBatch = () => {
                       <span style={{ fontSize: 12, color: entry.file ? "#166534" : "#2563eb", fontWeight: 500, flex: 1 }}>
                         {entry.file ? entry.file.name : "Click to upload"}
                       </span>
-                      {entry.file && <span style={{ fontSize: 10, color: "#9ca3af" }}>{(entry.file.size / 1024).toFixed(0)} KB</span>}
-                      {!entry.file && <span style={{ fontSize: 10, color: "#9ca3af" }}>Max 1 MB</span>}
+                      {entry.file && <span style={{ fontSize: 10, color: "#333" }}>{(entry.file.size / 1024).toFixed(0)} KB</span>}
+                      {!entry.file && <span style={{ fontSize: 10, color: "#333" }}>Max 1 MB</span>}
                       <input ref={el => { fileRefs.current[entry.subType] = el; }} type="file" accept={entry.accept}
                         style={{ display: "none" }} onChange={e => handleFileChange(entry.subType, e.target.files?.[0] || null)} />
                     </div>
@@ -277,7 +277,7 @@ const cardStyle: React.CSSProperties = {
   background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "10px 14px",
 };
 const sectionTitle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase",
+  fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase",
   letterSpacing: "0.05em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid #f3f4f6",
 };
 const fieldStyle: React.CSSProperties = {

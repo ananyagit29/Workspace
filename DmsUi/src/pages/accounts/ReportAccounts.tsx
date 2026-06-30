@@ -233,7 +233,7 @@ const ReportAccounts: React.FC = () => {
 
             {/* Grid layout for filters */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px" }}>
-              
+
               {/* Line 1 */}
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Daybook Code</label>
@@ -254,7 +254,7 @@ const ReportAccounts: React.FC = () => {
               </div>
 
               {/* Line 2 (Conditional) */}
-              
+
               {/* Col 1 of Line 2: Account Code / Name */}
               {showPartyFilter && (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -273,7 +273,7 @@ const ReportAccounts: React.FC = () => {
                   <input type="number" value={accCode} onChange={e => setAccCode(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
                 </div>
               )}
-              
+
               {/* Col 2 of Line 2: Amount More Than */}
               {showAmountMonth && (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -324,7 +324,7 @@ const ReportAccounts: React.FC = () => {
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, gap: 8 }}>
                 {!isMissing && (
                   <button onClick={handleDownloadSelected} disabled={selectedDocs.size === 0 || loading} style={{ ...primaryButton, opacity: selectedDocs.size === 0 || loading ? 0.6 : 1, background: "#003366" }}>
-                    Download Selected
+                    Download
                   </button>
                 )}
                 <button onClick={handleExportExcel} style={primaryButton}>Save As Excel</button>
@@ -353,106 +353,122 @@ const ReportAccounts: React.FC = () => {
                   </table>
                 ) : (
                   <>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                    <thead>
-                      <tr style={{ background: "#f9fafb", position: "sticky", top: 0, zIndex: 1 }}>
-                        <th style={thStyle}>Doc Code</th>
-                        <th style={thStyle}>Doc Date</th>
-                        <th style={thStyle}>Account Name</th>
-                        <th style={thStyle}>Filename</th>
-                        <th style={{ ...thStyle, textAlign: "center" }}>
-                          Download<br />
-                          <input
-                            type="checkbox"
-                            onChange={e => {
-                              const pageFiles = results.slice((currentPage - 1) * 5, currentPage * 5)
-                                .filter((r: any) => r.FILE_NAME)
-                                .map((r: any) => JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }));
-                              const newSet = new Set(selectedDocs);
-                              if (e.target.checked) {
-                                pageFiles.forEach(f => newSet.add(f));
-                              } else {
-                                pageFiles.forEach(f => newSet.delete(f));
-                              }
-                              setSelectedDocs(newSet);
-                            }}
-                          />
-                        </th>
-                        <th style={thStyle}>Bill No.</th>
-                        <th style={thStyle}>Bill Date</th>
-                        <th style={thStyle}>Trans Amt</th>
-                        <th style={thStyle}>Created By</th>
-                        <th style={thStyle}>Created On</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {results.slice((currentPage - 1) * 5, currentPage * 5).map((r: any, idx: number) => (
-                        <tr key={idx}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <td style={{ ...tdStyle, textAlign: "right" }}>{r.DOC_CODE || ""}</td>
-                          <td style={tdStyle}>{r.DOC_DATE ? new Date(r.DOC_DATE).toLocaleDateString("en-GB") : ""}</td>
-                          <td style={{ ...tdStyle, minWidth: 200 }}>{r.ACCOUNT_NAME || ""}</td>
-                          <td style={tdStyle}>
-                            {r.FILE_NAME ? (
-                              <button onClick={() => handleViewFile(r.DAYBOOK_CODE || "", r.DOC_CODE || "", r.FILE_NAME)} style={fileButton}>
-                                {r.FILE_NAME}
-                              </button>
-                            ) : ""}
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: "center" }}>
-                            {r.FILE_NAME && (
-                              <input
-                                type="checkbox"
-                                checked={selectedDocs.has(JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }))}
-                                onChange={e => {
-                                  const id = JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME });
-                                  const newSet = new Set(selectedDocs);
-                                  if (e.target.checked) newSet.add(id);
-                                  else newSet.delete(id);
-                                  setSelectedDocs(newSet);
-                                }}
-                              />
-                            )}
-                          </td>
-                          <td style={tdStyle}>{r.BILL_NUMBER || ""}</td>
-                          <td style={tdStyle}>{r.BILL_DATE ? new Date(r.BILL_DATE).toLocaleDateString("en-GB") : ""}</td>
-                          <td style={{ ...tdStyle, textAlign: "right" }}>{r.TRAN_AMOUNT != null ? r.TRAN_AMOUNT : ""}</td>
-                          <td style={tdStyle}>{r.CREATED_BY || ""}</td>
-                          <td style={tdStyle}>{r.CREATED_ON || ""}</td>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#f9fafb", position: "sticky", top: 0, zIndex: 1 }}>
+                          <th style={thStyle}>Doc Code</th>
+                          <th style={thStyle}>Doc Date</th>
+                          <th style={thStyle}>Account Name</th>
+                          <th style={thStyle}>Filename</th>
+                          <th style={{ ...thStyle, textAlign: "center" }}>
+                            Download<br />
+                            <span style={{ fontSize: 10, color: "#333", fontWeight: "normal" }}>(Max 100 files)</span><br />
+                            <input
+                              type="checkbox"
+                              onChange={e => {
+                                const pageFiles = results.slice((currentPage - 1) * 5, currentPage * 5)
+                                  .filter((r: any) => r.FILE_NAME)
+                                  .map((r: any) => JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }));
+                                const newSet = new Set(selectedDocs);
+                                if (e.target.checked) {
+                                  for (const f of pageFiles) {
+                                    if (!newSet.has(f)) {
+                                      if (newSet.size >= 100) {
+                                        alert("Maximum 100 files can be selected at a time.");
+                                        break;
+                                      }
+                                      newSet.add(f);
+                                    }
+                                  }
+                                } else {
+                                  pageFiles.forEach(f => newSet.delete(f));
+                                }
+                                setSelectedDocs(newSet);
+                              }}
+                            />
+                          </th>
+                          <th style={thStyle}>Bill No.</th>
+                          <th style={thStyle}>Bill Date</th>
+                          <th style={thStyle}>Trans Amt</th>
+                          <th style={thStyle}>Created By</th>
+                          <th style={thStyle}>Created On</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {results.length > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
-                      <button 
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                        disabled={currentPage === 1}
-                        style={{ ...primaryButton, padding: "4px 12px", background: currentPage === 1 ? "#d1d5db" : "#003366", color: currentPage === 1 ? "#6b7280" : "#fff" }}>
-                        Previous
-                      </button>
-                      <span style={{ fontSize: 12, color: "#374151" }}>
-                        Page {currentPage} of {Math.max(1, Math.ceil(results.length / 5))}
-                      </span>
-                      <button 
-                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(results.length / 5), p + 1))} 
-                        disabled={currentPage === Math.ceil(results.length / 5) || results.length === 0}
-                        style={{ ...primaryButton, padding: "4px 12px", background: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#d1d5db" : "#003366", color: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#6b7280" : "#fff" }}>
-                        Next
-                      </button>
-                    </div>
-                  )}
-                </>
+                      </thead>
+                      <tbody>
+                        {results.slice((currentPage - 1) * 5, currentPage * 5).map((r: any, idx: number) => (
+                          <tr key={idx}
+                            onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{r.DOC_CODE || ""}</td>
+                            <td style={tdStyle}>{r.DOC_DATE ? new Date(r.DOC_DATE).toLocaleDateString("en-GB") : ""}</td>
+                            <td style={{ ...tdStyle, minWidth: 200 }}>{r.ACCOUNT_NAME || ""}</td>
+                            <td style={tdStyle}>
+                              {r.FILE_NAME ? (
+                                <button onClick={() => handleViewFile(r.DAYBOOK_CODE || "", r.DOC_CODE || "", r.FILE_NAME)} style={fileButton}>
+                                  {r.FILE_NAME}
+                                </button>
+                              ) : ""}
+                            </td>
+                            <td style={{ ...tdStyle, textAlign: "center" }}>
+                              {r.FILE_NAME && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedDocs.has(JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }))}
+                                  onChange={e => {
+                                    const id = JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME });
+                                    const newSet = new Set(selectedDocs);
+                                    if (e.target.checked) {
+                                      if (newSet.size >= 100) {
+                                        alert("Maximum 100 files can be selected at a time.");
+                                        return;
+                                      }
+                                      newSet.add(id);
+                                    } else {
+                                      newSet.delete(id);
+                                    }
+                                    setSelectedDocs(newSet);
+                                  }}
+                                />
+                              )}
+                            </td>
+                            <td style={tdStyle}>{r.BILL_NUMBER || ""}</td>
+                            <td style={tdStyle}>{r.BILL_DATE ? new Date(r.BILL_DATE).toLocaleDateString("en-GB") : ""}</td>
+                            <td style={{ ...tdStyle, textAlign: "right" }}>{r.TRAN_AMOUNT != null ? r.TRAN_AMOUNT : ""}</td>
+                            <td style={tdStyle}>{r.CREATED_BY || ""}</td>
+                            <td style={tdStyle}>{r.CREATED_ON || ""}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {results.length > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          style={{ ...primaryButton, padding: "4px 12px", background: currentPage === 1 ? "#d1d5db" : "#003366", color: currentPage === 1 ? "#6b7280" : "#fff" }}>
+                          Previous
+                        </button>
+                        <span style={{ fontSize: 12, color: "#374151" }}>
+                          Page {currentPage} of {Math.max(1, Math.ceil(results.length / 5))}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(Math.ceil(results.length / 5), p + 1))}
+                          disabled={currentPage === Math.ceil(results.length / 5) || results.length === 0}
+                          style={{ ...primaryButton, padding: "4px 12px", background: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#d1d5db" : "#003366", color: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#6b7280" : "#fff" }}>
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           )}
 
           {!loading && results.length === 0 && reportType && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#9ca3af" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#333" }}>
               <div style={{ fontSize: 28, marginBottom: 10 }}>📊</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>No data</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>No data</div>
               <div style={{ fontSize: 11, marginTop: 4 }}>Select report type and click "Go" to view results.</div>
             </div>
           )}
@@ -462,10 +478,10 @@ const ReportAccounts: React.FC = () => {
   );
 };
 
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" as const };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 32 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
 

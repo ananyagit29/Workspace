@@ -20,6 +20,9 @@ public interface UserRightsRepository extends JpaRepository<UserRights, UserRigh
    @Query("SELECT r FROM UserRights r WHERE r.id.userId = :userId")
    List<UserRights> findByUserId(@Param("userId") String userId);
 
+   @Query(value = "SELECT COMPANY_ID, DIVISION_NAME, LOCATION_ID, APPLICATION_NAME, SUB_APPLICATION_NAME, ACCESS_TYPE FROM DMS_USER_RIGHTS WHERE USER_ID = :userId", nativeQuery = true)
+   List<Object[]> findRawRightsByUserId(@Param("userId") String userId);
+
    @Query("SELECT DISTINCT ur.id.companyId, ur.companyName FROM UserRights ur " +
          "WHERE ur.id.userId = :userId " +
          "ORDER BY ur.companyName")

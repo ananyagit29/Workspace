@@ -173,7 +173,7 @@ const CreateCapex = () => {
                       </li>
                     ))}
                     {budgetCodes.filter(c => c.toUpperCase().includes(budgetCode.toUpperCase())).length === 0 && (
-                      <li style={{ padding: "8px 12px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No matches</li>
+                      <li style={{ padding: "8px 12px", fontSize: 12, color: "#333", textAlign: "center" }}>No matches</li>
                     )}
                   </ul>
                 )}
@@ -275,7 +275,7 @@ const uploadButton: React.CSSProperties = {
 
 const fileNameStyle: React.CSSProperties = {
   fontSize: 12,
-  color: "#6b7280",
+  color: "#333",
 };
 
 const actionRow: React.CSSProperties = {

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -183,7 +183,7 @@ public class AccountsController {
             if (file == null || !file.exists()) return ResponseEntity.notFound().build();
 
             Path path = file.toPath();
-            Resource resource = new UrlResource(path.toUri());
+            Resource resource = new FileSystemResource(file);
 
             String contentType = Files.probeContentType(path);
             if (contentType == null) contentType = "application/pdf";

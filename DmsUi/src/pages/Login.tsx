@@ -147,7 +147,7 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid #f3f4f6", textAlign: "center", fontSize: 11, color: "#9ca3af" }}>
+          <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid #f3f4f6", textAlign: "center", fontSize: 11, color: "#333" }}>
             ©2026 Ipca Laboratories Limited · DMS v2.0
           </div>
         </div>

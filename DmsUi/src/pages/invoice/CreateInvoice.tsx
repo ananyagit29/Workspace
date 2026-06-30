@@ -194,7 +194,7 @@ const CreateInvoice = () => {
 
             <div style={{ ...cardStyle, marginTop: 10 }}>
               <div style={sectionTitle}>Upload Additional File</div>
-              <div style={{ fontSize: 10, color: "#9ca3af", marginBottom: 10 }}>Upload other file in PDF format only. Maximum file size: 1 MB.</div>
+              <div style={{ fontSize: 10, color: "#333", marginBottom: 10 }}>Upload other file in PDF format only. Maximum file size: 1 MB.</div>
               <div
                 onClick={() => {
                   if (invoiceExists === true) fileRef.current?.click();
@@ -211,7 +211,7 @@ const CreateInvoice = () => {
                 <span style={{ fontSize: 12, color: invoiceExists === true ? (invoiceFile ? "#166534" : "#2563eb") : "#9ca3af", fontWeight: 500, flex: 1 }}>
                   {invoiceFile ? invoiceFile.name : "Choose file"}
                 </span>
-                <span style={{ fontSize: 10, color: "#9ca3af" }}>
+                <span style={{ fontSize: 10, color: "#333" }}>
                   {invoiceFile ? `${(invoiceFile.size / 1024).toFixed(0)} KB` : "No file chosen"}
                 </span>
                 <input disabled={invoiceExists !== true} ref={fileRef} type="file" accept=".pdf,application/pdf" style={{ display: "none" }} onChange={e => handleFileChange(e.target.files?.[0] || null)} />
@@ -237,7 +237,7 @@ const CreateInvoice = () => {
 };
 
 const cardStyle: React.CSSProperties = { background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "10px 14px" };
-const sectionTitle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid #f3f4f6" };
+const sectionTitle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid #f3f4f6" };
 const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", marginBottom: 7 };
 const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 3 };
 const inputStyle: React.CSSProperties = { border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none" };

@@ -286,7 +286,7 @@ const SearchInvoice = () => {
                       Export to Excel
                     </button>
                   )}
-                  {results.length > 0 && <span style={{ fontSize: 11, color: "#9ca3af" }}>Page {currentPage + 1} of {totalPages}</span>}
+                  {results.length > 0 && <span style={{ fontSize: 11, color: "#333" }}>Page {currentPage + 1} of {totalPages}</span>}
                 </div>
               </div>
 
@@ -319,13 +319,13 @@ const SearchInvoice = () => {
                                 </button>
                               ) : "-"}
                             </td>
-                            <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdBy || "-"}</td>
-                            <td style={{ ...tdStyle, color: "#6b7280" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
+                            <td style={{ ...tdStyle, color: "#333" }}>{row.createdBy || "-"}</td>
+                            <td style={{ ...tdStyle, color: "#333" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
                             <td style={{ ...tdStyle, textAlign: "center" }}>
                               {row.otherFileName ? (
                                 <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ color: "#ef4444", background: "#fee2e2", border: "1px solid #fecaca", padding: "4px 12px", borderRadius: "6px", fontSize: 11, fontWeight: 500, cursor: "pointer" }} title="Remove Other File">Remove</button>
                               ) : (
-                                <div style={{ fontSize: 11, color: "#9ca3af", fontStyle: "italic" }}>No Other File Present</div>
+                                <div style={{ fontSize: 11, color: "#333", fontStyle: "italic" }}>No Other File Present</div>
                               )}
                             </td>
                           </tr>
@@ -336,7 +336,7 @@ const SearchInvoice = () => {
 
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f9fafb", borderTop: "1px solid #e5e7eb" }}>
-                      <span style={{ fontSize: 11, color: "#9ca3af" }}>
+                      <span style={{ fontSize: 11, color: "#333" }}>
                         Showing {currentPage * PAGE_SIZE + 1}-{Math.min((currentPage + 1) * PAGE_SIZE, totalElements)} of {totalElements.toLocaleString()} documents
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -394,19 +394,19 @@ const SearchInvoice = () => {
 };
 
 const EmptyState = ({ title, text }: { title: string; text: string }) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#9ca3af" }}>
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", color: "#333" }}>
     <div style={{ fontSize: 28, marginBottom: 10 }}>PDF</div>
-    <div style={{ fontSize: 13, fontWeight: 600, color: "#6b7280" }}>{title}</div>
+    <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>{title}</div>
     <div style={{ fontSize: 11, marginTop: 4 }}>{text}</div>
   </div>
 );
 
-const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" };
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
+const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.05em" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
-const linkButton: React.CSSProperties = { fontSize: 11, color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
+const linkButton: React.CSSProperties = { fontSize: 11, color: "#333", background: "none", border: "none", cursor: "pointer", padding: 0 };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
 const iconButton: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 2 };
