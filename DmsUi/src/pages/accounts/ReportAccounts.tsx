@@ -6,6 +6,7 @@ import {
   getAccountsPartyNames,
   getAccountsMissing,
   getAccountsReport,
+  downloadAccountsZip,
 } from "../../api/dmsApi";
 
 interface Selections {
@@ -44,6 +45,7 @@ const ReportAccounts: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -83,6 +85,7 @@ const ReportAccounts: React.FC = () => {
     setReportType(val);
     setResults([]);
     setCurrentPage(1);
+    setSelectedDocs(new Set());
     setSelectedParty("");
     setAccCode("");
     setAmountMoreThan("0");
@@ -100,6 +103,7 @@ const ReportAccounts: React.FC = () => {
     setLoading(true);
     setResults([]);
     setCurrentPage(1);
+    setSelectedDocs(new Set());
 
     if (reportType === "getmissingdocuments") {
       getAccountsMissing({ locationId: selections.loc, daybookCode, year: selections.year })
@@ -133,6 +137,43 @@ const ReportAccounts: React.FC = () => {
         window.open(blobUrl, "_blank");
       })
       .catch(() => showToast("Failed to open file", "error"));
+  };
+
+  const handleDownloadSelected = async () => {
+    if (selectedDocs.size === 0) return;
+    const docs = Array.from(selectedDocs).map(d => JSON.parse(d));
+    if (docs.length === 1) {
+      const { daybookCode, docCode, fileName } = docs[0];
+      const url = `${import.meta.env.VITE_DMS_API}accounts/view-file?daybookCode=${daybookCode}&docCode=${docCode}&fileName=${encodeURIComponent(fileName)}&download=true`;
+      const token = localStorage.getItem("jwtToken");
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(blobUrl);
+        })
+        .catch(() => showToast("Failed to download file", "error"));
+    } else {
+      setLoading(true);
+      try {
+        const res = await downloadAccountsZip(docs);
+        const blobUrl = URL.createObjectURL(res.data);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = "Accounts_Documents.zip";
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+        showToast("Zip downloaded successfully", "success");
+      } catch (e) {
+        showToast("Failed to download zip", "error");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleExportExcel = () => {
@@ -280,7 +321,12 @@ const ReportAccounts: React.FC = () => {
           {/* Results */}
           {results.length > 0 && (
             <div>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8, gap: 8 }}>
+                {!isMissing && (
+                  <button onClick={handleDownloadSelected} disabled={selectedDocs.size === 0 || loading} style={{ ...primaryButton, opacity: selectedDocs.size === 0 || loading ? 0.6 : 1, background: "#003366" }}>
+                    Download Selected
+                  </button>
+                )}
                 <button onClick={handleExportExcel} style={primaryButton}>Save As Excel</button>
               </div>
               <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", overflow: isMissing ? "auto" : "hidden", maxHeight: isMissing ? "calc(100vh - 320px)" : "none" }}>
@@ -314,6 +360,24 @@ const ReportAccounts: React.FC = () => {
                         <th style={thStyle}>Doc Date</th>
                         <th style={thStyle}>Account Name</th>
                         <th style={thStyle}>Filename</th>
+                        <th style={{ ...thStyle, textAlign: "center" }}>
+                          Download<br />
+                          <input
+                            type="checkbox"
+                            onChange={e => {
+                              const pageFiles = results.slice((currentPage - 1) * 5, currentPage * 5)
+                                .filter((r: any) => r.FILE_NAME)
+                                .map((r: any) => JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }));
+                              const newSet = new Set(selectedDocs);
+                              if (e.target.checked) {
+                                pageFiles.forEach(f => newSet.add(f));
+                              } else {
+                                pageFiles.forEach(f => newSet.delete(f));
+                              }
+                              setSelectedDocs(newSet);
+                            }}
+                          />
+                        </th>
                         <th style={thStyle}>Bill No.</th>
                         <th style={thStyle}>Bill Date</th>
                         <th style={thStyle}>Trans Amt</th>
@@ -335,6 +399,21 @@ const ReportAccounts: React.FC = () => {
                                 {r.FILE_NAME}
                               </button>
                             ) : ""}
+                          </td>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
+                            {r.FILE_NAME && (
+                              <input
+                                type="checkbox"
+                                checked={selectedDocs.has(JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME }))}
+                                onChange={e => {
+                                  const id = JSON.stringify({ daybookCode: r.DAYBOOK_CODE, docCode: r.DOC_CODE, fileName: r.FILE_NAME });
+                                  const newSet = new Set(selectedDocs);
+                                  if (e.target.checked) newSet.add(id);
+                                  else newSet.delete(id);
+                                  setSelectedDocs(newSet);
+                                }}
+                              />
+                            )}
                           </td>
                           <td style={tdStyle}>{r.BILL_NUMBER || ""}</td>
                           <td style={tdStyle}>{r.BILL_DATE ? new Date(r.BILL_DATE).toLocaleDateString("en-GB") : ""}</td>

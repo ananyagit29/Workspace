@@ -415,4 +415,28 @@ public class AccountsService {
         }
         return null;
     }
+    // ── 12. Download multiple files as ZIP ───────────────────────────────────
+
+    public void downloadZip(List<Map<String, String>> files, jakarta.servlet.http.HttpServletResponse response) {
+        response.setContentType("application/zip");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Accounts_Documents.zip\"");
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(response.getOutputStream())) {
+            for (Map<String, String> reqFile : files) {
+                String daybookCode = reqFile.get("daybookCode");
+                String docCode = reqFile.get("docCode");
+                String fileName = reqFile.get("fileName");
+
+                File f = getFile(daybookCode, docCode, fileName);
+                if (f != null && f.exists()) {
+                    java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(f.getName());
+                    zos.putNextEntry(zipEntry);
+                    java.nio.file.Files.copy(f.toPath(), zos);
+                    zos.closeEntry();
+                }
+            }
+            zos.finish();
+        } catch (IOException e) {
+            System.err.println("[Accounts] downloadZip error: " + e.getMessage());
+        }
+    }
 }

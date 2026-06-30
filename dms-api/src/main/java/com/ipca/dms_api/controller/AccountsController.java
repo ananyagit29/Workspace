@@ -165,7 +165,8 @@ public class AccountsController {
     public ResponseEntity<Resource> viewFile(
             @RequestParam String daybookCode,
             @RequestParam String docCode,
-            @RequestParam String fileName) {
+            @RequestParam String fileName,
+            @RequestParam(defaultValue = "false") boolean download) {
         try {
             File file = accountsService.getFile(daybookCode, docCode, fileName);
             if (file == null || !file.exists()) return ResponseEntity.notFound().build();
@@ -176,12 +177,21 @@ public class AccountsController {
             String contentType = Files.probeContentType(path);
             if (contentType == null) contentType = "application/pdf";
 
+            String disposition = download ? "attachment" : "inline";
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_TYPE, contentType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + file.getName() + "\"")
                     .body(resource);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // ── 12. Download multiple files as ZIP ───────────────────────────────────
+
+    @PostMapping("/download-zip")
+    public void downloadZip(@RequestBody List<Map<String, String>> files, jakarta.servlet.http.HttpServletResponse response) {
+        accountsService.downloadZip(files, response);
     }
 }

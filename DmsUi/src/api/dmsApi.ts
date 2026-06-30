@@ -263,3 +263,6 @@ export const getAccountsMissing = (params: any) =>
 
 export const getAccountsReport = (params: any) =>
   dmsApi.get("/accounts/report", { params });
+
+export const downloadAccountsZip = (files: any[]) =>
+  dmsApi.post("/accounts/download-zip", files, { responseType: "blob" });
