@@ -15,6 +15,7 @@ const APP_ROUTES: Record<string, string> = {
   CAPEX_BUDGET: "/capex",
   SUPPLIER_AND_CUSTOMER: "/supplier-customer",
   TRUCK_LOAD_STUFF: "/truck-load-stuff",
+  ACCOUNTS: "/accounts",
 };
 
 const sel: React.CSSProperties = {    

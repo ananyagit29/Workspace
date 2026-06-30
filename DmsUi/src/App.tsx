@@ -18,6 +18,10 @@ import CreateSupplierCustomer from "./pages/supplier-customer/CreateSupplierCust
 import TruckLoadStuffLayout from "./layouts/TruckLoadStuffLayout";
 import SearchTruckLoadStuff from "./pages/truck-load-stuff/SearchTruckLoadStuff";
 import CreateTruckLoadStuff from "./pages/truck-load-stuff/CreateTruckLoadStuff";
+import AccountsLayout from "./layouts/AccountsLayout";
+import SearchAccounts from "./pages/accounts/SearchAccounts";
+import CreateAccounts from "./pages/accounts/CreateAccounts";
+import ReportAccounts from "./pages/accounts/ReportAccounts";
 function App() {
   return (
     <Routes>
@@ -54,6 +58,13 @@ function App() {
       <Route path="/truck-load-stuff" element={<TruckLoadStuffLayout />}>
         <Route index element={<SearchTruckLoadStuff />} />
         <Route path="create" element={<CreateTruckLoadStuff />} />
+      </Route>
+
+      {/* Accounts Module */}
+      <Route path="/accounts" element={<AccountsLayout />}>
+        <Route index element={<SearchAccounts />} />
+        <Route path="create" element={<CreateAccounts />} />
+        <Route path="report" element={<ReportAccounts />} />
       </Route>
     </Routes>
   );

@@ -230,3 +230,36 @@ export const createTlsRecords = (data: FormData) =>
 
 export const removeTlsFile = (invoiceNo: string, fileName: string) =>
   dmsApi.delete("/truck-load-stuff/remove", { params: { invoiceNo, fileName } });
+
+// Accounts API
+export const getAccountsDaybooks = () =>
+  dmsApi.get("/accounts/daybooks");
+
+export const getAccountsDocList = (params: any) =>
+  dmsApi.get("/accounts/doc-list", { params });
+
+export const getAccountsDocDetails = (params: any) =>
+  dmsApi.get("/accounts/doc-details", { params });
+
+export const getAccountsFieldRequired = (daybookCode: string) =>
+  dmsApi.get("/accounts/field-required", { params: { daybookCode } });
+
+export const uploadAccountsDocument = (data: FormData) =>
+  dmsApi.post("/accounts/upload", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+export const searchAccounts = (params: any) =>
+  dmsApi.get("/accounts/search", { params });
+
+export const removeAccountsDocument = (params: any) =>
+  dmsApi.delete("/accounts/remove", { params });
+
+export const getAccountsPartyNames = (params: any) =>
+  dmsApi.get("/accounts/party-names", { params });
+
+export const getAccountsMissing = (params: any) =>
+  dmsApi.get("/accounts/missing", { params });
+
+export const getAccountsReport = (params: any) =>
+  dmsApi.get("/accounts/report", { params });
