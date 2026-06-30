@@ -142,7 +142,7 @@ const SearchAccounts: React.FC = () => {
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           {/* Filters */}
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 20px", marginBottom: 16 }}>
+          <div style={{ width: "fit-content", margin: "0 auto 16px auto", minWidth: 600, background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 24px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={sectionTitle}>Search Filters</span>
             </div>
@@ -237,8 +237,10 @@ const SearchAccounts: React.FC = () => {
                           <td style={{ ...tdStyle, textAlign: "center", width: 60 }}>
                             <button
                               onClick={() => handleRemove(r.DAYBOOK_CODE || "", r.DOC_CODE || "", r.FILE_NAME || "")}
-                              style={{ ...iconButton, color: "#dc2626" }}
-                            >✕</button>
+                              style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}
+                            >
+                              Remove
+                            </button>
                           </td>
                         )}
                         <td style={{ ...tdStyle, width: 120 }}>{r.BILL_NUMBER || ""}</td>

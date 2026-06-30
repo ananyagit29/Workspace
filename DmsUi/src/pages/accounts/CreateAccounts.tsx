@@ -261,15 +261,18 @@ const CreateAccounts: React.FC = () => {
                   </>
                 )}
 
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-                  <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Upload File</label>
-                  <input
-                    type="file"
-                    ref={fileRef}
-                    accept=".pdf"
-                    onChange={e => setFile(e.target.files?.[0] || null)}
-                    style={{ fontSize: 12, color: "#374151" }}
-                  />
+                <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14, gap: 12 }}>
+                  <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0, marginTop: 2 }}>Upload File</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <input
+                      type="file"
+                      ref={fileRef}
+                      accept=".pdf"
+                      onChange={e => setFile(e.target.files?.[0] || null)}
+                      style={{ fontSize: 12, color: "#374151" }}
+                    />
+                    <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 500 }}>* PDF File Size cannot exceed 1 MB</span>
+                  </div>
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>

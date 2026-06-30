@@ -42,6 +42,7 @@ const ReportAccounts: React.FC = () => {
   const [toMonth, setToMonth] = useState("03");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   const showToast = (msg: string, type: "success" | "error") => {
@@ -81,6 +82,7 @@ const ReportAccounts: React.FC = () => {
   const handleReportTypeChange = (val: string) => {
     setReportType(val);
     setResults([]);
+    setCurrentPage(1);
     setSelectedParty("");
     setAccCode("");
     setAmountMoreThan("0");
@@ -97,6 +99,7 @@ const ReportAccounts: React.FC = () => {
     const daybookCode = selectedDaybook.split("~")[0];
     setLoading(true);
     setResults([]);
+    setCurrentPage(1);
 
     if (reportType === "getmissingdocuments") {
       getAccountsMissing({ locationId: selections.loc, daybookCode, year: selections.year })
@@ -179,83 +182,99 @@ const ReportAccounts: React.FC = () => {
         </div>
       )}
 
-      <main style={{ padding: "24px 32px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <main style={{ padding: "16px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           {/* Filters */}
-          <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "24px 28px", marginBottom: 16 }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "16px 24px", marginBottom: 12 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "#003366", margin: "0 0 20px 0", textAlign: "center" }}>
               Accounts Document Report
             </h2>
 
-            {/* Daybook */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-              <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Daybook Code</label>
-              <select value={selectedDaybook} onChange={e => { setSelectedDaybook(e.target.value); setResults([]); }} style={{ ...inputStyle, flex: 1 }}>
-                {daybooks.map(d => (
-                  <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Report Type */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-              <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Report Type</label>
-              <select value={reportType} onChange={e => handleReportTypeChange(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-                {REPORT_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Party Wise: Account Name dropdown */}
-            {showPartyFilter && (
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-                <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Account Name</label>
-                <select value={selectedParty} onChange={e => setSelectedParty(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-                  <option value="">SELECT</option>
-                  {partyNames.map(p => (
-                    <option key={p.code} value={p.code}>{p.name}</option>
+            {/* Grid layout for filters */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 24px" }}>
+              
+              {/* Line 1 */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Daybook Code</label>
+                <select value={selectedDaybook} onChange={e => { setSelectedDaybook(e.target.value); setResults([]); }} style={{ ...inputStyle, flex: 1 }}>
+                  {daybooks.map(d => (
+                    <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
                   ))}
                 </select>
               </div>
-            )}
 
-            {/* Account Code Wise: Account code input */}
-            {showAccCodeFilter && (
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-                <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Enter Account Code</label>
-                <input type="number" value={accCode} onChange={e => setAccCode(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Report Type</label>
+                <select value={reportType} onChange={e => handleReportTypeChange(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
+                  {REPORT_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            {/* Amount + month range (Party/Account Code) */}
-            {showAmountMonth && (
-              <>
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
+              {/* Line 2 (Conditional) */}
+              
+              {/* Col 1 of Line 2: Account Code / Name */}
+              {showPartyFilter && (
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Select Account Name</label>
+                  <select value={selectedParty} onChange={e => setSelectedParty(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
+                    <option value="">SELECT</option>
+                    {partyNames.map(p => (
+                      <option key={p.code} value={p.code}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {showAccCodeFilter && (
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Enter Account Code</label>
+                  <input type="number" value={accCode} onChange={e => setAccCode(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
+                </div>
+              )}
+              
+              {/* Col 2 of Line 2: Amount More Than */}
+              {showAmountMonth && (
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>Amount More Than</label>
                   <input type="number" value={amountMoreThan} onChange={e => setAmountMoreThan(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12, flexWrap: "wrap" }}>
-                  <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>From Month</label>
-                  <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={{ ...inputStyle, flex: 1, maxWidth: 120 }}>
-                    {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                  <label style={{ ...labelStyle, minWidth: 80, marginBottom: 0, textAlign: "center" }}>To Month</label>
-                  <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={{ ...inputStyle, flex: 1, maxWidth: 120 }}>
-                    {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
+              )}
 
-            {/* Go button */}
-            {reportType && (
-              <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-                <button onClick={handleGo} disabled={loading} style={{ ...primaryButton, opacity: loading ? 0.6 : 1, padding: "8px 40px" }}>
-                  {loading ? "Loading..." : "Go"}
-                </button>
-              </div>
-            )}
+              {/* Line 3: From Month, To Month (Left), Go (Right) */}
+              {showAmountMonth && (
+                <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <label style={{ ...labelStyle, minWidth: 160, marginBottom: 0 }}>From Month</label>
+                      <select value={fromMonth} onChange={e => setFromMonth(e.target.value)} style={{ ...inputStyle, width: 140 }}>
+                        {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <label style={{ ...labelStyle, minWidth: 80, marginBottom: 0 }}>To Month</label>
+                      <select value={toMonth} onChange={e => setToMonth(e.target.value)} style={{ ...inputStyle, width: 140 }}>
+                        {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={handleGo} disabled={loading} style={{ ...primaryButton, opacity: loading ? 0.6 : 1, padding: "5px 40px" }}>
+                    {loading ? "Loading..." : "Go"}
+                  </button>
+                </div>
+              )}
+
+              {/* If Missing Documents, render Go button in the grid */}
+              {isMissing && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gridColumn: "1 / -1" }}>
+                  <button onClick={handleGo} disabled={loading} style={{ ...primaryButton, opacity: loading ? 0.6 : 1, padding: "8px 40px", marginTop: 10 }}>
+                    {loading ? "Loading..." : "Go"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+
           </div>
 
           {/* Results */}
@@ -264,7 +283,7 @@ const ReportAccounts: React.FC = () => {
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
                 <button onClick={handleExportExcel} style={primaryButton}>Save As Excel</button>
               </div>
-              <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", overflow: "auto", maxHeight: "calc(100vh - 400px)" }}>
+              <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", overflow: isMissing ? "auto" : "hidden", maxHeight: isMissing ? "calc(100vh - 320px)" : "none" }}>
                 {isMissing ? (
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
@@ -287,6 +306,7 @@ const ReportAccounts: React.FC = () => {
                     </tbody>
                   </table>
                 ) : (
+                  <>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr style={{ background: "#f9fafb", position: "sticky", top: 0, zIndex: 1 }}>
@@ -302,7 +322,7 @@ const ReportAccounts: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((r: any, idx: number) => (
+                      {results.slice((currentPage - 1) * 5, currentPage * 5).map((r: any, idx: number) => (
                         <tr key={idx}
                           onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -325,6 +345,26 @@ const ReportAccounts: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+                  {results.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderTop: "1px solid #e5e7eb", background: "#fff" }}>
+                      <button 
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                        disabled={currentPage === 1}
+                        style={{ ...primaryButton, padding: "4px 12px", background: currentPage === 1 ? "#d1d5db" : "#003366", color: currentPage === 1 ? "#6b7280" : "#fff" }}>
+                        Previous
+                      </button>
+                      <span style={{ fontSize: 12, color: "#374151" }}>
+                        Page {currentPage} of {Math.max(1, Math.ceil(results.length / 5))}
+                      </span>
+                      <button 
+                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(results.length / 5), p + 1))} 
+                        disabled={currentPage === Math.ceil(results.length / 5) || results.length === 0}
+                        style={{ ...primaryButton, padding: "4px 12px", background: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#d1d5db" : "#003366", color: (currentPage === Math.ceil(results.length / 5) || results.length === 0) ? "#6b7280" : "#fff" }}>
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
                 )}
               </div>
             </div>
