@@ -246,6 +246,9 @@ export const removeTlsFile = (invoiceNo: string, fileName: string) =>
 export const getAccountsDaybooks = () =>
   dmsApi.get("/accounts/daybooks");
 
+export const getAccountsSearchDaybooks = (params: any) =>
+  dmsApi.get("/accounts/search-daybooks", { params });
+
 export const getAccountsDocList = (params: any) =>
   dmsApi.get("/accounts/doc-list", { params });
 

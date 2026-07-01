@@ -80,6 +80,23 @@ public class AccountsService {
         }
     }
 
+    public List<Map<String, Object>> getSearchDaybooks(String locationId, String year) {
+        String[] range = computeDateRange(year, null);
+        if (range == null) return new ArrayList<>();
+
+        String sql = "SELECT DISTINCT Daybook_Code AS code, Daybook_Name AS name " +
+                     "FROM DMS_ACCOUNTS " +
+                     "WHERE Location_Id = ? " +
+                     "AND Doc_Year BETWEEN ? AND ? " +
+                     "ORDER BY Daybook_Code";
+        try {
+            return jdbcTemplate.queryForList(sql, locationId, range[0], range[1]);
+        } catch (Exception e) {
+            System.err.println("[Accounts] getSearchDaybooks error: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
     // ── 2. Doc list for Create (un-uploaded from SCM) ───────────────────────
 
     public List<Map<String, Object>> getDocList(String locationId, String daybookCode, String year, String month) {

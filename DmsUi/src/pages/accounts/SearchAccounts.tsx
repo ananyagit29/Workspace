@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
 import { useAppRights } from "../../hooks/useAppRights";
 import {
-  getAccountsDaybooks,
+  getAccountsSearchDaybooks,
   searchAccounts,
   removeAccountsDocument,
   dmsApi,
@@ -40,26 +40,43 @@ const SearchAccounts: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Load daybooks
+  // Load daybooks whenever selections changes
   useEffect(() => {
-    getAccountsDaybooks()
+    if (!selections) return;
+    getAccountsSearchDaybooks({
+      locationId: selections.loc,
+      year: selections.year
+    })
       .then(res => {
         const data = (res.data || []).map((r: any) => ({
           code: String(r.CODE || r.code || ""),
           name: String(r.NAME || r.name || ""),
         }));
         setDaybooks(data);
-        if (data.length > 0) setSelectedDaybook(data[0].code + "~" + data[0].name);
+        
+        // If there are valid daybooks, ensure one is selected
+        if (data.length > 0) {
+          // Keep current selection if it's still valid
+          const currentValid = data.find((d: any) => selectedDaybook.startsWith(d.code + "~"));
+          if (!currentValid) {
+            setSelectedDaybook(data[0].code + "~" + data[0].name);
+          }
+        } else {
+          // If no daybooks have data, clear selection and results
+          setSelectedDaybook("");
+          setResults([]);
+          setDocCodes([]);
+        }
       })
       .catch(() => showToast("Failed to load daybooks", "error"));
-  }, []);
+  }, [selections]); // Notice selectedDaybook is NOT a dependency to avoid loops
 
-  // When daybook or month changes, auto-search and populate doc codes
+  // When daybook changes, auto-search and populate doc codes
   useEffect(() => {
     if (!selectedDaybook || !selections) return;
     const daybookCode = selectedDaybook.split("~")[0];
     handleSearch(daybookCode, selectedMonth);
-  }, [selectedDaybook, selectedMonth, selections]);
+  }, [selectedDaybook, selections]);
 
   const handleSearch = (daybookCode?: string, month?: string, docCode?: string) => {
     const dbCode = daybookCode || selectedDaybook.split("~")[0];
@@ -153,10 +170,15 @@ const SearchAccounts: React.FC = () => {
                   value={selectedDaybook}
                   onChange={e => { setSelectedDaybook(e.target.value); setSelectedDocCode(""); }}
                   style={inputStyle}
+                  disabled={daybooks.length === 0}
                 >
-                  {daybooks.map(d => (
-                    <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
-                  ))}
+                  {daybooks.length === 0 ? (
+                    <option value="">No Data Row to Display</option>
+                  ) : (
+                    daybooks.map(d => (
+                      <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
+                    ))
+                  )}
                 </select>
               </div>
               <div style={{ minWidth: 140 }}>

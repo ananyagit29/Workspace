@@ -39,6 +39,13 @@ public class AccountsController {
         return ResponseEntity.ok(accountsService.getDaybooks());
     }
 
+    @GetMapping("/search-daybooks")
+    public ResponseEntity<List<Map<String, Object>>> getSearchDaybooks(
+            @RequestParam String locationId,
+            @RequestParam String year) {
+        return ResponseEntity.ok(accountsService.getSearchDaybooks(locationId, year));
+    }
+
     // ── 2. Doc list (un-uploaded from SCM) for Create dropdown ──────────────
 
     @GetMapping("/doc-list")
