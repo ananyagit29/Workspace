@@ -78,15 +78,9 @@ const SearchBatch = () => {
   const [showMailModal, setShowMailModal] = useState(false);
   const [mailTo, setMailTo]               = useState("");
   const [recipients, setRecipients]       = useState<string[]>([]);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   const handleBatchTypeChange = async (type: string) => {
     setBatchType(type);
@@ -183,12 +177,7 @@ const SearchBatch = () => {
     <main style={{ flex: 1, overflowY: "auto", padding: "8px 12px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
-        {/* Toast */}
-        {toast && (
-          <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-            {toast.type === "success" ? "✓" : "✕"} {toast.msg}
-          </div>
-        )}
+
 
         {/* Filter card */}
         <div style={{ background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "8px 12px", marginBottom: 8 }}>
@@ -256,7 +245,7 @@ const SearchBatch = () => {
                           "Sub Type", "File", "Uploaded By", "Date",
                           ...(canRemove ? [""] : []),   // Action col only if canRemove
                         ].map((h, i) => (
-                          <th key={i} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                          <th key={i} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#003366", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                             {h}
                           </th>
                         ))}
@@ -295,7 +284,7 @@ const SearchBatch = () => {
                             </td>
                             <td style={{ padding: "7px 10px", fontSize: 11, color: "#333", whiteSpace: "nowrap" }}>{row.createdBy}</td>
                             <td style={{ padding: "7px 10px", fontSize: 11, color: "#333", whiteSpace: "nowrap" }}>
-                              {row.createdOn ? new Date(row.createdOn).toLocaleDateString("en-GB") : "—"}
+                              {row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "—"}
                             </td>
                             {/* Remove — only rendered if user has Remove right */}
                             {canRemove && (

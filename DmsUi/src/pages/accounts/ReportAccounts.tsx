@@ -44,12 +44,10 @@ const ReportAccounts: React.FC = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
 
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
   };
 
   // Load daybooks
@@ -196,7 +194,7 @@ const ReportAccounts: React.FC = () => {
           "Bill Date": r.BILL_DATE ? new Date(r.BILL_DATE).toLocaleDateString("en-GB") : "",
           "Trans Amt": r.TRAN_AMOUNT || "",
           "Created By": r.CREATED_BY || "",
-          "Created On": r.CREATED_ON || "",
+          "Created On": r.CREATED_ON ? r.CREATED_ON.split(" ")[0].split("-").reverse().join("-") + (r.CREATED_ON.split(" ")[1] ? " " + r.CREATED_ON.split(" ")[1] : "") : "",
         }));
       }
       const ws = XLSX.utils.json_to_sheet(data);
@@ -217,11 +215,7 @@ const ReportAccounts: React.FC = () => {
 
   return (
     <div style={{ flex: 1, overflow: "auto", background: "#f3f4f6" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "16px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -435,7 +429,7 @@ const ReportAccounts: React.FC = () => {
                             <td style={tdStyle}>{r.BILL_DATE ? new Date(r.BILL_DATE).toLocaleDateString("en-GB") : ""}</td>
                             <td style={{ ...tdStyle, textAlign: "right" }}>{r.TRAN_AMOUNT != null ? r.TRAN_AMOUNT : ""}</td>
                             <td style={tdStyle}>{r.CREATED_BY || ""}</td>
-                            <td style={tdStyle}>{r.CREATED_ON || ""}</td>
+                            <td style={tdStyle}>{r.CREATED_ON ? r.CREATED_ON.split(" ")[0].split("-").reverse().join("-") + (r.CREATED_ON.split(" ")[1] ? " " + r.CREATED_ON.split(" ")[1] : "") : ""}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -478,10 +472,10 @@ const ReportAccounts: React.FC = () => {
   );
 };
 
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
-const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" as const };
-const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 32 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 };
+const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
+const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#003366", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb", background: "#f9fafb" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
 

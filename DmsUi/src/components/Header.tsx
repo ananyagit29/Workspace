@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../auth/AuthContext";
 
 interface HeaderProps {
@@ -43,6 +43,17 @@ export const Header: React.FC<HeaderProps> = ({
     clearUser();
     navigate("/");
   };
+
+  const [globalToast, setGlobalToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  useEffect(() => {
+    const handleAppToast = (e: any) => {
+      setGlobalToast(e.detail);
+      setTimeout(() => setGlobalToast(null), 4000);
+    };
+    window.addEventListener("app-toast", handleAppToast);
+    return () => window.removeEventListener("app-toast", handleAppToast);
+  }, []);
 
   const initials = username
     .split(" ")
@@ -97,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* META PILLS: Application + Company + Division + Location + SubApp */}
         {allMeta.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 20, flex: 1, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flexShrink: 0 }}>
             {allMeta.map((m, i) => (
               <div key={i} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -111,8 +122,26 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        {/* SPACER when no meta */}
-        {allMeta.length === 0 && <div style={{ flex: 1 }} />}
+        {/* TOAST CONTAINER (takes up remaining space) */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", overflow: "hidden", padding: "0 16px" }}>
+           {globalToast && (
+             <div style={{ 
+               background: globalToast.type === 'success' ? '#16a34a' : '#dc2626', 
+               color: '#fff', 
+               padding: '4px 14px', 
+               borderRadius: '6px', 
+               fontSize: 12, 
+               fontWeight: 600, 
+               whiteSpace: 'nowrap', 
+               textOverflow: 'ellipsis', 
+               overflow: 'hidden',
+               maxWidth: '100%',
+               animation: "fadein 0.3s"
+             }}>
+               {globalToast.type === "success" ? "✓" : "✕"} {globalToast.msg}
+             </div>
+           )}
+        </div>
 
         {/* RIGHT: Tabs + divider + Home + Logout */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>

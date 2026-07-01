@@ -58,7 +58,7 @@ public class SupplierCustomerController {
             Authentication authentication,
             @RequestParam String accountCode,
             @RequestParam String fileName) {
-        userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Supplier & Customer", "Remove");
+        userRightsValidator.requireAnySubAppRight(authentication.getName(), null, null, null, "Supplier and Customer", "Remove");
         service.removeDocument(accountCode, fileName);
         return ResponseEntity.ok(Map.of("message", "Document removed successfully"));
     }

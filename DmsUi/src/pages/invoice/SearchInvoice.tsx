@@ -47,9 +47,11 @@ const SearchInvoice = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   const [replacingInvoice, setReplacingInvoice] = useState<string | null>(null);
   const fileRef = React.useRef<HTMLInputElement | null>(null);
@@ -58,14 +60,6 @@ const SearchInvoice = () => {
     if (loading) return;
     if (!user) { navigate("/"); return; }
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
   const handleSearch = async (page = 0, specificInvoiceNumber?: string) => {
     if (!selections) return;
@@ -168,7 +162,7 @@ const SearchInvoice = () => {
         "Other File": r.otherFileName || "-",
         "Invoice File": r.invoiceFileName || "-",
         "Created By": r.createdBy || "-",
-        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -188,11 +182,7 @@ const SearchInvoice = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -320,7 +310,7 @@ const SearchInvoice = () => {
                               ) : "-"}
                             </td>
                             <td style={{ ...tdStyle, color: "#333" }}>{row.createdBy || "-"}</td>
-                            <td style={{ ...tdStyle, color: "#333" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB") : "-"}</td>
+                            <td style={{ ...tdStyle, color: "#333" }}>{row.createdOn ? new Date(row.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"}</td>
                             <td style={{ ...tdStyle, textAlign: "center" }}>
                               {row.otherFileName ? (
                                 <button onClick={() => handleDeleteOtherFile(row.invoiceNumber)} style={{ color: "#ef4444", background: "#fee2e2", border: "1px solid #fecaca", padding: "4px 12px", borderRadius: "6px", fontSize: 11, fontWeight: 500, cursor: "pointer" }} title="Remove Other File">Remove</button>
@@ -406,7 +396,7 @@ const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWe
 const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 const linkButton: React.CSSProperties = { fontSize: 11, color: "#333", background: "none", border: "none", cursor: "pointer", padding: 0 };
-const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#333", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
+const thStyle: React.CSSProperties = { padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 600, color: "#003366", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const tdStyle: React.CSSProperties = { padding: "8px 10px", color: "#374151", whiteSpace: "nowrap", border: "1px solid #e5e7eb" };
 const fileButton: React.CSSProperties = { color: "#1d4ed8", fontSize: 11, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 };
 const iconButton: React.CSSProperties = { background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: 2 };

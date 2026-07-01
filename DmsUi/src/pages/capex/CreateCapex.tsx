@@ -35,15 +35,9 @@ const CreateCapex = () => {
   const [saving, setSaving] = useState(false);
 
   const { selections } = useOutletContext<{ selections: Selections }>();
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   // Fetch Budget Types
   // Removed dynamic fetch to match exact legacy budget types
@@ -120,11 +114,7 @@ const CreateCapex = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>

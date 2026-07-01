@@ -24,15 +24,9 @@ const AddSupplierCustomerFile = () => {
   const [file, setFile] = useState<File | null>(null);
 
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   useEffect(() => {
     setSelectedAccount("");
@@ -109,11 +103,7 @@ const AddSupplierCustomerFile = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", top: 16, right: 16, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 600, margin: "0 auto", background: "#fff", borderRadius: 8, border: "1px solid #e5e7eb", padding: "20px 24px" }}>

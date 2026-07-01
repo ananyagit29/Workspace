@@ -55,7 +55,9 @@ const SearchCapex = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   const [reviseModal, setReviseModal] = useState<{ budgetCode: string; revisionNo: number; file: File | null } | null>(null);
 
@@ -63,14 +65,6 @@ const SearchCapex = () => {
     if (loading) return;
     if (!user) { navigate("/"); return; }
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
   // Fetch Budget Types
   // Removed dynamic fetch to match exact legacy budget types
@@ -155,7 +149,7 @@ const SearchCapex = () => {
         "Revision No": r.revisionNo,
         "Filename": r.fileName || "-",
         "Created By": r.createdBy || "-",
-        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -225,12 +219,6 @@ const SearchCapex = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
-
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           {reviseModal ? (
@@ -403,7 +391,7 @@ const SearchCapex = () => {
                               </td>
                             )}
                             <td style={tdStyle}>{r.createdBy || "-"}</td>
-                            <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
+                            <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"}</td>
                           </tr>
                         ))}
                         {results.length === 0 && (
@@ -436,8 +424,7 @@ const linkButton: React.CSSProperties = { background: "none", border: "none", co
 const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase" };
 const inputStyle: React.CSSProperties = { width: "100%", padding: "6px 10px", fontSize: 12, color: "#111827", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
-
-const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
+const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, color: "#003366", borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#333", whiteSpace: "nowrap" };
 const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 

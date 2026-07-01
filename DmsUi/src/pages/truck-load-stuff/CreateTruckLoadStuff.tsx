@@ -16,16 +16,17 @@ const CreateTruckLoadStuff = () => {
   
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   // Parse session storage for selections
   const selectionsStr = sessionStorage.getItem("dms2Selections");
   const selections = selectionsStr ? JSON.parse(selectionsStr) : null;
-
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  
+  // Fetch invoice details using the helper function
+  const [invoices, setInvoices] = useState<any[]>([]);
 
   useEffect(() => {
     if (!selections) return;
@@ -136,11 +137,7 @@ const CreateTruckLoadStuff = () => {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f3f4f6", height: "calc(100vh - 100px)", padding: "24px 32px" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, background: toast.type === "success" ? "#10b981" : "#ef4444", color: "#fff", padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e5e7eb", padding: "20px 24px", maxWidth: 800, margin: "0 auto", width: "100%", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
         <h2 style={{ fontSize: 13, fontWeight: 700, color: "#5f7a98", margin: "0 0 20px 0", borderBottom: "1px solid #f3f4f6", paddingBottom: 12 }}>CREATE TRUCK LOAD STUFF</h2>

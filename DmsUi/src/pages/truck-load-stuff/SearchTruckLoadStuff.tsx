@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
+import { useAppRights } from "../../hooks/useAppRights";
 import { getTlsSearchOptions, searchTls, removeTlsFile } from "../../api/dmsApi";
 
 interface Selections {
@@ -20,13 +21,10 @@ const SearchTruckLoadStuff = () => {
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [searching, setSearching] = useState(false);
+  const { canCreate, canReport, canRemove, loading: rightsLoading } = useAppRights();
   
-  // Toast
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
   };
 
   useEffect(() => {
@@ -89,7 +87,7 @@ const SearchTruckLoadStuff = () => {
         "Invoice Number": r.invoiceNo || "-",
         "File Name": r.fileName || "-",
         "Created By": r.createdBy || "-",
-        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -106,7 +104,7 @@ const SearchTruckLoadStuff = () => {
   };
 
   const handleDelete = async (inv: string, file: string) => {
-    if (!confirm(`Are you sure you want to remove file "${file}"?`)) return;
+    if (!window.confirm(`Are you sure you want to remove file "${file}"?`)) return;
     try {
       await removeTlsFile(inv, file);
       showToast("Document removed", "success");
@@ -122,11 +120,7 @@ const SearchTruckLoadStuff = () => {
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "#f3f4f6", height: "calc(100vh - 100px)", position: "relative" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, padding: "12px 20px", borderRadius: 4, color: "#fff", background: toast.type === "success" ? "#10b981" : "#ef4444", zIndex: 9999, boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: 13, fontWeight: 500 }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
@@ -188,7 +182,7 @@ const SearchTruckLoadStuff = () => {
                     <tr style={{ color: "#374151" }}>
                       <th style={thStyle}>Invoice Number</th>
                       <th style={thStyle}>File Name</th>
-                      <th style={thStyle}>Action</th>
+                      {canRemove && <th style={thStyle}>Action</th>}
                       <th style={thStyle}>Created By</th>
                       <th style={thStyle}>Created On</th>
                     </tr>
@@ -202,13 +196,15 @@ const SearchTruckLoadStuff = () => {
                             {r.fileName || "View Document"}
                           </a>
                         </td>
-                        <td style={tdStyle}>
-                          <button onClick={() => handleDelete(r.invoiceNo, r.fileName)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-                            Remove
-                          </button>
-                        </td>
+                        {canRemove && (
+                          <td style={tdStyle}>
+                            <button onClick={() => handleDelete(r.invoiceNo, r.fileName)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                              Remove
+                            </button>
+                          </td>
+                        )}
                         <td style={tdStyle}>{r.createdBy || "-"}</td>
-                        <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
+                        <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"}</td>
                       </tr>
                     ))}
                     {results.length === 0 && (
@@ -230,13 +226,12 @@ const SearchTruckLoadStuff = () => {
 };
 
 // --- STYLES --- //
-const sectionTitle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: "#5f7a98", textTransform: "uppercase", letterSpacing: "0.05em" };
+const sectionTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: "#111", letterSpacing: "0.02em", textTransform: "uppercase" };
 const linkButton: React.CSSProperties = { background: "none", border: "none", color: "#333", fontSize: 12, fontWeight: 500, cursor: "pointer", padding: 0 };
-const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWeight: 600, color: "#5f7a98", marginBottom: 4, textTransform: "uppercase" };
-const inputStyle: React.CSSProperties = { width: "100%", padding: "6px 10px", fontSize: 12, color: "#111827", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box" };
-const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
-
-const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
+const labelStyle: React.CSSProperties = { display: "block", fontSize: 10, fontWeight: 600, color: "#333", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" };
+const inputStyle: React.CSSProperties = { width: "100%", border: "1px solid #e5e7eb", borderRadius: 6, padding: "6px 8px", fontSize: 12, color: "#374151", background: "#f9fafb", outline: "none", boxSizing: "border-box" };
+const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
+const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, color: "#003366", borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#333", whiteSpace: "nowrap" };
 const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 

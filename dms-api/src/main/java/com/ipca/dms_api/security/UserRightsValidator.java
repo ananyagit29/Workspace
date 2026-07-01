@@ -60,6 +60,11 @@ public class UserRightsValidator {
         });
 
         if (!hasRight) {
+            System.out.println("AccessDenied! Required: App=" + applicationName + " Type=" + requiredAccessType + " for User=" + userId);
+            System.out.println("Available rights:");
+            rawRights.forEach(r -> {
+                System.out.println("  App: " + r[3] + " Type: " + r[5] + " Comp: " + r[0] + " Loc: " + r[2] + " Div: " + r[1]);
+            });
             throw new AccessDeniedException("User cannot perform respective operation due to unsupported access rights.");
         }
     }
@@ -67,6 +72,10 @@ public class UserRightsValidator {
     private boolean matches(String required, String actual) {
         if (required == null) return true;
         if (actual == null || actual.equalsIgnoreCase("ALL") || actual.equals("*")) return true;
-        return required.equalsIgnoreCase(actual);
+        
+        String normReq = required.replace(" ", "_").replace("&", "AND");
+        String normAct = actual.replace(" ", "_").replace("&", "AND");
+        
+        return normReq.equalsIgnoreCase(normAct);
     }
 }

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AuthContext } from "../../auth/AuthContext";
+import { useAppRights } from "../../hooks/useAppRights";
 import { getSupplierCustomerSearchOptions, searchSupplierCustomer, removeSupplierCustomer } from "../../api/dmsApi";
 
 interface Selections {
@@ -23,6 +24,7 @@ const PAGE_SIZE = 7;
 
 const SearchSupplierCustomer = () => {
   const { user, loading } = useContext(AuthContext);
+  const { canRemove } = useAppRights();
   const { selections } = useOutletContext<{ selections: Selections }>();
   const navigate = useNavigate();
 
@@ -37,20 +39,14 @@ const SearchSupplierCustomer = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/"); return; }
   }, [loading, user, navigate]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
   useEffect(() => {
     setSelectedAccount("");
@@ -115,7 +111,7 @@ const SearchSupplierCustomer = () => {
         "Code": r.accountCode || "-",
         "Filename": r.fileName || "-",
         "Created By": r.createdBy || "-",
-        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"
+        "Created On": r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -162,11 +158,7 @@ const SearchSupplierCustomer = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
@@ -247,7 +239,7 @@ const SearchSupplierCustomer = () => {
                       <th style={thStyle}>Name</th>
                       <th style={thStyle}>Code</th>
                       <th style={thStyle}>Filename</th>
-                      <th style={thStyle}>Remove</th>
+                      {canRemove && <th style={thStyle}>Remove</th>}
                       <th style={thStyle}>Created By</th>
                       <th style={thStyle}>Created On</th>
                     </tr>
@@ -262,13 +254,15 @@ const SearchSupplierCustomer = () => {
                             {r.fileName}
                           </a>
                         </td>
-                        <td style={tdStyle}>
-                          <button onClick={() => handleDelete(r.accountCode, r.fileName)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
-                            Remove
-                          </button>
-                        </td>
+                        {canRemove && (
+                          <td style={tdStyle}>
+                            <button onClick={() => handleDelete(r.accountCode, r.fileName)} style={{ padding: "4px 8px", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 4, cursor: "pointer", fontSize: 11, fontWeight: 500, color: "#ef4444" }}>
+                              Remove
+                            </button>
+                          </td>
+                        )}
                         <td style={tdStyle}>{r.createdBy || "-"}</td>
-                        <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB") : "-"}</td>
+                        <td style={tdStyle}>{r.createdOn ? new Date(r.createdOn).toLocaleString("en-GB").replace(/\//g, "-").replace(",", "") : "-"}</td>
                       </tr>
                     ))}
                     {results.length === 0 && (
@@ -300,7 +294,7 @@ const labelStyle: React.CSSProperties = { display: "block", fontSize: 11, fontWe
 const inputStyle: React.CSSProperties = { width: "100%", padding: "6px 10px", fontSize: 12, color: "#111827", background: "#fff", border: "1px solid #d1d5db", borderRadius: 6, outline: "none", boxSizing: "border-box" };
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" };
 
-const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
+const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, color: "#003366", borderBottom: "2px solid #e5e7eb", whiteSpace: "nowrap" };
 const tdStyle: React.CSSProperties = { padding: "10px 16px", color: "#333", whiteSpace: "nowrap" };
 const exportBtn: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
 

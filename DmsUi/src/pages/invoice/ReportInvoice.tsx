@@ -13,11 +13,8 @@ const ReportInvoice = () => {
   const { selections } = useOutletContext<{ selections: Selections }>();
   const [results, setResults] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
   };
 
   useEffect(() => {
@@ -48,11 +45,7 @@ const ReportInvoice = () => {
 
   return (
     <div style={{ background: "#f3f4f6", minHeight: "100vh" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px", display: "flex", flexDirection: "column", alignItems: "center" }}>
         
@@ -99,7 +92,7 @@ const ReportInvoice = () => {
 };
 
 const primaryButton: React.CSSProperties = { background: "#003366", color: "#fff", border: "none", borderRadius: 6, padding: "5px 24px", fontSize: 12, fontWeight: 600, cursor: "pointer", height: 28 };
-const thStyle: React.CSSProperties = { position: "sticky", top: 0, zIndex: 1, background: "#f9fafb", padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "#5f7a98", borderBottom: "2px solid #e5e7eb", textTransform: "uppercase" };
+const thStyle: React.CSSProperties = { position: "sticky", top: 0, zIndex: 1, background: "#f9fafb", padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "#003366", borderBottom: "2px solid #e5e7eb", textTransform: "uppercase" };
 const tdStyle: React.CSSProperties = { padding: "8px 16px", color: "#374151", borderBottom: "1px solid #e5e7eb" };
 
 export default ReportInvoice;

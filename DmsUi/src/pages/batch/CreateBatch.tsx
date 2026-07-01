@@ -42,17 +42,12 @@ const CreateBatch = () => {
   const [fetchingProduct, setFetchingProduct] = useState(false);
   const [fetchingFiles, setFetchingFiles]     = useState(false);
   const [saving, setSaving]                   = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
+  };
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (msg: string, type: "success" | "error" = "success") => setToast({ msg, type });
 
   const handleBatchTypeChange = (type: string) => {
     setBatchType(type);
@@ -153,12 +148,7 @@ const CreateBatch = () => {
   return (
     <main style={{ flex: 1, padding: "8px 16px", overflowY: "auto" }}>
 
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.type === "success" ? "✓" : "✕"} {toast.msg}
-        </div>
-      )}
+
 
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         <form onSubmit={handleSubmit}>

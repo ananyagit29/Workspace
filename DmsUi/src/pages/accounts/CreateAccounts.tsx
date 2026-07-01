@@ -34,13 +34,10 @@ const CreateAccounts: React.FC = () => {
   const [fieldRequired, setFieldRequired] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [disabledMonths, setDisabledMonths] = useState<Set<string>>(new Set());
   const fileRef = React.useRef<HTMLInputElement>(null);
-
-  const showToast = (msg: string, type: "success" | "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    window.dispatchEvent(new CustomEvent("app-toast", { detail: { msg, type } }));
   };
 
   // Load daybooks
@@ -201,11 +198,7 @@ const CreateAccounts: React.FC = () => {
 
   return (
     <div style={{ flex: 1, overflow: "auto", background: "#f3f4f6" }}>
-      {toast && (
-        <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50, padding: "8px 14px", borderRadius: 8, color: "#fff", fontSize: 12, fontWeight: 500, background: toast.type === "success" ? "#16a34a" : "#dc2626" }}>
-          {toast.msg}
-        </div>
-      )}
+
 
       <main style={{ padding: "24px 32px" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -214,69 +207,71 @@ const CreateAccounts: React.FC = () => {
               Create Accounts Document
             </h2>
 
-            {/* Daybook */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-              <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Select Daybook Code</label>
-              <select value={selectedDaybook} onChange={e => setSelectedDaybook(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-                {daybooks.map(d => (
-                  <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
-                ))}
-              </select>
-            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px 20px", marginBottom: 16 }}>
+              {/* Daybook */}
+              <div>
+                <label style={labelStyle}>Select Daybook Code</label>
+                <select value={selectedDaybook} onChange={e => setSelectedDaybook(e.target.value)} style={inputStyle}>
+                  {daybooks.map(d => (
+                    <option key={d.code} value={`${d.code}~${d.name}`}>{d.code}~{d.name}</option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Month */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-              <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Select Month</label>
-              <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-                {MONTHS.map(m => (
-                  <option key={m.value} value={m.value} disabled={disabledMonths.has(m.value)}>{m.label}</option>
-                ))}
-              </select>
-            </div>
+              {/* Month */}
+              <div>
+                <label style={labelStyle}>Select Month</label>
+                <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={inputStyle}>
+                  {MONTHS.map(m => (
+                    <option key={m.value} value={m.value} disabled={disabledMonths.has(m.value)}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Doc Code */}
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-              <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Select Doc Code</label>
-              <select value={selectedDocCode} onChange={e => setSelectedDocCode(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-                <option value="">Select</option>
-                {docCodes.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              {/* Doc Code */}
+              <div>
+                <label style={labelStyle}>Select Doc Code</label>
+                <select value={selectedDocCode} onChange={e => setSelectedDocCode(e.target.value)} style={inputStyle}>
+                  <option value="">Select</option>
+                  {docCodes.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Details (shown when doc code selected) */}
             {docDetails && (
               <>
                 {fieldRequired && (
-                  <>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-                      <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Account Name</label>
-                      <input type="text" readOnly value={docDetails.ACCOUNT_NAME || docDetails.account_name || ""} style={{ ...inputStyle, flex: 1, background: "#f3f4f6" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 20px", marginBottom: 16 }}>
+                    <div>
+                      <label style={labelStyle}>Account Name</label>
+                      <input type="text" readOnly value={docDetails.ACCOUNT_NAME || docDetails.account_name || ""} style={{ ...inputStyle, background: "#f3f4f6" }} />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 12 }}>
-                      <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0 }}>Bill Number</label>
-                      <input type="text" readOnly value={docDetails.BILL_NUMBER || docDetails.bill_number || ""} style={{ ...inputStyle, flex: 1, background: "#f3f4f6" }} />
+                    <div>
+                      <label style={labelStyle}>Bill Number</label>
+                      <input type="text" readOnly value={docDetails.BILL_NUMBER || docDetails.bill_number || ""} style={{ ...inputStyle, background: "#f3f4f6" }} />
                     </div>
-                  </>
+                  </div>
                 )}
 
-                <div style={{ display: "flex", alignItems: "flex-start", marginBottom: 14, gap: 12 }}>
-                  <label style={{ ...labelStyle, minWidth: 140, marginBottom: 0, marginTop: 2 }}>Upload File</label>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <input
-                      type="file"
-                      ref={fileRef}
-                      accept=".pdf"
-                      onChange={e => setFile(e.target.files?.[0] || null)}
-                      style={{ fontSize: 12, color: "#374151" }}
-                    />
-                    <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 500 }}>* PDF File Size cannot exceed 1 MB</span>
+                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 6, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div>
+                    <label style={{ ...labelStyle, marginBottom: 4 }}>Upload Document</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <input
+                        type="file"
+                        ref={fileRef}
+                        accept=".pdf"
+                        onChange={e => setFile(e.target.files?.[0] || null)}
+                        style={{ fontSize: 12, color: "#374151" }}
+                      />
+                      <span style={{ fontSize: 10, color: "#dc2626", fontWeight: 500 }}>* PDF File Size cannot exceed 1 MB</span>
+                    </div>
                   </div>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
-                  <button onClick={handleSubmit} disabled={submitting} style={{ ...primaryButton, opacity: submitting ? 0.6 : 1, padding: "8px 40px" }}>
+                  
+                  <button onClick={handleSubmit} disabled={submitting} style={{ ...primaryButton, opacity: submitting ? 0.6 : 1, padding: "8px 32px", height: "auto" }}>
                     {submitting ? "Submitting..." : "Submit"}
                   </button>
                 </div>
