@@ -55,7 +55,7 @@ public class InvoiceDocumentService {
     // ─────────────────────────────────────────────────────────────
     public boolean exists(String invoiceNumber, String year, String locationId) {
         StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB WHERE UPPER(doc_code) = UPPER(?)");
+                "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB WHERE UPPER(doc_code) = UPPER(?)");
         java.util.List<Object> params = new java.util.ArrayList<>();
         params.add(clean(invoiceNumber));
 
@@ -64,7 +64,7 @@ public class InvoiceDocumentService {
             sql.append(" AND entity_code = ?");
             params.add(locationId);
         }
-        
+
         if (year != null && year.matches("\\d{4}-\\d{4}")) {
             String[] parts = year.split("-");
             int y1 = Integer.parseInt(parts[0]);
@@ -91,9 +91,9 @@ public class InvoiceDocumentService {
         String q = query != null ? query.trim() : "";
 
         StringBuilder sql = new StringBuilder(
-            "SELECT DISTINCT s.doc_code FROM scm_excise_invoice_header@IPCASCMDRDB s " +
-            "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
-            "WHERE UPPER(s.doc_code) LIKE ? AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL");
+                "SELECT DISTINCT s.doc_code FROM scm_excise_invoice_header@IPCASCMDRDB s " +
+                        "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
+                        "WHERE UPPER(s.doc_code) LIKE ? AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL");
         java.util.List<Object> params = new java.util.ArrayList<>();
         params.add("%" + q.toUpperCase() + "%");
 
@@ -129,17 +129,17 @@ public class InvoiceDocumentService {
     // ────────────────────────────────────────────────────────────────────────────
     // SEARCH: query IPCASCMDRDB for invoice list (with pagination)
     // Maps SCM columns to our InvoiceDocumentResponse DTO:
-    //   doc_code        -> invoiceNumber
-    //   entity_code     -> companyId
-    //   division_code   -> divisionName
-    //   doc_date        -> createdOn
-    //   doc_amount      -> (unused, but available)
-    //   store_code      -> locationId
-    //   checked_by      -> createdBy
-    //   We also LEFT JOIN to DMS_INVOICE_DOCUMENTS to get any locally attached files
+    // doc_code -> invoiceNumber
+    // entity_code -> companyId
+    // division_code -> divisionName
+    // doc_date -> createdOn
+    // doc_amount -> (unused, but available)
+    // store_code -> locationId
+    // checked_by -> createdBy
+    // We also LEFT JOIN to DMS_INVOICE_DOCUMENTS to get any locally attached files
     // ────────────────────────────────────────────────────────────────────────────
     public Page<InvoiceDocumentResponse> search(String invoiceNumber, String year, String locationId,
-                                                 int page, int size) {
+            int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         String invoiceFilter = emptyToNull(invoiceNumber);
 
@@ -150,7 +150,7 @@ public class InvoiceDocumentService {
             where.append(" AND UPPER(s.doc_code) LIKE UPPER(?) ");
             params.add("%" + invoiceFilter + "%");
         }
-        
+
         // Map DMS locationId to SCM entity_code
         if (locationId != null && !locationId.isEmpty()) {
             where.append(" AND s.entity_code = ? ");
@@ -167,8 +167,8 @@ public class InvoiceDocumentService {
 
         // Count query
         String countSql = "SELECT COUNT(*) FROM scm_excise_invoice_header@IPCASCMDRDB s " +
-                          "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
-                          where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL";
+                "INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code) " +
+                where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL";
         String finalCountSql = java.util.Objects.requireNonNull(countSql);
         Long total = invoiceJdbcTemplate.queryForObject(finalCountSql, Long.class, params.toArray());
 
@@ -178,36 +178,39 @@ public class InvoiceDocumentService {
         queryParams.add(pageable.getPageSize());
 
         String dataSql = """
-            SELECT s.doc_code, s.entity_code, s.division_code, s.store_code,
-                   s.doc_date, s.checked_by, s.doc_amount,
-                   d.FILE_NAME, d.FILE_PATH, d.OTHER_FILE_NAME, d.OTHER_FILE_PATH,
-                   d.APPLICATION_NAME, d.CREATED_BY AS DMS_CREATED_BY, d.CREATED_ON AS DMS_CREATED_ON
-            FROM scm_excise_invoice_header@IPCASCMDRDB s
-            INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code)
-            """ + where + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL ORDER BY s.doc_date DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                SELECT s.doc_code, s.entity_code, s.division_code, s.store_code,
+                       s.doc_date, s.checked_by, s.doc_amount,
+                       d.FILE_NAME, d.FILE_PATH, d.OTHER_FILE_NAME, d.OTHER_FILE_PATH,
+                       d.APPLICATION_NAME, d.CREATED_BY AS DMS_CREATED_BY, d.CREATED_ON AS DMS_CREATED_ON
+                FROM scm_excise_invoice_header@IPCASCMDRDB s
+                INNER JOIN DMS_INVOICE_DOCUMENTS d ON UPPER(d.INVOICE_NUMBER) = UPPER(s.doc_code)
+                """ + where
+                + " AND d.FILE_PATH IS NOT NULL AND d.OTHER_FILE_PATH IS NOT NULL ORDER BY s.doc_date DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         System.out.println("[SEARCH] SQL=" + dataSql);
         System.out.println("[SEARCH] params=" + queryParams);
 
         String finalDataSql = java.util.Objects.requireNonNull(dataSql);
         java.util.List<InvoiceDocumentResponse> rows = invoiceJdbcTemplate.query(
-            finalDataSql,
-            (rs, rowNum) -> InvoiceDocumentResponse.builder()
-                .invoiceNumber(rs.getString("doc_code"))
-                .companyId(rs.getString("entity_code"))
-                .divisionName(rs.getString("division_code"))
-                .locationId(rs.getString("store_code"))
-                .createdBy(rs.getString("DMS_CREATED_BY") != null ? rs.getString("DMS_CREATED_BY") : rs.getString("checked_by"))
-                .createdOn(rs.getTimestamp("DMS_CREATED_ON") != null
-                    ? rs.getTimestamp("DMS_CREATED_ON").toLocalDateTime()
-                    : (rs.getTimestamp("doc_date") != null ? rs.getTimestamp("doc_date").toLocalDateTime() : null))
-                .invoiceFileName(rs.getString("FILE_NAME"))
-                .fileName(rs.getString("OTHER_FILE_NAME"))
-                .filePath(rs.getString("OTHER_FILE_PATH"))
-                .otherFileName(rs.getString("OTHER_FILE_NAME"))
-                .otherFilePath(rs.getString("OTHER_FILE_PATH"))
-                .build(),
-            queryParams.toArray());
+                finalDataSql,
+                (rs, rowNum) -> InvoiceDocumentResponse.builder()
+                        .invoiceNumber(rs.getString("doc_code"))
+                        .companyId(rs.getString("entity_code"))
+                        .divisionName(rs.getString("division_code"))
+                        .locationId(rs.getString("store_code"))
+                        .createdBy(rs.getString("DMS_CREATED_BY") != null ? rs.getString("DMS_CREATED_BY")
+                                : rs.getString("checked_by"))
+                        .createdOn(rs.getTimestamp("DMS_CREATED_ON") != null
+                                ? rs.getTimestamp("DMS_CREATED_ON").toLocalDateTime()
+                                : (rs.getTimestamp("doc_date") != null ? rs.getTimestamp("doc_date").toLocalDateTime()
+                                        : null))
+                        .invoiceFileName(rs.getString("FILE_NAME"))
+                        .fileName(rs.getString("OTHER_FILE_NAME"))
+                        .filePath(rs.getString("OTHER_FILE_PATH"))
+                        .otherFileName(rs.getString("OTHER_FILE_NAME"))
+                        .otherFilePath(rs.getString("OTHER_FILE_PATH"))
+                        .build(),
+                queryParams.toArray());
 
         return new PageImpl<>(rows, pageable, total == null ? 0 : total);
     }
@@ -218,31 +221,32 @@ public class InvoiceDocumentService {
         }
 
         String[] parts = year.split("-");
-        if (parts.length != 2) return java.util.Collections.emptyList();
-        
+        if (parts.length != 2)
+            return java.util.Collections.emptyList();
+
         int y1 = Integer.parseInt(parts[0]);
-        int y2 = parts[1].length() == 2 ? Integer.parseInt(parts[0].substring(0, 2) + parts[1]) : Integer.parseInt(parts[1]);
+        int y2 = parts[1].length() == 2 ? Integer.parseInt(parts[0].substring(0, 2) + parts[1])
+                : Integer.parseInt(parts[1]);
 
         String sql = """
-            SELECT s.doc_code AS invoice_number 
-            FROM scm_excise_invoice_header@IPCASCMDRDB s 
-            WHERE s.division_code='F' AND s.entity_code=? 
-            AND s.doc_date BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')
-            AND NOT EXISTS (
-                SELECT 'x' FROM DMS_INVOICE_DOCUMENTS 
-                WHERE location_id = s.entity_code AND UPPER(invoice_number) = UPPER(s.doc_code)
-            )
-            ORDER BY s.doc_date DESC
-            """;
-            
+                SELECT s.doc_code AS invoice_number
+                FROM scm_excise_invoice_header@IPCASCMDRDB s
+                WHERE s.division_code='B' AND s.entity_code=?
+                AND s.doc_date BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')
+                AND NOT EXISTS (
+                    SELECT 'x' FROM DMS_INVOICE_DOCUMENTS
+                    WHERE location_id = s.entity_code AND UPPER(invoice_number) = UPPER(s.doc_code)
+                )
+                ORDER BY s.doc_date DESC
+                """;
+
         try {
             return invoiceJdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> rs.getString("invoice_number"),
-                locationId,
-                y1 + "-04-01",
-                y2 + "-03-31"
-            );
+                    sql,
+                    (rs, rowNum) -> rs.getString("invoice_number"),
+                    locationId,
+                    y1 + "-04-01",
+                    y2 + "-03-31");
         } catch (Exception e) {
             System.err.println("Error fetching missing invoices: " + e.getMessage());
             return java.util.Collections.emptyList();
@@ -279,7 +283,8 @@ public class InvoiceDocumentService {
         // Check if invoice number exists in SCM ERP
         if (!exists(cleanedInvoice, null, locationId)) {
             throw new IllegalArgumentException(
-                "Invoice number " + cleanedInvoice + " does not exist in the SCM ERP system for the selected location.");
+                    "Invoice number " + cleanedInvoice
+                            + " does not exist in the SCM ERP system for the selected location.");
         }
 
         // Check if already saved locally
@@ -292,11 +297,12 @@ public class InvoiceDocumentService {
         Path fullPath = Paths.get(targetDir, safeFileName);
 
         LocalDateTime now = LocalDateTime.now();
-        invoiceJdbcTemplate.update("""
-                INSERT INTO DMS_INVOICE_DOCUMENTS
-                (INVOICE_NUMBER, FILE_NAME, FILE_PATH, COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, CREATED_BY, CREATED_ON)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
+        invoiceJdbcTemplate.update(
+                """
+                        INSERT INTO DMS_INVOICE_DOCUMENTS
+                        (INVOICE_NUMBER, FILE_NAME, FILE_PATH, COMPANY_ID, LOCATION_ID, DIVISION_NAME, APPLICATION_NAME, CREATED_BY, CREATED_ON)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
                 cleanedInvoice, safeFileName, fullPath.toString(), companyId, locationId,
                 divisionName, applicationName, userId, Timestamp.valueOf(now));
 
@@ -306,7 +312,8 @@ public class InvoiceDocumentService {
     // ────────────────────────────────────────────────────────────────────
     // ATTACH OTHER FILE
     // ────────────────────────────────────────────────────────────────────
-    public InvoiceDocumentResponse attachOtherFile(String invoiceNumber, String userId, MultipartFile otherFile) throws IOException {
+    public InvoiceDocumentResponse attachOtherFile(String invoiceNumber, String userId, MultipartFile otherFile)
+            throws IOException {
         String cleanedInvoice = clean(invoiceNumber);
         if (cleanedInvoice == null || cleanedInvoice.isBlank()) {
             throw new IllegalArgumentException("Invoice number is required.");
@@ -319,7 +326,8 @@ public class InvoiceDocumentService {
         }
 
         if (parent.getOtherFileName() != null && !parent.getOtherFileName().isEmpty()) {
-            throw new IllegalArgumentException("Only one attached file is allowed per invoice. This invoice already has an attachment.");
+            throw new IllegalArgumentException(
+                    "Only one attached file is allowed per invoice. This invoice already has an attachment.");
         }
 
         if (otherFile == null || otherFile.isEmpty()) {
@@ -344,8 +352,8 @@ public class InvoiceDocumentService {
         Files.write(fullPath, otherFile.getBytes());
 
         invoiceJdbcTemplate.update("""
-                UPDATE DMS_INVOICE_DOCUMENTS 
-                SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ? 
+                UPDATE DMS_INVOICE_DOCUMENTS
+                SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ?
                 WHERE UPPER(INVOICE_NUMBER) = UPPER(?)
                 """,
                 safeFileName, fullPath.toString(), cleanedInvoice);
@@ -377,13 +385,16 @@ public class InvoiceDocumentService {
             }
         }
 
-        invoiceJdbcTemplate.update("UPDATE DMS_INVOICE_DOCUMENTS SET OTHER_FILE_NAME = NULL, OTHER_FILE_PATH = NULL WHERE UPPER(INVOICE_NUMBER) = UPPER(?)", cleanedInvoice);
+        invoiceJdbcTemplate.update(
+                "UPDATE DMS_INVOICE_DOCUMENTS SET OTHER_FILE_NAME = NULL, OTHER_FILE_PATH = NULL WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                cleanedInvoice);
     }
 
     // ────────────────────────────────────────────────────────────────────
     // REPLACE OTHER FILE
     // ────────────────────────────────────────────────────────────────────
-    public InvoiceDocumentResponse replaceOtherFile(String invoiceNumber, String userId, MultipartFile newFile) throws IOException {
+    public InvoiceDocumentResponse replaceOtherFile(String invoiceNumber, String userId, MultipartFile newFile)
+            throws IOException {
         String cleanedInvoice = clean(invoiceNumber);
         if (cleanedInvoice == null || cleanedInvoice.isBlank()) {
             throw new IllegalArgumentException("Invoice number is required.");
@@ -425,8 +436,8 @@ public class InvoiceDocumentService {
         Files.write(fullPath, newFile.getBytes());
 
         invoiceJdbcTemplate.update("""
-                UPDATE DMS_INVOICE_DOCUMENTS 
-                SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ? 
+                UPDATE DMS_INVOICE_DOCUMENTS
+                SET OTHER_FILE_NAME = ?, OTHER_FILE_PATH = ?
                 WHERE UPPER(INVOICE_NUMBER) = UPPER(?)
                 """,
                 safeFileName, fullPath.toString(), cleanedInvoice);
@@ -472,8 +483,8 @@ public class InvoiceDocumentService {
     private boolean localRecordExists(String invoiceNumber) {
         try {
             Integer count = invoiceJdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
-                Integer.class, invoiceNumber);
+                    "SELECT COUNT(*) FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                    Integer.class, invoiceNumber);
             return count != null && count > 0;
         } catch (Exception e) {
             return false;
@@ -487,10 +498,11 @@ public class InvoiceDocumentService {
         if ("other".equalsIgnoreCase(type)) {
             try {
                 String fileName = invoiceJdbcTemplate.queryForObject(
-                    "SELECT OTHER_FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
-                    String.class,
-                    invoiceNumber);
-                if (fileName == null || fileName.isEmpty()) return null;
+                        "SELECT OTHER_FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                        String.class,
+                        invoiceNumber);
+                if (fileName == null || fileName.isEmpty())
+                    return null;
                 return "d:/Workspace/Docs/Other/" + fileName;
             } catch (Exception e) {
                 return null;
@@ -498,10 +510,11 @@ public class InvoiceDocumentService {
         } else {
             try {
                 String fileName = invoiceJdbcTemplate.queryForObject(
-                    "SELECT FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
-                    String.class,
-                    invoiceNumber);
-                if (fileName == null || fileName.isEmpty()) return null;
+                        "SELECT FILE_NAME FROM DMS_INVOICE_DOCUMENTS WHERE UPPER(INVOICE_NUMBER) = UPPER(?)",
+                        String.class,
+                        invoiceNumber);
+                if (fileName == null || fileName.isEmpty())
+                    return null;
                 return "d:/Workspace/Docs/Invoice/" + fileName;
             } catch (Exception e) {
                 return null;
