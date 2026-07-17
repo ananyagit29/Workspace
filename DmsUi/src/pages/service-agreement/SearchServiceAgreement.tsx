@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { searchServiceAgreement, removeServiceAgreement } from '../../api/dmsApi';
+import { searchServiceAgreement, removeServiceAgreement, getSubdivisions } from '../../api/dmsApi';
 import { useAppRights } from '../../hooks/useAppRights';
 import { useOutletContext } from 'react-router-dom';
 import { AuthContext } from '../../auth/AuthContext';
@@ -29,21 +29,26 @@ const SearchServiceAgreement = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const rightsStr = JSON.stringify(rights);
   useEffect(() => {
-    if (rights && rights.length > 0) {
-      // Extract unique sub-application names for the SERVICE_AGREEMENT app
-      const saRights = rights.filter((r: any) => r.applicationName === 'SERVICE_AGREEMENT');
-      const uniqueSubDivs = Array.from(new Set(saRights.map((r: any) => r.subApplicationName).filter(Boolean)));
-      setSubdivisions(prev => {
-        const newSubDivs = uniqueSubDivs.map(name => ({ label: name, value: name }));
-        if (JSON.stringify(prev) !== JSON.stringify(newSubDivs)) {
-          return newSubDivs;
+    const fetchSubdivisions = async () => {
+      try {
+        const compId = selections?.com;
+        const uid = user?.userId || localStorage.getItem('userId');
+        if (compId && uid) {
+          const res = await getSubdivisions(compId, uid);
+          if (res && Array.isArray(res)) {
+            setSubdivisions(res.map((item: any) => ({
+              label: item.name,
+              value: item.code
+            })));
+          }
         }
-        return prev;
-      });
-    }
-  }, [rightsStr]);
+      } catch (err) {
+        console.error('Failed to load subdivisions', err);
+      }
+    };
+    fetchSubdivisions();
+  }, [selections?.com, user?.userId]);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     window.dispatchEvent(new CustomEvent('app-toast', { detail: { msg, type } }));

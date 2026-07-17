@@ -90,6 +90,31 @@ public class ServiceAgreementController {
         }
     }
 
+    // ─── GET SUBDIVISIONS (from HRMS via DB link) ───────────────────────
+    @GetMapping("/subdivisions")
+    public ResponseEntity<?> getSubdivisions(@RequestParam String companyId, @RequestParam String userId) {
+        try {
+            String subDivQuery = "SELECT DISTINCT h.code, h.name " +
+                    "FROM hrms_live.subdivision@hrmsdrdb h, DMS_USER_RIGHTS d " +
+                    "WHERE h.company_id = ? AND h.code = d.SUB_APPLICATION_NAME " +
+                    "AND d.USER_ID = ? ORDER BY 2";
+
+            List<Map<String, Object>> subDivs = jdbcTemplate.queryForList(subDivQuery, companyId, userId);
+            List<Map<String, String>> subdivisions = new ArrayList<>();
+            for (Map<String, Object> row : subDivs) {
+                Map<String, String> sub = new HashMap<>();
+                sub.put("code", String.valueOf(row.get("CODE")));
+                sub.put("name", String.valueOf(row.get("NAME")));
+                subdivisions.add(sub);
+            }
+            return ResponseEntity.ok(subdivisions);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // ─── GET EMPLOYEE DETAILS (from HRMS via DB link) ────────────────────
     @GetMapping("/employee-details")
     public ResponseEntity<?> getEmployeeDetails(@RequestParam String employeeId,

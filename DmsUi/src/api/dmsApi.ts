@@ -287,6 +287,11 @@ export const getDoctorDetails = async (pan: string, companyId: string, userId: s
   return response.data;
 };
 
+export const getSubdivisions = async (companyId: string, userId: string) => {
+  const response = await dmsApi.get('/service-agreement/subdivisions', { params: { companyId, userId } });
+  return response.data;
+};
+
 export const getEmployeeDetails = async (employeeId: string, applicationName: string, userId: string) => {
   const response = await dmsApi.get('/service-agreement/employee-details', { params: { employeeId, applicationName, userId } });
   return response.data;
@@ -313,5 +318,3 @@ export const removeServiceAgreement = async (params: any) => {
   const response = await dmsApi.delete('/service-agreement/remove', { params });
   return response.data;
 };
-
-
