@@ -16,6 +16,7 @@ const APP_ROUTES: Record<string, string> = {
   SUPPLIER_AND_CUSTOMER: "/supplier-customer",
   TRUCK_LOAD_STUFF: "/truck-load-stuff",
   ACCOUNTS: "/accounts",
+  SERVICE_AGREEMENT: "/service-agreement",
 };
 
 const sel: React.CSSProperties = {    
@@ -139,7 +140,7 @@ const Dashboard: React.FC = () => {
   };
 
   const canSubmit = !!(com && div && loc && app);
-  const hasSubApps = subApps.some(s => s !== null);
+  const hasSubApps = app !== 'SERVICE_AGREEMENT' && subApps.some(s => s !== null);
   const hasModules = modules.some(m => m !== null);
 
   const initials = user

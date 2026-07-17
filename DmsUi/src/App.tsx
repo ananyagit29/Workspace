@@ -22,6 +22,9 @@ import AccountsLayout from "./layouts/AccountsLayout";
 import SearchAccounts from "./pages/accounts/SearchAccounts";
 import CreateAccounts from "./pages/accounts/CreateAccounts";
 import ReportAccounts from "./pages/accounts/ReportAccounts";
+import ServiceAgreementLayout from './layouts/ServiceAgreementLayout';
+import SearchServiceAgreement from './pages/service-agreement/SearchServiceAgreement';
+import CreateServiceAgreement from './pages/service-agreement/CreateServiceAgreement';
 import { useEffect, useState } from "react";
 function App() {
   return (
@@ -67,6 +70,12 @@ function App() {
         <Route index element={<SearchAccounts />} />
         <Route path="create" element={<CreateAccounts />} />
         <Route path="report" element={<ReportAccounts />} />
+      </Route>
+
+      {/* Service Agreement Module */}
+      <Route path="/service-agreement" element={<ServiceAgreementLayout />}>
+        <Route index element={<SearchServiceAgreement />} />
+        <Route path="create" element={<CreateServiceAgreement />} />
       </Route>
       </Routes>
     </>

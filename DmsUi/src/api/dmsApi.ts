@@ -280,3 +280,38 @@ export const getAccountsReport = (params: any) =>
 
 export const downloadAccountsZip = (files: any[]) =>
   dmsApi.post("/accounts/download-zip", files, { responseType: "blob" });
+
+// Service Agreement
+export const getDoctorDetails = async (pan: string, companyId: string, userId: string) => {
+  const response = await dmsApi.get('/service-agreement/doctor-details', { params: { pan, companyId, userId } });
+  return response.data;
+};
+
+export const getEmployeeDetails = async (employeeId: string, applicationName: string, userId: string) => {
+  const response = await dmsApi.get('/service-agreement/employee-details', { params: { employeeId, applicationName, userId } });
+  return response.data;
+};
+
+export const getInterfaceDetails = async (interfaceAppNo: string) => {
+  const response = await dmsApi.get('/service-agreement/interface-details', { params: { interfaceAppNo } });
+  return response.data;
+};
+
+export const createServiceAgreement = async (formData: FormData) => {
+  const response = await dmsApi.post('/service-agreement/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
+export const searchServiceAgreement = async (params: any) => {
+  const response = await dmsApi.get('/service-agreement/search', { params });
+  return response.data;
+};
+
+export const removeServiceAgreement = async (params: any) => {
+  const response = await dmsApi.delete('/service-agreement/remove', { params });
+  return response.data;
+};
+
+
