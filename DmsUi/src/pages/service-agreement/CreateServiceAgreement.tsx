@@ -199,152 +199,154 @@ const CreateServiceAgreement = () => {
   };
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: '20px 24px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-          <h2 style={sectionTitle}>CREATE SERVICE AGREEMENT</h2>
+    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      
+      {/* Card 1: Doctor PAN Search */}
+      <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: '24px 32px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 500 }}>
+        <h2 style={{ ...sectionTitle, marginBottom: 20 }}>CREATE SERVICE AGREEMENT</h2>
 
-          {message && <div style={{ padding: '8px 12px', background: '#ecfdf5', color: '#065f46', borderRadius: 6, fontSize: 12, marginTop: 12, border: '1px solid #a7f3d0' }}>{message}</div>}
-          {error && <div style={{ padding: '8px 12px', background: '#fef2f2', color: '#991b1b', borderRadius: 6, fontSize: 12, marginTop: 12, border: '1px solid #fca5a5' }}>{error}</div>}
+        {message && <div style={{ padding: '8px 12px', background: '#ecfdf5', color: '#065f46', borderRadius: 6, fontSize: 12, marginBottom: 16, border: '1px solid #a7f3d0', width: '100%', textAlign: 'center' }}>{message}</div>}
+        {error && <div style={{ padding: '8px 12px', background: '#fef2f2', color: '#991b1b', borderRadius: 6, fontSize: 12, marginBottom: 16, border: '1px solid #fca5a5', width: '100%', textAlign: 'center' }}>{error}</div>}
 
-          {!doctorFound ? (
-            <div style={{ marginTop: 16 }}>
-              <table style={{ borderCollapse: 'collapse' }}>
-                <tbody>
-                  <tr>
-                    <td style={tdLabel}>Enter Doctor's PAN :</td>
-                    <td>
-                      <input type="text" value={pan}
-                        onChange={(e: any) => setPan(e.target.value.toUpperCase())}
-                        style={{ ...inputStyle, width: 120 }} />
-                    </td>
-                    <td style={{ paddingLeft: 8 }}>
-                      <button onClick={handleGo} disabled={loading} style={primaryButton}>
-                        {loading ? 'Searching...' : 'GO'}
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                <tbody>
-                  <tr>
-                    <td style={tdLabel}>Doctor's PAN :</td>
-                    <td><input type="text" value={pan} readOnly style={{ ...inputStyle, width: 120, background: '#f3f4f6' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Doctor Name :</td>
-                    <td><input type="text" value={doctorName} readOnly style={{ ...inputStyle, width: 280, background: '#f3f4f6' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Doctor Code :</td>
-                    <td><input type="text" value={doctorCode} readOnly style={{ ...inputStyle, width: 120, background: '#f3f4f6' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>In Favour Of :</td>
-                    <td><input type="text" value={inFavourOf} readOnly style={{ ...inputStyle, width: 280, background: '#f3f4f6' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Employee ID :</td>
-                    <td><input type="text" value={employeeId}
-                      onChange={(e: any) => setEmployeeId(e.target.value)}
-                      onBlur={handleEmployeeBlur}
-                      style={{ ...inputStyle, width: 120 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Employee Name :</td>
-                    <td><input type="text" value={employeeName} readOnly style={{ ...inputStyle, width: 280, background: '#f3f4f6' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>RC Code :</td>
-                    <td><input type="text" value={rcCode}
-                      readOnly={rcCodeReadonly}
-                      onChange={(e: any) => setRcCode(e.target.value)}
-                      style={{ ...inputStyle, width: 120, background: rcCodeReadonly ? '#f3f4f6' : '#fff' }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Select Sub Division :</td>
-                    <td>
-                      <select value={selectedSubdivision}
-                        onChange={(e: any) => setSelectedSubdivision(e.target.value)}
-                        disabled={subDivDisabled}
-                        style={{ ...inputStyle, width: 180 }}>
-                        <option value="">SELECT</option>
-                        {subdivisions.map((s: any) => (
-                          <option key={s.code} value={s.code}>{s.name}</option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Interface App No. :</td>
-                    <td><input type="text" maxLength={20} value={interfaceAppNo}
-                      onChange={(e: any) => setInterfaceAppNo(e.target.value)}
-                      onBlur={handleInterfaceBlur}
-                      style={{ ...inputStyle, width: 140 }} /></td>
-                  </tr>
-                  {interfaceError && (
-                    <tr>
-                      <td></td>
-                      <td><span style={{ color: '#dc2626', fontSize: 11 }}>{interfaceError}</span></td>
-                    </tr>
-                  )}
-                  <tr>
-                    <td style={tdLabel}>CME Log No. :</td>
-                    <td><input type="text" maxLength={14} value={cmeLogNo}
-                      onChange={(e: any) => setCmeLogNo(e.target.value.toUpperCase())}
-                      style={{ ...inputStyle, width: 140 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Amount :</td>
-                    <td><input type="text" maxLength={6} value={amount}
-                      onChange={(e: any) => setAmount(e.target.value)}
-                      style={{ ...inputStyle, width: 140 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Event From Date :</td>
-                    <td><input type="date" value={eventFromDate}
-                      onChange={(e: any) => setEventFromDate(e.target.value)}
-                      style={{ ...inputStyle, width: 160 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Event To Date :</td>
-                    <td><input type="date" value={eventToDate}
-                      onChange={(e: any) => setEventToDate(e.target.value)}
-                      onBlur={handleDateCheck}
-                      style={{ ...inputStyle, width: 160 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Event Name :</td>
-                    <td><input type="text" value={eventName}
-                      onChange={(e: any) => setEventName(e.target.value.toUpperCase())}
-                      style={{ ...inputStyle, width: 280 }} /></td>
-                  </tr>
-                  <tr>
-                    <td style={tdLabel}>Upload File :</td>
-                    <td><input type="file" accept="application/pdf"
-                      onChange={(e: any) => setFile(e.target.files?.[0] || null)}
-                      style={{ fontSize: 12 }} /></td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2} style={{ paddingTop: 16, textAlign: 'center' }}>
-                      <button type="submit" disabled={loading || submitDisabled} style={{ ...primaryButton, opacity: (loading || submitDisabled) ? 0.5 : 1, marginRight: 8 }}>
-                        {loading ? 'Submitting...' : 'Submit'}
-                      </button>
-                      <button type="button" onClick={() => setDoctorFound(false)} style={cancelButton}>
-                        Cancel
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </form>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={labelStyle}>Enter Doctor's PAN :</label>
+            <input type="text" value={pan}
+              onChange={(e: any) => setPan(e.target.value.toUpperCase())}
+              disabled={doctorFound}
+              style={{ ...inputStyle, width: 220, background: doctorFound ? '#f3f4f6' : '#fff' }} />
+          </div>
+          <button onClick={handleGo} disabled={loading || doctorFound} style={{ ...primaryButton, padding: '7px 24px', opacity: (loading || doctorFound) ? 0.6 : 1 }}>
+            {loading ? 'Searching...' : (doctorFound ? 'Found' : 'GO')}
+          </button>
+          {doctorFound && (
+            <button onClick={() => {
+              setDoctorFound(false);
+              setPan(''); setEmployeeId(''); setEmployeeName(''); setRcCode('');
+              setSelectedSubdivision(''); setInterfaceAppNo(''); setCmeLogNo('');
+              setAmount(''); setEventFromDate(''); setEventToDate(''); setEventName('');
+              setFile(null); setSubDivDisabled(true); setSubmitDisabled(false);
+              setMessage(''); setError('');
+            }} style={{ ...cancelButton, padding: '7px 24px' }}>
+              Reset
+            </button>
           )}
         </div>
       </div>
+
+      {/* Card 2: Form Details */}
+      {doctorFound && (
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #e5e7eb', padding: '32px 40px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', width: '100%', maxWidth: 900, marginTop: 24 }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '48px' }}>
+              {/* Column 1 */}
+              <div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Doctor Code :</label>
+                  <input type="text" value={doctorCode} readOnly style={{ ...inputFull, background: '#f3f4f6' }} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Doctor Name :</label>
+                  <input type="text" value={doctorName} readOnly style={{ ...inputFull, background: '#f3f4f6' }} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>In Favour Of :</label>
+                  <input type="text" value={inFavourOf} readOnly style={{ ...inputFull, background: '#f3f4f6' }} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Employee ID :</label>
+                  <input type="text" value={employeeId}
+                    onChange={(e: any) => setEmployeeId(e.target.value)}
+                    onBlur={handleEmployeeBlur}
+                    style={inputFull} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Employee Name :</label>
+                  <input type="text" value={employeeName} readOnly style={{ ...inputFull, background: '#f3f4f6' }} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>RC Code :</label>
+                  <input type="text" value={rcCode}
+                    readOnly={rcCodeReadonly}
+                    onChange={(e: any) => setRcCode(e.target.value)}
+                    style={{ ...inputFull, background: rcCodeReadonly ? '#f3f4f6' : '#fff' }} />
+                </div>
+              </div>
+
+              {/* Column 2 */}
+              <div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Select Sub Division :</label>
+                  <select value={selectedSubdivision}
+                    onChange={(e: any) => setSelectedSubdivision(e.target.value)}
+                    disabled={subDivDisabled}
+                    style={{ ...inputFull, background: subDivDisabled ? '#f3f4f6' : '#fff' }}>
+                    <option value="">SELECT</option>
+                    {subdivisions.map((s: any) => (
+                      <option key={s.code} value={s.code}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ ...fieldRow, marginBottom: interfaceError ? 4 : 16 }}>
+                  <label style={labelStyle}>Interface App No. :</label>
+                  <input type="text" maxLength={20} value={interfaceAppNo}
+                    onChange={(e: any) => setInterfaceAppNo(e.target.value)}
+                    onBlur={handleInterfaceBlur}
+                    style={inputFull} />
+                </div>
+                {interfaceError && (
+                  <div style={{ color: '#dc2626', fontSize: 11, marginBottom: 12 }}>{interfaceError}</div>
+                )}
+                <div style={fieldRow}>
+                  <label style={labelStyle}>CME Log No. :</label>
+                  <input type="text" maxLength={14} value={cmeLogNo}
+                    onChange={(e: any) => setCmeLogNo(e.target.value.toUpperCase())}
+                    style={inputFull} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Amount :</label>
+                  <input type="text" maxLength={6} value={amount}
+                    onChange={(e: any) => setAmount(e.target.value)}
+                    style={inputFull} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={fieldRow}>
+                    <label style={labelStyle}>Event From Date :</label>
+                    <input type="date" value={eventFromDate}
+                      onChange={(e: any) => setEventFromDate(e.target.value)}
+                      style={inputFull} />
+                  </div>
+                  <div style={fieldRow}>
+                    <label style={labelStyle}>Event To Date :</label>
+                    <input type="date" value={eventToDate}
+                      onChange={(e: any) => setEventToDate(e.target.value)}
+                      onBlur={handleDateCheck}
+                      style={inputFull} />
+                  </div>
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Event Name :</label>
+                  <input type="text" value={eventName}
+                    onChange={(e: any) => setEventName(e.target.value.toUpperCase())}
+                    style={inputFull} />
+                </div>
+                <div style={fieldRow}>
+                  <label style={labelStyle}>Upload File :</label>
+                  <input type="file" accept="application/pdf"
+                    onChange={(e: any) => setFile(e.target.files?.[0] || null)}
+                    style={{ fontSize: 12, padding: '4px 0' }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center', gap: 16, borderTop: '1px solid #e5e7eb', paddingTop: 24 }}>
+              <button type="submit" disabled={loading || submitDisabled} style={{ ...primaryButton, opacity: (loading || submitDisabled) ? 0.5 : 1 }}>
+                {loading ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };
@@ -355,5 +357,10 @@ const tdLabel: React.CSSProperties = { fontSize: 12, fontWeight: 500, color: '#3
 const inputStyle: React.CSSProperties = { border: '1px solid #d1d5db', borderRadius: 4, padding: '5px 8px', fontSize: 12, color: '#374151', outline: 'none', boxSizing: 'border-box' as const };
 const primaryButton: React.CSSProperties = { background: '#003366', color: '#fff', border: 'none', borderRadius: 5, padding: '6px 20px', fontSize: 12, fontWeight: 600, cursor: 'pointer' };
 const cancelButton: React.CSSProperties = { background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 5, padding: '6px 20px', fontSize: 12, fontWeight: 500, cursor: 'pointer' };
+
+// --- NEW TWO-COLUMN STYLES ---
+const fieldRow: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 };
+const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#4b5563' };
+const inputFull: React.CSSProperties = { ...inputStyle, width: '100%' };
 
 export default CreateServiceAgreement;

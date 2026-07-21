@@ -244,13 +244,13 @@ const SearchServiceAgreement = () => {
                         onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                         <td style={tdStyle}>{row.SUBDIVISION_NAME}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right' }}>{row.DOC_CODE}</td>
+                        <td style={tdStyle}>{row.DOC_CODE}</td>
                         <td style={tdStyle}>{row.DOCTOR_PAN}</td>
                         <td style={tdStyle}>{row.DOCTOR_NAME}</td>
                         <td style={tdStyle}>{row.INTERFACE_APP_NO}</td>
                         <td style={tdStyle}>{fmtDate(row.EVENT_FROM_DATE)}</td>
                         <td style={tdStyle}>{fmtDate(row.EVENT_TO_DATE)}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right' }}>{row.AMOUNT}</td>
+                        <td style={tdStyle}>{row.AMOUNT}</td>
                         <td style={tdStyle}>
                           {row.FILE_NAME && (
                             <a href={getViewUrl(row)} target="_blank" rel="noreferrer"
@@ -305,7 +305,7 @@ const labelStyle: React.CSSProperties = { display: 'block', fontSize: 10, fontWe
 const inputStyle: React.CSSProperties = { border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 8px', fontSize: 12, color: '#374151', background: '#f9fafb', outline: 'none', boxSizing: 'border-box' as const };
 const primaryButton: React.CSSProperties = { background: '#003366', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 20px', fontSize: 12, fontWeight: 600, cursor: 'pointer', height: 28 };
 const exportBtn: React.CSSProperties = { background: '#003366', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', height: 28 };
-const thStyle: React.CSSProperties = { padding: '8px 12px', fontWeight: 600, color: '#003366', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', fontSize: 11 };
-const tdStyle: React.CSSProperties = { padding: '6px 12px', color: '#333', whiteSpace: 'nowrap', fontSize: 11 };
+const thStyle: React.CSSProperties = { padding: '8px 12px', fontWeight: 600, color: '#003366', borderBottom: '2px solid #e5e7eb', whiteSpace: 'nowrap', fontSize: 11, textAlign: 'center' };
+const tdStyle: React.CSSProperties = { padding: '6px 12px', color: '#333', whiteSpace: 'nowrap', fontSize: 11, textAlign: 'center' };
 
 export default SearchServiceAgreement;

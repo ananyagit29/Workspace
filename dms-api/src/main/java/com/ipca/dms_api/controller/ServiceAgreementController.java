@@ -217,7 +217,6 @@ public class ServiceAgreementController {
             String docCodeQuery = "SELECT NVL(MAX(TO_NUMBER(doc_code)),0) + 1 AS doc_code " +
                     "FROM DMS_SERVICE_AGREEMENT WHERE financial_year = ? AND subdivision_code = ?";
             Integer docCode = jdbcTemplate.queryForObject(docCodeQuery, Integer.class, financialYear, subdivisionCode);
-            if (docCode == null) docCode = 1;
 
             // Build upload directory: UPLOAD_DIR/app/com/div/loc/subappcode/finyear/doccode/
             String uploadPath = uploadDir + "/" + applicationName + "/" + companyId + "/" +
@@ -272,6 +271,7 @@ public class ServiceAgreementController {
 
     // ─── SEARCH SERVICE AGREEMENT ────────────────────────────────────────
     @GetMapping("/search")
+    @SuppressWarnings("null")
     public ResponseEntity<?> search(
             @RequestParam("financialYear") String financialYear,
             @RequestParam("userId") String userId,
@@ -322,12 +322,12 @@ public class ServiceAgreementController {
             }
             sql.append(" ORDER BY 1, 3 DESC");
 
-            List<Map<String, Object>> results = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+            var results = jdbcTemplate.queryForList(sql.toString(), params.toArray());
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
 
