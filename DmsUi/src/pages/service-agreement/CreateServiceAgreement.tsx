@@ -30,7 +30,7 @@ const CreateServiceAgreement = () => {
   // Subdivision
   const [subdivisions, setSubdivisions] = useState<any[]>([]);
   const [selectedSubdivision, setSelectedSubdivision] = useState('');
-  const [subDivDisabled, setSubDivDisabled] = useState(false);
+  const [subDivDisabled, setSubDivDisabled] = useState(true);
 
   // Other fields
   const [interfaceAppNo, setInterfaceAppNo] = useState('');
@@ -70,7 +70,14 @@ const CreateServiceAgreement = () => {
   };
 
   const handleEmployeeBlur = async () => {
-    if (!employeeId) return;
+    if (!employeeId) {
+      setEmployeeName('');
+      setRcCode('');
+      setSubDivDisabled(true);
+      setSubmitDisabled(false);
+      setError('');
+      return;
+    }
     setError('');
     try {
       const res = await getEmployeeDetails(employeeId, 'SERVICE_AGREEMENT', user?.userId || '');
@@ -88,14 +95,14 @@ const CreateServiceAgreement = () => {
 
         const subCode = res.subdivision_code;
         if (subCode && subCode !== 'null') {
-          // Auto-select and lock subdivision
+          // Auto-select but DO NOT lock subdivision according to user request
           setSelectedSubdivision(subCode);
-          setSubDivDisabled(true);
           setRcCodeReadonly(true);
         } else {
-          setSubDivDisabled(false);
           setRcCodeReadonly(false);
         }
+        // User explicitly wants it enabled when employee is entered:
+        setSubDivDisabled(false);
       }
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Employee not found');

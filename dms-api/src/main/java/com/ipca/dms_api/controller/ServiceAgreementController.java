@@ -122,13 +122,11 @@ public class ServiceAgreementController {
                                                 @RequestParam String userId) {
         try {
             // Exact query from old system GetServiceAgreementDetailServlet
-            String query = "SELECT 'H01', h.employee_id, first_name||' '||last_name as EMPLOYEE_NAME, " +
-                    "responsibility_code, h.subdivision_code " +
-                    "FROM hrms_live.pms_employee@hrmsdrdb h, dms_user_rights d " +
-                    "WHERE h.COMPANY_ID='1' AND h.LOCATION_ID = 'H01' " +
-                    "AND emp_status ='A' AND h.employee_id = ? " +
-                    "AND APPLICATION_NAME = ? AND user_id = ? " +
-                    "AND h.subdivision_code = sub_application_name " +
+            String query = "SELECT 'H01', employee_id, first_name||' '||last_name as EMPLOYEE_NAME, " +
+                    "responsibility_code, subdivision_code " +
+                    "FROM hrms_live.pms_employee@hrmsdrdb " +
+                    "WHERE COMPANY_ID='1' AND LOCATION_ID = 'H01' " +
+                    "AND emp_status ='A' AND employee_id = ? " +
                     "UNION ALL " +
                     "SELECT '101', employee_id, first_name||' '||last_name as EMPLOYEE_NAME, " +
                     "responsibility_code, subdivision_code " +
@@ -137,7 +135,7 @@ public class ServiceAgreementController {
                     "AND emp_status ='A' AND employee_id = ?";
 
             List<Map<String, Object>> employees = jdbcTemplate.queryForList(query,
-                    employeeId, applicationName, userId, employeeId);
+                    employeeId, employeeId);
 
             if (employees.isEmpty()) {
                 return ResponseEntity.ok(Map.of(
